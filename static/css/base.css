@@ -1,0 +1,119 @@
+html, body {
+    background: url('/media/welcome_kabayan.webp')
+        no-repeat center center fixed;
+    background-size: cover;
+    height: calc(100% - 164px);
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    color: #555;
+    font-family: 'Lato', sans-serif;
+}
+
+
+/* Logo */
+a.navbar-brand.logo {
+    font-family: "Lilita One", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 2rem;
+}
+
+h2.welcome {
+    font-size: xx-large;
+    font-weight: 900;
+    text-align: center;
+    color: black;
+}
+
+h2.hide {
+    display: none;
+}
+
+main {
+    flex: 1;
+}
+
+/* Footer */
+footer {
+    padding-top: 20px ;
+    text-align: center;
+}
+
+.contact-info a {
+    color: white;
+    text-decoration: none;
+}
+
+a i {
+    color: white;
+    font-size: 2em;
+    margin-left: 10px;
+}
+
+/* Home */
+.welcome-message {
+    padding-top: .5rem;
+}
+
+.instructions-box {
+ padding: 1rem;
+}
+
+.welcome-message,
+.instructions-box,
+.form-group {
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+}
+
+/* Forms */
+.form-group {
+    padding: 1.5rem;
+}
+
+.username-request {
+    font-style: italic;
+}
+
+/* Tables */
+.table-group {
+    background: #69ddff;
+    color: black;
+}
+
+/* Alert */
+.alert-error {
+    color: #842029;
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+}
+
+/* Instructions */
+p.instruction-group{
+    font-style: italic;
+}
+
+/* -------------------------------- Media Queries */
+
+/* Slightly larger container on xl screens */
+/* @media (min-width: 1200px) {
+    .container {
+      max-width: 80%;
+    }
+  } */
+  
+  /* fixed top navbar only on medium and up */
+  /* @media (min-width: 992px) {
+      .fixed-top-desktop-only {
+          position: fixed;
+          top: 0;
+          right: 0;
+          left: 0;
+          z-index: 1030;
+      }
+  
+      .header-container {
+          padding-top: 164px;
+      }
+  } */

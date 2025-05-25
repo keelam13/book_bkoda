@@ -10,18 +10,57 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container h-100">
-        <div class="row h-100">
-            <div class="col-7 col-md-6 my-auto">
-                <h1 class="display-4 logo-font-text-black">
-                    Book your trip now!
-                </h1>
-                <div class="my-5">
-                    <h4>
-                        <a href="" class="search-trips-button btn btn-lg text-uppercase py-3">Search Trips</a>
-                    </h4>
+<article class="text-white">
+    <h2 class="welcome">Book your trip now!</h2>
+    <div class="container mt-3">
+        <div class="row">
+            <section class="col-md-6 mt-2">
+                <h2 class="hide">CTA</h2>
+                <div class="text-center welcome-message">
+                    {% if user.is_authenticated %}
+                    <p class="lead">Hello, <strong>{{ user.username }}</strong>!</p>
+                    {% else %}
+                    <p class="lead">Please <a href="{% url 'account_login' %}">log in</a> to access more features.</p>
+                    {% endif %}
                 </div>
-            </div>
+                <div class="instructions-box">
+                    <p class="instruction-group">
+                        * To reserve seats you must be logged in, but if you still don't have an account please
+                        <span><a href="{% url 'account_signup' %}">sign up</a></span>.
+                        However, if you only want to see the trips for the day, you may search for trips without logging in.
+                        Search trips by entering origin or where you're coming from and your desired destination,
+                        the date of your travel, clicking the search button. A list of trips will then be displayed according
+                        to the origin, destination and date you provided. A reserve button is placed at the end of each trip.
+                        You may reserve seats for up to 30 days in advance.
+                        <br>
+                        Note: As of now BKODA only offers trips from Kabayan, Benguet to Baguio City and vice versa.
+                    </p>
+                </div>
+            </section>
+            <section class="col-md-6 mt-2 form-group">
+                <h2 class="mb-4 text-center">Search Trips</h2>
+                <form action="" method="GET">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="origin" class="form-label">From</label>
+                        <input name='origin' class="form-control" type="text" id="origin"
+                            placeholder="Enter origin city" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="destination" class="form-label">To</label>
+                        <input name='destination' class="form-control" type="text" id="destination"
+                            placeholder="Enter destination city" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="departure-date" class="form-label">Date</label>
+                        <input name='date' class="form-control" type="date" id="departure-date" required>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </form>
+            </section>
         </div>
     </div>
+</article>
 {% endblock %}
