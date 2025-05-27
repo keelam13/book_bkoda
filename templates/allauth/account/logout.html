@@ -1,12 +1,12 @@
-{% extends "account/base_manage.html" %}
+{% extends "account/base_entrance.html" %}
 {% load allauth i18n %}
+
 {% block head_title %}
     {% trans "Sign Out" %}
 {% endblock head_title %}
-{% block content %}
-    {% element h1 %}
-        {% trans "Sign Out" %}
-    {% endelement %}
+
+{% block inner_content %}
+    <h2 class="logo-font text-center mb-4">{% trans "Sign Out" %}</h2>
     {% element p %}
         {% trans 'Are you sure you want to sign out?' %}
     {% endelement %}
@@ -17,9 +17,10 @@
             {{ redirect_field }}
         {% endslot %}
         {% slot actions %}
-            {% element button type="submit" %}
-                {% trans 'Sign Out' %}
-            {% endelement %}
+        <div class="text-center mt-3">
+            <a class="btn btn-outline-white" href="{% url 'home' %}">Cancel</a>
+            <button type="submit" class="btn btn-danger">{% trans "Sign Out" %}</button>
+        </div>
         {% endslot %}
     {% endelement %}
-{% endblock content %}
+{% endblock inner_content %}

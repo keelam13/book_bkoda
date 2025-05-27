@@ -1,12 +1,12 @@
 {% extends "account/base_entrance.html" %}
 {% load allauth i18n %}
+
 {% block head_title %}
     {% trans "Signup" %}
 {% endblock head_title %}
-{% block content %}
-    {% element h1 %}
-        {% trans "Sign Up" %}
-    {% endelement %}
+
+{% block inner_content %}
+<h2 class="logo-font text-center mb-4">{% trans "Sign In" %}</h2>
     {% setvar link %}
         <a href="{{ login_url }}">
         {% endsetvar %}
@@ -14,7 +14,7 @@
         </a>
     {% endsetvar %}
     {% element p %}
-        {% blocktranslate %}Already have an account? Then please {{ link }}sign in{{ end_link }}.{% endblocktranslate %}
+        {% blocktranslate %}Already have an account? Then please {{ link }}<strong>login</strong>{{ end_link }}.{% endblocktranslate %}
     {% endelement %}
     {% if not SOCIALACCOUNT_ONLY %}
         {% url 'account_signup' as action_url %}
@@ -26,9 +26,10 @@
                 {{ redirect_field }}
             {% endslot %}
             {% slot actions %}
-                {% element button tags="prominent,signup" type="submit" %}
-                    {% trans "Sign Up" %}
-                {% endelement %}
+            <div class="text-center mt-3">
+                <a class="btn btn-outline-white" href="{% url 'home' %}">Home</a>
+                <button type="submit" class="btn btn-primary">{% trans "Sign Up" %}</button>
+            </div>
             {% endslot %}
         {% endelement %}
     {% endif %}
@@ -42,4 +43,4 @@
     {% if SOCIALACCOUNT_ENABLED %}
         {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
     {% endif %}
-{% endblock content %}
+{% endblock inner_content %}

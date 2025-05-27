@@ -1,4 +1,8 @@
-html, body {
+html {
+    height: 100%;
+}
+
+body {
     background: url('/media/welcome_kabayan.webp')
         no-repeat center center fixed;
     background-size: cover;
@@ -10,7 +14,28 @@ html, body {
     font-family: 'Lato', sans-serif;
 }
 
+.overlay {
+	height: 100%;
+	width: 100%;
+	top: 0;
+	left: 0;
+	position: fixed;
+	background-color: rgba(60, 60, 70, 0.5);
+	z-index: -1;
+}
 
+.btn-outline-white {
+    background: transparent;
+    color: white !important;
+    border: 1px solid white;
+}
+
+.btn-outline-white:hover,
+.btn-outline-white:active,
+.btn-outline-white:focus {
+    background: #007bff;
+    border: 1px solid #007bff;
+}
 /* Logo */
 a.navbar-brand.logo {
     font-family: "Lilita One", sans-serif;
@@ -19,11 +44,11 @@ a.navbar-brand.logo {
     font-size: 2rem;
 }
 
-h2.welcome {
+h1.welcome {
     font-size: xx-large;
     font-weight: 900;
     text-align: center;
-    color: black;
+    color: white;
 }
 
 h2.hide {
@@ -74,6 +99,10 @@ a i {
 
 .username-request {
     font-style: italic;
+}
+
+.logo-font {
+    text-transform: uppercase;
 }
 
 /* Tables */

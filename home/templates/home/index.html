@@ -10,8 +10,9 @@
 {% endblock %}
 
 {% block content %}
-<article class="text-white">
-    <h2 class="welcome">Book your trip now!</h2>
+<article class="text-white mt-3">
+    <div class="overlay"></div>
+    <h1 class="welcome">Book your trip now!</h1>
     <div class="container mt-3">
         <div class="row">
             <section class="col-md-6 mt-2">
@@ -20,25 +21,25 @@
                     {% if user.is_authenticated %}
                     <p class="lead">Hello, <strong>{{ user.username }}</strong>!</p>
                     {% else %}
-                    <p class="lead">Please <a href="{% url 'account_login' %}">log in</a> to access more features.</p>
+                    <p class="lead">Please <a class="links" href="{% url 'account_login' %}"><strong>login</strong></a> to access more features.</p>
                     {% endif %}
                 </div>
                 <div class="instructions-box">
                     <p class="instruction-group">
                         * To reserve seats you must be logged in, but if you still don't have an account please
-                        <span><a href="{% url 'account_signup' %}">sign up</a></span>.
+                        <span><a href="{% url 'account_signup' %}"><strong>signup</strong></a></span>.
                         However, if you only want to see the trips for the day, you may search for trips without logging in.
                         Search trips by entering origin or where you're coming from and your desired destination,
-                        the date of your travel, clicking the search button. A list of trips will then be displayed according
-                        to the origin, destination and date you provided. A reserve button is placed at the end of each trip.
-                        You may reserve seats for up to 30 days in advance.
+                        the date of your travel, and then clicking the search button. A list of trips will then be displayed
+                        according to the origin, destination and date you provided. A reserve button is placed at the end of
+                        each trip. You may reserve seats for up to 30 days in advance.
                         <br>
                         Note: As of now BKODA only offers trips from Kabayan, Benguet to Baguio City and vice versa.
                     </p>
                 </div>
             </section>
             <section class="col-md-6 mt-2 form-group">
-                <h2 class="mb-4 text-center">Search Trips</h2>
+                <h2 class="mb-2 text-center">Search Trips</h2>
                 <form action="" method="GET">
                     {% csrf_token %}
                     <div class="mb-3">

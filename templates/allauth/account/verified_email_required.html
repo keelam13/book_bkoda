@@ -1,13 +1,13 @@
-{% extends "account/base_manage.html" %}
+{% extends "account/base_entrance.html" %}
 {% load i18n %}
 {% load allauth %}
+
 {% block head_title %}
     {% trans "Verify Your Email Address" %}
 {% endblock head_title %}
-{% block content %}
-    {% element h1 %}
-        {% trans "Verify Your Email Address" %}
-    {% endelement %}
+
+{% block inner_content %}
+    <h2 class="logo-font text-center mb-4">{% trans "Verify Your E-mail Address" %}</h2>
     {% url 'account_email' as email_url %}
     {% element p %}
         {% blocktrans %}This part of the site requires us to verify that
@@ -22,4 +22,4 @@ contact us if you do not receive it within a few minutes.{% endblocktrans %}
     {% element p %}
         {% blocktrans %}<strong>Note:</strong> you can still <a href="{{ email_url }}">change your email address</a>.{% endblocktrans %}
     {% endelement %}
-{% endblock content %}
+{% endblock inner_content %}

@@ -1,12 +1,12 @@
-{% extends "account/base_manage_email.html" %}
+{% extends "account/base_entrance.html" %}
 {% load static allauth i18n %}
+
 {% block head_title %}
     {% trans "Email Addresses" %}
 {% endblock head_title %}
-{% block content %}
-    {% element h1 %}
-        {% trans "Email Addresses" %}
-    {% endelement %}
+
+{% block inner_content %}
+    <h2 class="logo-font text-center mb-4">{% trans "Email Addresses" %}</h2>
     {% if emailaddresses %}
         {% element p %}
             {% trans 'The following email addresses are associated with your account:' %}
@@ -72,7 +72,7 @@
             {% endslot %}
         {% endelement %}
     {% endif %}
-{% endblock content %}
+{% endblock inner_content %}
 {% block extra_body %}
     <script src="{% static 'account/js/account.js' %}"></script>
     <script src="{% static 'account/js/onload.js' %}"></script>
