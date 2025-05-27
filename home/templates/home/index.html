@@ -40,7 +40,7 @@
             </section>
             <section class="col-md-6 mt-2 form-group">
                 <h2 class="mb-2 text-center">Search Trips</h2>
-                <form action="" method="GET">
+                <form action="{% url 'trips' %}" method="GET">
                     {% csrf_token %}
                     <div class="mb-3">
                         <label for="origin" class="form-label">From</label>

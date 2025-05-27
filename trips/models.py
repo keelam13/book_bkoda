@@ -12,7 +12,6 @@ class Trip(models.Model):
     destination = models.CharField(max_length=30, db_index=True)
     date = models.DateField(db_index=True)
     time = models.TimeField()
-    total_seats = models.IntegerField()
     available_seats = models.IntegerField()
 
     def update_available_seats(self, number_of_seats, operation='subtract'):
