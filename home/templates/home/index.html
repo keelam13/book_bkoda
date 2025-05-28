@@ -40,24 +40,50 @@
             </section>
             <section class="col-md-6 mt-2 form-group">
                 <h2 class="mb-2 text-center">Search Trips</h2>
+                {% if form %}
+                    <p>Form is available in template!</p>
+                {% else %}
+                    <p>ERROR: Form is NOT available in template!</p>
+                {% endif %}
                 <form action="{% url 'trips' %}" method="GET">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label for="origin" class="form-label">From</label>
-                        <input name='origin' class="form-control" type="text" id="origin"
-                            placeholder="Enter origin city" required>
+                        <label for="{{ form.origin.id_for_label }}" class="form-label">From</label>
+                        {{ form.origin }}
+                        {% if form.origin.errors %}
+                            <div class="text-danger small">{{ form.origin.errors }}</div>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
-                        <label for="destination" class="form-label">To</label>
-                        <input name='destination' class="form-control" type="text" id="destination"
-                            placeholder="Enter destination city" required>
+                        <label for="{{ form.destination.id_for_label }}" class="form-label">To</label>
+                        {{ form.destination }}
+                        {% if form.destination.errors %}
+                            <div class="text-danger small">{{ form.destination.errors }}</div>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
-                        <label for="departure-date" class="form-label">Date</label>
-                        <input name='date' class="form-control" type="date" id="departure-date" required>
+                        <label for="{{ form.date.id_for_label }}" class="form-label">Date</label>
+                        {{ form.date }}
+
+                        {% if form.date.errors %}
+                            <div class="text-danger small">{{ form.date.errors }}</div>
+                        {% endif %}
                     </div>
+                    <div class="mb-3">
+                        <label for="{{ form.num_travelers.id_for_label }}" class="form-label">Passengers</label>
+                        {{ form.num_travelers }}
+                        {% if form.num_travelers.errors %}
+                            <div class="text-danger small">{{ form.num_travelers.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    {# Hidden fields for other form management if any #}
+                    {% for hidden_field in form.hidden_fields %}
+                        {{ hidden_field }}
+                    {% endfor %}
+
                     <div class="text-center">
-                        <button type="submit" class="btn btn-primary">Search</button>
+                        <button type="submit" class="btn btn-primary">Let's Go!</button>
                     </div>
                 </form>
             </section>
