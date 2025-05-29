@@ -13,6 +13,7 @@ class Trip(models.Model):
     date = models.DateField(db_index=True)
     time = models.TimeField()
     available_seats = models.IntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def update_available_seats(self, number_of_seats, operation='subtract'):
         """
@@ -34,6 +35,6 @@ class Trip(models.Model):
         Returns a string representation of the trip.
         """
         return (
-            f"{self.trip_number}: {self.origin} to {self.destination}"
-            f"({self.date} {self.time})"
+            f"Trip {self.trip_number}: From {self.origin} to {self.destination}"
+            f"on({self.date} at {self.time} - Price: {self.price})"
         )

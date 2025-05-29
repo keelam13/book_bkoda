@@ -11,11 +11,10 @@
 
 {% block content %}
 <article class="text-white mt-3">
-    <div class="overlay"></div>
     <div class="container mt-3">
         <div class="row">
             <section class="container form-group">
-                <h1 class="welcome">Book your trip now!</h1>
+                <h1 class="cta">Book your trip now!</h1>
                 <div class="col d-flex justify-content-center">
                     <form action="{% url 'trips' %}" method="GET">
                         {% csrf_token %}

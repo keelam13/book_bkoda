@@ -12,8 +12,7 @@
 
 {% block content %}
 
-<article class="mx-md-5">
-    <div class="overlay"></div>
+<article class="trips-display mx-md-5">
     <h2 class="mb-3">Trips Schedule for {{ current_day|date:"Y-m-d" }}</h2>
     <p class="lead">Origin: <strong>{{ origin }}</strong>, Destination: <strong>{{ destination }}</strong></p>
     <div class="mb-3 d-flex flex-column flex-sm-row justify-content-sm-around">
@@ -33,7 +32,8 @@
                     <th>Destination</th>
                     <th>Date</th>
                     <th>Time</th>
-                    <th>Available Seats</th>
+                    <th>Passengers</th>
+                    <th>Price</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -45,13 +45,14 @@
                     <td>{{ row.destination }}</td>
                     <td>{{ row.date }}</td>
                     <td>{{ row.time }}</td>
-                    <td>{{ row.available_seats }}</td>
+                    <td>{{ row.requested_passengers }}</td>
+                    <td>Php{{ row.total_display_price|floatformat:2 }}</td>
                     <td>
                         {% if row.available_seats != 0 %}
                         <a href=""
                             class="btn btn-sm btn-primary"
                             aria-label="Reserve Seat" title="Reserve Seat">
-                            Reserve
+                            Book Now
                         </a>
                         {% elif row.date|is_before_now:row.time %}
                         <span title="Past Trip">Past</span>
