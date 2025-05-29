@@ -7,17 +7,29 @@ from datetime import datetime, date, timedelta
 def index(request):
     """ A view to return the index page. """
     # Instantiate the form, populating it with GET data if a search was performed
-    form = TripSearchForm(request.GET)
+     # Define default initial values for origin and destination
+    default_initial_data = {
+        'origin': 'Kabayan, Benguet',
+        'destination': 'Baguio City',
+    }
 
+    # Instantiate the form
+    # If it's a GET request with query parameters (i.e., a search was performed),
+    # then populate the form with that data.
+    # Otherwise, if it's a fresh GET request, use the default_initial_data.
+    if request.method == 'GET' and request.GET: # Form submitted via GET (search)
+        form = TripSearchForm(request.GET)
+    else:
+        form = TripSearchForm(initial=default_initial_data)
+    
     # Initialize trips queryset. It will be filtered later if the form is valid.
     trips = Trip.objects.all()
 
     # Initialize default values for context, especially for date navigation
+    # Use today's date if the form hasn't provided one.
     current_date = date.today()
-    prev_date = current_date - timedelta(days=1)
-    next_date = current_date + timedelta(days=1)
-    selected_origin = None
-    selected_destination = None
+    selected_origin = default_initial_data['origin']
+    selected_destination = default_initial_data['destination']
     selected_travelers = 1
 
     # Check if the form is submitted AND valid
@@ -27,10 +39,6 @@ def index(request):
         # Use the date from the form, or default to today
         current_date = form.cleaned_data.get('date') or date.today() 
         selected_travelers = form.cleaned_data.get('num_travelers') or 1
-
-        # Update prev/next dates based on the current_date after search
-        prev_date = current_date - timedelta(days=1)
-        next_date = current_date + timedelta(days=1)
 
         # Apply filters based on form input
         if selected_origin:
@@ -43,6 +51,10 @@ def index(request):
         # Filter by available seats (assuming Trip model has this property)
         # This is a list comprehension because available_seats is a @property
         trips = [trip for trip in trips if trip.available_seats >= selected_travelers]
+    
+    # Update prev/next dates based on the current_date after search
+    prev_date = current_date - timedelta(days=1)
+    next_date = current_date + timedelta(days=1)
 
     # Order the results by time for display
     trips = sorted(trips, key=lambda trip: trip.time)

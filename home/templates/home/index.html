@@ -12,82 +12,122 @@
 {% block content %}
 <article class="text-white mt-3">
     <div class="overlay"></div>
-    <h1 class="welcome">Book your trip now!</h1>
     <div class="container mt-3">
         <div class="row">
-            <section class="col-md-6 mt-2">
-                <h2 class="hide">CTA</h2>
-                <div class="text-center welcome-message">
-                    {% if user.is_authenticated %}
-                    <p class="lead">Hello, <strong>{{ user.username }}</strong>!</p>
-                    {% else %}
-                    <p class="lead">Please <a class="links" href="{% url 'account_login' %}"><strong>login</strong></a> to access more features.</p>
-                    {% endif %}
+            <section class="container form-group">
+                <h1 class="welcome">Book your trip now!</h1>
+                <div class="col d-flex justify-content-center">
+                    <form action="{% url 'trips' %}" method="GET">
+                        {% csrf_token %}
+                        <div class="row g-2 align-items-end just">
+                            <div class="col-md-6 col-lg-3">
+                                <label for="{{ form.origin.id_for_label }}" class="form-label visually-hidden">From</label>
+                                <div class="input-with-icon">
+                                    <span class="icon-inside-input"><i class="bi bi-geo-alt-fill"></i></span>
+                                    {{ form.origin }}
+                                </div>
+                                {% if form.origin.errors %}
+                                    <div class="text-danger small">{{ form.origin.errors }}</div>
+                                {% endif %}
+                            </div>
+                        
+                            <div class="col-12 col-md-auto d-flex align-items-end justify-content-end">
+                                <button type="button" id="swapLocationsBtn" class="btn btn-outline-secondary btn-sm p-0" aria-label="Swap Origin and Destination">
+                                    <i class="bi bi-arrow-left-right fs-4 d-none d-md-block"></i>
+                                    <i class="bi bi-arrow-down-up fs-4 d-md-none"></i>
+                                </button>
+                            </div>
+                        
+                            <div class="col-md-6 col-lg-3">
+                                <label for="{{ form.destination.id_for_label }}" class="form-label visually-hidden">To</label>
+                                <div class="input-with-icon">
+                                    <span class="icon-inside-input"><i class="bi bi-geo-alt-fill"></i></span>
+                                    {{ form.destination }}
+                                </div>
+                                {% if form.destination.errors %}
+                                    <div class="text-danger small">{{ form.destination.errors }}</div>
+                                {% endif %}
+                            </div>
+                        
+                            <div class="col-md-6 col-lg-3">
+                                <label for="{{ form.date.id_for_label }}" class="form-label visually-hidden">Date</label>
+                                <div class="input-with-icon">
+                                    <span class="icon-inside-input"><i class="bi bi-calendar-date-fill"></i></span>
+                                    {{ form.date }}
+                                </div>
+                                {% if form.date.errors %}
+                                    <div class="text-danger small">{{ form.date.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 col-lg-3">
+                                <label for="{{ form.num_travelers.id_for_label }}" class="form-label visually-hidden">Passengers</label>
+                                <div class="input-with-icon">
+                                    <span class="icon-inside-input"><i class="bi bi-person-fill"></i></span>
+                                    {{ form.num_travelers }}
+                                </div>
+                                {% if form.num_travelers.errors %}
+                                    <div class="text-danger small">{{ form.num_travelers.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mt-3 justify-content-center">
+                            <button type="submit" class="btn btn-primary">Let's Go!</button>
+                        </div>
+                        
+
+                        {# Hidden fields for other form management if any #}
+                            {% for hidden_field in form.hidden_fields %}
+                                {{ hidden_field }}
+                        {% endfor %}
+                    </form>
                 </div>
-                <div class="instructions-box">
-                    <p class="instruction-group">
-                        * To reserve seats you must be logged in, but if you still don't have an account please
-                        <span><a href="{% url 'account_signup' %}"><strong>signup</strong></a></span>.
-                        However, if you only want to see the trips for the day, you may search for trips without logging in.
-                        Search trips by entering origin or where you're coming from and your desired destination,
-                        the date of your travel, and then clicking the search button. A list of trips will then be displayed
-                        according to the origin, destination and date you provided. A reserve button is placed at the end of
-                        each trip. You may reserve seats for up to 30 days in advance.
-                        <br>
-                        Note: As of now BKODA only offers trips from Kabayan, Benguet to Baguio City and vice versa.
-                    </p>
-                </div>
-            </section>
-            <section class="col-md-6 mt-2 form-group">
-                <h2 class="mb-2 text-center">Search Trips</h2>
-                {% if form %}
-                    <p>Form is available in template!</p>
-                {% else %}
-                    <p>ERROR: Form is NOT available in template!</p>
-                {% endif %}
-                <form action="{% url 'trips' %}" method="GET">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="{{ form.origin.id_for_label }}" class="form-label">From</label>
-                        {{ form.origin }}
-                        {% if form.origin.errors %}
-                            <div class="text-danger small">{{ form.origin.errors }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="mb-3">
-                        <label for="{{ form.destination.id_for_label }}" class="form-label">To</label>
-                        {{ form.destination }}
-                        {% if form.destination.errors %}
-                            <div class="text-danger small">{{ form.destination.errors }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="mb-3">
-                        <label for="{{ form.date.id_for_label }}" class="form-label">Date</label>
-                        {{ form.date }}
-
-                        {% if form.date.errors %}
-                            <div class="text-danger small">{{ form.date.errors }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="mb-3">
-                        <label for="{{ form.num_travelers.id_for_label }}" class="form-label">Passengers</label>
-                        {{ form.num_travelers }}
-                        {% if form.num_travelers.errors %}
-                            <div class="text-danger small">{{ form.num_travelers.errors }}</div>
-                        {% endif %}
-                    </div>
-
-                    {# Hidden fields for other form management if any #}
-                    {% for hidden_field in form.hidden_fields %}
-                        {{ hidden_field }}
-                    {% endfor %}
-
-                    <div class="text-center">
-                        <button type="submit" class="btn btn-primary">Let's Go!</button>
-                    </div>
-                </form>
             </section>
         </div>
     </div>
 </article>
+{% endblock %}
+
+{% block postload_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            // Get the ID dynamically from the Django template
+            const dateInputId = "{{ form.date.id_for_label }}";
+            const dateInput = document.getElementById(dateInputId);
+
+            if (dateInput) { // Always good to check if the element exists
+                // Get the current date
+                const today = new Date();
+
+                // Format the date as 'YYYY-MM-DD' which is required by the input type="date"
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                const day = String(today.getDate()).padStart(2, '0');
+
+                const formattedDate = `${year}-${month}-${day}`;
+
+                // Set the value of the input
+                dateInput.value = formattedDate;
+            } else {
+                console.error("Date input element not found with ID:", dateInputId);
+            }
+
+            const swapBtn = document.getElementById('swapLocationsBtn');
+            const originInput = document.getElementById("{{ form.origin.id_for_label }}");
+            const destinationInput = document.getElementById("{{ form.destination.id_for_label }}");
+
+            if (swapBtn && originInput && destinationInput) {
+                swapBtn.addEventListener('click', () => {
+                    const currentOrigin = originInput.value;
+                    const currentDestination = destinationInput.value;
+
+                    originInput.value = currentDestination;
+                    destinationInput.value = currentOrigin;
+                });
+            } else {
+                console.error("One or more elements for swap functionality not found.");
+            }
+        });
+    </script>
 {% endblock %}
