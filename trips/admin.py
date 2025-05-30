@@ -17,14 +17,22 @@ class TripAdmin(admin.ModelAdmin):
         'origin',
         'destination',
         'date',
-        'time',
+        'departure_time',
+        'arrival_time',
         'available_seats',
-        # 'total_seats_reserved'
-        )
+        'price',
+        'company_name',
+        'bus_number',
+        'origin_station',
+        'destination_station',
+        # 'total_seats_reserved',
+    )
+
+
     list_filter = ('origin', 'destination', 'date')
-    search_fields = ('trip_number', 'origin', 'destination')
+    search_fields = ('trip_number', 'origin', 'destination', 'bus_number')
     # inlines = [ReservationInline]
-    ordering = ('-date', '-time')
+    ordering = ('-date', '-departure_time')
 
     # def total_seats_reserved(self, obj):
     #     """

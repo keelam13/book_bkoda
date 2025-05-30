@@ -37,7 +37,7 @@ def index(request):
         selected_origin = form.cleaned_data.get('origin')
         selected_destination = form.cleaned_data.get('destination')
         # Use the date from the form, or default to today
-        current_date = form.cleaned_data.get('date') or date.today() 
+        current_date = form.cleaned_data.get('departure_date') or date.today() 
         selected_travelers = form.cleaned_data.get('num_travelers') or 1
 
         # Apply filters based on form input
@@ -46,7 +46,7 @@ def index(request):
         if selected_destination:
             trips = trips.filter(destination__icontains=selected_destination)
         if current_date: # Filter by the selected date
-            trips = trips.filter(date=current_date)
+            trips = trips.filter(departure_date=current_date)
 
         # Filter by available seats (assuming Trip model has this property)
         # This is a list comprehension because available_seats is a @property
@@ -57,7 +57,7 @@ def index(request):
     next_date = current_date + timedelta(days=1)
 
     # Order the results by time for display
-    trips = sorted(trips, key=lambda trip: trip.time)
+    trips = sorted(trips, key=lambda trip: trip.departure_time)
 
     context = {
         'form': form, # <--- This is the key: pass the form instance!

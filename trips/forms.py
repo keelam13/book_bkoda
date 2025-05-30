@@ -14,7 +14,7 @@ class TripSearchForm(forms.Form):
         widget=forms.TextInput(attrs={'placeholder': 'To', 'class': 'form-control'}),
         label=""
     )
-    date = forms.DateField(
+    departure_date = forms.DateField(
         required=False,
         initial=date.today,
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
@@ -24,6 +24,6 @@ class TripSearchForm(forms.Form):
         required=False,
         min_value=1,
         initial=1,
-        widget=forms.NumberInput(attrs={'placeholder': '1 Traveler', 'min': '1', 'class': 'form-control'}),
+        widget=forms.NumberInput(attrs={'placeholder': '1 Passenger', 'min': '1', 'class': 'form-control'}),
         label=""
     )
