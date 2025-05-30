@@ -1,0 +1,113 @@
+{% load static %}
+
+<section class="container form-group search-form-section"> {# Added a class for potential styling #}
+    <h1 class="cta d-none d-md-block">Book your trip now!</h1> {# Only show CTA on larger screens #}
+    <div class="col d-flex justify-content-center">
+        <form action="{% url 'trips' %}" method="GET" class="w-100"> {# Added w-100 for width #}
+            {% csrf_token %}
+            <div class="row g-2 align-items-end justify-content-center"> {# Changed just to justify-content-center #}
+                <div class="col-md-6 col-lg-3">
+                    <label for="{{ form.origin.id_for_label }}" class="form-label visually-hidden">From</label>
+                    <div class="input-with-icon">
+                        <span class="icon-inside-input"><i class="bi bi-geo-alt-fill"></i></span>
+                        {{ form.origin }}
+                    </div>
+                    {% if form.origin.errors %}
+                        <div class="text-danger small">{{ form.origin.errors }}</div>
+                    {% endif %}
+                </div>
+            
+                <div class="col-12 col-md-auto d-flex align-items-end justify-content-center"> {# Changed justify-content-end to center #}
+                    <button type="button" id="swapLocationsBtn" class="btn btn-outline-secondary btn-sm p-0" aria-label="Swap Origin and Destination">
+                        <i class="bi bi-arrow-left-right fs-4 d-none d-md-block"></i>
+                        <i class="bi bi-arrow-down-up fs-4 d-md-none"></i>
+                    </button>
+                </div>
+            
+                <div class="col-md-6 col-lg-3">
+                    <label for="{{ form.destination.id_for_label }}" class="form-label visually-hidden">To</label>
+                    <div class="input-with-icon">
+                        <span class="icon-inside-input"><i class="bi bi-geo-alt-fill"></i></span>
+                        {{ form.destination }}
+                    </div>
+                    {% if form.destination.errors %}
+                        <div class="text-danger small">{{ form.destination.errors }}</div>
+                    {% endif %}
+                </div>
+            
+                <div class="col-md-6 col-lg-3">
+                    <label for="{{ form.departure_date.id_for_label }}" class="form-label visually-hidden">Date</label>
+                    <div class="input-with-icon">
+                        <span class="icon-inside-input"><i class="bi bi-calendar-date-fill"></i></span>
+                        {{ form.departure_date }}
+                    </div>
+                    {% if form.departure_date.errors %}
+                        <div class="text-danger small">{{ form.departure_date.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <label for="{{ form.num_travelers.id_for_label }}" class="form-label visually-hidden">Passengers</label>
+                    <div class="input-with-icon">
+                        <span class="icon-inside-input"><i class="bi bi-person-fill"></i></span>
+                        {{ form.num_travelers }}
+                    </div>
+                    {% if form.num_travelers.errors %}
+                        <div class="text-danger small">{{ form.num_travelers.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row mt-3 justify-content-center">
+                <div class="col-auto"> {# Use col-auto to keep button width natural #}
+                    <button type="submit" class="btn btn-primary">Let's Go!</button>
+                </div>
+            </div>
+            
+            {# Hidden fields for other form management if any #}
+            {% for hidden_field in form.hidden_fields %}
+                {{ hidden_field }}
+            {% endfor %}
+        </form>
+    </div>
+</section>
+
+{# Move all the JavaScript related to the form (date input, swap button) here, or include it from a static file. #}
+{# This ensures the JS runs whenever this partial is included. #}
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const dateInputId = "{{ form.departure_date.id_for_label }}";
+        const dateInput = document.getElementById(dateInputId);
+
+        if (dateInput) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
+
+            // Only set if the input is empty or the value is not a valid date
+            if (!dateInput.value || isNaN(new Date(dateInput.value))) {
+                 dateInput.value = formattedDate;
+            }
+        } else {
+            console.error("Date input element not found with ID:", dateInputId);
+        }
+
+        const swapBtn = document.getElementById('swapLocationsBtn');
+        const originInput = document.getElementById("{{ form.origin.id_for_label }}");
+        const destinationInput = document.getElementById("{{ form.destination.id_for_label }}");
+
+        if (swapBtn && originInput && destinationInput) {
+            swapBtn.addEventListener('click', () => {
+                const currentOrigin = originInput.value;
+                const currentDestination = destinationInput.value;
+
+                originInput.value = currentDestination;
+                destinationInput.value = currentOrigin;
+            });
+        } else {
+            console.error("One or more elements for swap functionality not found.");
+        }
+    });
+</script>

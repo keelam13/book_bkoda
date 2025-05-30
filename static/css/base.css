@@ -44,6 +44,7 @@ header {
     width: 100%;
     z-index: 1;
 }
+
 a.navbar-brand.logo {
     font-family: "Lilita One", sans-serif;
     font-weight: 400;
@@ -51,6 +52,16 @@ a.navbar-brand.logo {
     font-size: 2rem;
 }
 
+span.company-label {
+    background-color: #007bff;
+    border-radius: 5px;
+    padding: 0.2rem 0.5rem;
+    font-family: "Lilita One", sans-serif;
+    font-weight: 200;
+    font-style: normal;
+    font-size: 1rem;
+    color: white;
+}
 h1.cta {
     font-size: xx-large;
     font-weight: 900;
@@ -76,7 +87,7 @@ a i {
 }
 
 /* Home */
-.welcome-message {
+.cta {
     padding-top: .5rem;
 }
 
@@ -84,7 +95,6 @@ a i {
  padding: 1rem;
 }
 
-.welcome-message,
 .instructions-box,
 .form-group {
     background: rgba(0, 0, 0, 0.5);
@@ -232,8 +242,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Tables */
 .table-group {
-    background: #69ddff;
+    background: #fff;
     color: black;
+    border-radius: 10px;
 }
 
 /* Alert */
