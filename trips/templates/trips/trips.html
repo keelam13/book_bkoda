@@ -25,11 +25,19 @@
 
 <article class="trips-display mx-md-5 mt-4">
     <div class="mb-3 d-flex flex-column flex-sm-row justify-content-sm-around">
-        <a href="{% url 'trips' %}?departure_date={{ previous_day|date:'Y-m-d' }}&origin={{ origin }}&destination={{ destination }}&number_of_passengers={{ number_of_passengers }}"
-            class="btn btn-sm btn-success mb-2 mb-sm-0" aria-label="Previous Day" title="Previous Day">Previous Day</a>
-        <span class="current-date-display mx-3 mb-2 mb-sm-0 btn btn-outline-info">{{ current_day|date:"F d, Y" }}</span>
-        <a href="{% url 'trips' %}?departure_date={{ next_day|date:'Y-m-d' }}&origin={{ origin }}&destination={{ destination }}&num_travelers={{ number_of_passengers }}"
-            class="btn btn-sm btn-success" aria-label="Next Day" title="Next Day">Next Day</a>
+        <div class="col-md-4 mb-2 mb-sm-0 text-center">
+            <a href="{% url 'trips' %}?departure_date={{ previous_day|date:'Y-m-d' }}&origin={{ origin }}&destination={{ destination }}&num_travelers={{ number_of_passengers }}"
+                class="btn btn-sm btn-primary w-100 d-flex align-items-center justify-content-center py-2"
+                aria-label="Previous Day" title="Previous Day">Previous Day</a>
+        </div>
+        <div class="col-md-4 mb-2 mb-sm-0 text-center">
+            <span class="btn btn-sm btn-light w-100 d-flex align-items-center justify-content-center py-2">{{ current_day|date:"F d, Y" }}</span>
+        </div>
+        <div class="col-md-4 mb-2 mb-sm-0 text-center">
+            <a href="{% url 'trips' %}?departure_date={{ next_day|date:'Y-m-d' }}&origin={{ origin }}&destination={{ destination }}&num_travelers={{ number_of_passengers }}"
+                class="btn btn-sm btn-primary w-100 d-flex align-items-center justify-content-center py-2"
+                aria-label="Next Day" title="Next Day">Next Day</a>
+        </div>
     </div>
     <div class="results-container table-group">
         {% if trip_list %}
