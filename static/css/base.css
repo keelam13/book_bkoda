@@ -106,6 +106,12 @@ article.trips-display{
     z-index: 1;
 }
 
+.trip-result-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+}
+
+
 /* Forms */
 .form-group {
     z-index: 1;
