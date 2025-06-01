@@ -1,11 +1,11 @@
 {% load static %}
 
-<section class="container form-group search-form-section"> {# Added a class for potential styling #}
-    <h1 class="cta d-none d-md-block">Book your trip now!</h1> {# Only show CTA on larger screens #}
+<section class="container text-white form-group search-form-section">
+    <h1 class="cta">Book your trip now!</h1>
     <div class="col d-flex justify-content-center">
-        <form action="{% url 'trips' %}" method="GET" class="w-100"> {# Added w-100 for width #}
+        <form action="{% url 'trips' %}" method="GET" class="w-100">
             {% csrf_token %}
-            <div class="row g-2 align-items-end justify-content-center"> {# Changed just to justify-content-center #}
+            <div class="row g-2 align-items-end justify-content-center">
                 <div class="col-md-6 col-lg-3">
                     <label for="{{ form.origin.id_for_label }}" class="form-label visually-hidden">From</label>
                     <div class="input-with-icon">
@@ -17,7 +17,7 @@
                     {% endif %}
                 </div>
             
-                <div class="col-12 col-md-auto d-flex align-items-end justify-content-center"> {# Changed justify-content-end to center #}
+                <div class="col-12 col-md-auto d-flex align-items-end justify-content-center">
                     <button type="button" id="swapLocationsBtn" class="btn btn-outline-secondary btn-sm p-0" aria-label="Swap Origin and Destination">
                         <i class="bi bi-arrow-left-right fs-4 d-none d-md-block"></i>
                         <i class="bi bi-arrow-down-up fs-4 d-md-none"></i>

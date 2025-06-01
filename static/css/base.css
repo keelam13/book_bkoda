@@ -63,10 +63,12 @@ span.company-label {
     color: white;
 }
 h1.cta {
+    position: relative;
     font-size: xx-large;
     font-weight: 900;
     text-align: center;
     color: white;
+    z-index: 1;
 }
 
 /* Footer */
@@ -105,6 +107,12 @@ a i {
 article.trips-display{
     z-index: 1;
 }
+
+.trip-result-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+}
+
 
 /* Forms */
 .form-group {
