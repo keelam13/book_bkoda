@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from trips.models import Trip
-from .models import Booking
+from .models import Booking, Passenger
 from .forms import BookingConfirmationForm
 from decimal import Decimal
 

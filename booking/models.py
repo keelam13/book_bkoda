@@ -60,3 +60,14 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"Booking {self.booking_reference} for {self.user.username} on {self.trip}"
+
+
+class Passenger(models.Model):
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='passengers')
+    name = models.CharField(max_length=100)
+    age = models.PositiveIntegerField(null=True, blank=True)
+    contact_number = models.CharField(max_length=15, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name} (Booking: {self.booking.booking_reference})"
