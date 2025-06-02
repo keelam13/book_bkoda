@@ -19,31 +19,27 @@ def index(request):
 
 
 def find_trip(request):
-    # Initialize the form with GET data to pre-fill it
     form = TripSearchForm(request.GET)
-    
-    # Initialize context with the form, as it's always needed
     context = {'form': form} 
 
     if form.is_valid():
-        # Retrieve cleaned data from the form
         requested_origin = form.cleaned_data.get('origin')
         requested_destination = form.cleaned_data.get('destination')
         requested_date = form.cleaned_data.get('departure_date')
-        number_of_passengers = form.cleaned_data.get('num_travelers') # This will be 1 by default due to form initial
-
+        number_of_passengers = form.cleaned_data.get('num_travelers')
         today = datetime.now().date()
         now = datetime.now()
 
         # Debugging: Print requested parameters
         print(f"--- Trip Search Debug ---")
+
         print(f"Requested Origin: {requested_origin}")
         print(f"Requested Destination: {requested_destination}")
         print(f"Requested Date: {requested_date}")
         print(f"Requested Passengers: {number_of_passengers}")
         print(f"Current Date/Time: {now}")
 
-        # The core logic for filtering trips
+
         if requested_date and requested_origin and requested_destination:
             try:
                 trip_list_queryset = Trip.objects.filter(
@@ -77,16 +73,14 @@ def find_trip(request):
                 print(f"Final trip list count (after time filter and sorting): {len(final_trip_list)}")
 
                 if len(final_trip_list) > 0:
-                    # Success: Render trips.html with the data and the form
-                    context.update({ # Use update to add to existing context with 'form'
+                    context.update({
                         'trip_list': final_trip_list,
                         'origin': requested_origin,
                         'destination': requested_destination,
                         'current_day': requested_date,
                         'previous_day': requested_date - timedelta(days=1),
                         'next_day': requested_date + timedelta(days=1),
-                        'number_of_passengers': number_of_passengers,
-                        # 'form' is already in context
+                        'number_of_passengers': int(number_of_passengers)
                     })
                     return render(request, 'trips/trips.html', context)
                 elif requested_date < today:
@@ -101,21 +95,11 @@ def find_trip(request):
                 messages.error(request, f"An unexpected error occurred during trip search: {e}")
                 print(f"General error in find_trip: {e}")
         else:
-            # This case means form.is_valid() was true, but some fields were technically not filled
-            # (e.g. if required=False and user didn't enter anything, but you still need them for filter)
             messages.error(request, "Please fill in all search fields (Origin, Destination, Date).")
     else:
-        # Form was NOT valid (e.g., num_travelers was not an integer)
-        # Add messages for specific form errors
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(request, f"Error in '{field}': {error}")
     
-    # If we reached here, it means:
-    # 1. No trips were found, OR
-    # 2. An error occurred (caught by outer try-except or form validation)
-    # 3. The request was invalid (e.g., missing essential parameters)
-    # In all these cases, we should render the home page with the current form state (which might have errors)
-    # and any accumulated messages.
-    context['search_error'] = messages.get_messages(request) # Ensure messages are passed
-    return render(request, 'home/index.html', context) # Redirect or render home page with messages
+    context['search_error'] = messages.get_messages(request)
+    return render(request, 'home/index.html', context)

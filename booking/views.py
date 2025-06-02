@@ -72,5 +72,5 @@ def book_trip(request, trip_id, number_of_passengers):
             'number_of_passengers': num_passengers,
             'total_price': total_price,
         }
-        return render(request, 'booking/booking_confirmation.html', context)
+        return render(request, 'booking/booking_form.html', context)
 

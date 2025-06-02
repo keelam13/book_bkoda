@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load booking_filters %}
 
 {% block content %}
 <article class="container mt-5 text-white">
     <h2 class="hide">Reservation</h2>
     <section class="row justify-content-center">
         <div class="col-md-8 form-group booking-form-container p-4 rounded shadow-lg">
-            <h2 class="mb-4 text-center">Confirm Your Booking for Trip: {{ trip.id }}</h2>
+            <h2 class="mb-4 text-center">Confirm Your Booking for Trip: {{ trip.trip_id }}</h2>
             <p class="text-center">From <strong>{{ trip.origin }}</strong> to <strong>{{ trip.destination }}</strong> on <strong>{{ trip.date|date:"F d, Y" }}</strong> at <strong>{{ trip.departure_time|time:"H:i A" }}</strong></p>
 
             {% if form.errors %}
@@ -32,7 +33,6 @@
             <form method="post" class="mb-4">
                 {% csrf_token %}
 
-                {# Number of Seats Field #}
                 <div class="mb-3">
                     <label for="{{ form.number_of_passenger.id_for_label }}" class="form-label">{{ form.number_of_passenger.label }}</label>
                     {{ form.number_of_passenger }}
@@ -44,10 +44,9 @@
                     {% endfor %}
                 </div>
 
-                {# Dynamically generated Passenger Name Fields #}
                 <div id="passenger-names-container">
                     {% for field in form %}
-                        {% if field.name startswith 'passenger_name_' %}
+                        {% if field.name|startswith:'passenger_name_' %}
                             <div class="mb-3">
                                 <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
                                 {{ field }}
@@ -67,3 +66,4 @@
         </div>
     </section>
 </article>
+{% endblock %}
