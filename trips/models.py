@@ -61,7 +61,6 @@ class Trip(models.Model):
             return f"{hours}h {minutes:02d}m"
         return "N/A"
 
-
     def __str__(self):
         """
         Returns a string representation of the trip.
