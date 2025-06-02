@@ -25,19 +25,19 @@ class Trip(models.Model):
     origin_station = models.CharField(max_length=255, blank=True, null=True)
     destination_station = models.CharField(max_length=255, blank=True, null=True)
 
-    def update_available_seats(self, number_of_seats, operation='subtract'):
+    def update_available_seats(self, number_of_passengers, operation='subtract'):
         """
         Updates the available seats for the trip.
 
         Args:
-            number_of_seats (int): The number of seats to add or subtract.
+            number_of_passengers (int): The number of seats to add or subtract.
             operation (str): 'subtract' to decrease seats, 'add' to increase
             seats. Defaults to 'subtract'.
         """
         if operation == 'subtract':
-            self.available_seats -= number_of_seats
+            self.available_seats -= number_of_passengers
         elif operation == 'add':
-            self.available_seats += number_of_seats
+            self.available_seats += number_of_passengers
         self.save()
 
     @property
