@@ -3,67 +3,131 @@
 {% load booking_filters %}
 
 {% block content %}
-<article class="container mt-5 text-white">
-    <h2 class="hide">Reservation</h2>
-    <section class="row justify-content-center">
-        <div class="col-md-8 form-group booking-form-container p-4 rounded shadow-lg">
-            <h2 class="mb-4 text-center">Confirm Your Booking for Trip: {{ trip.trip_id }}</h2>
-            <p class="text-center">From <strong>{{ trip.origin }}</strong> to <strong>{{ trip.destination }}</strong> on <strong>{{ trip.date|date:"F d, Y" }}</strong> at <strong>{{ trip.departure_time|time:"H:i A" }}</strong></p>
+<div class="container my-5 booking-page-container">
+    <div class="row">
+        <div class="col-12 mb-3">
+            <a href="javascript:history.back()" class="back-link">
+                <i class="fas fa-arrow-left me-2"></i> Back
+            </a>
+        </div>
+        <!-- Left Column: Booking Confirmation Form -->
+        <div class="col-md-8">
+            <div class="card booking-section-card mb-4">
+                <div class="card-body">
+                    <form method="post" id="bookingForm">
+                        {% csrf_token %}
+                        <h4 class="section-title mt-5 mb-4"><i class="bi bi-1-circle-fill"></i> Passengers</h4>
+                        
+                        <div id="passenger-names-container">
+                            {% if form.errors %}
+                                <div class="alert alert-danger" role="alert">
+                                    <strong>Please correct the following errors:</strong>
+                                    <ul class="errorlist list-unstyled mt-2">
+                                        {% for field in form %}
+                                            {% if field.errors %}
+                                                {% for error in field.errors %}
+                                                    <li>{{ field.label }}: {{ error }}</li>
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% if form.non_field_errors %}
+                                            {% for error in form.non_field_errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            {% endif %}
 
-            {% if form.errors %}
-            <div class="alert alert-danger" role="alert">
-                <strong>Please correct the following errors:</strong>
-                <ul class="errorlist list-unstyled mt-2">
-                {% for field in form %}
-                    {% if field.errors %}
-                        {% for error in field.errors %}
-                            <li>{{ field.label }}: {{ error }}</li>
-                        {% endfor %}
-                    {% endif %}
-                {% endfor %}
-                {% if form.non_field_errors %}
-                    {% for error in form.non_field_errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                {% endif %}
-                </ul>
-            </div>
-            {% endif %}
-
-            <form method="post" class="mb-4">
-                {% csrf_token %}
-
-                <div class="mb-3">
-                    <label for="{{ form.number_of_passenger.id_for_label }}" class="form-label">{{ form.number_of_passenger.label }}</label>
-                    {{ form.number_of_passenger }}
-                    {% if form.number_of_passenger.help_text %}
-                        <div class="form-text text-muted">{{ form.number_of_passenger.help_text }}</div>
-                    {% endif %}
-                    {% for error in form.number_of_passenger.errors %}
-                        <div class="text-danger small">{{ error }}</div>
-                    {% endfor %}
-                </div>
-
-                <div id="passenger-names-container">
-                    {% for field in form %}
-                        {% if field.name|startswith:'passenger_name_' %}
-                            <div class="mb-3">
-                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                                {{ field }}
-                                {% for error in field.errors %}
-                                    <div class="text-danger small">{{ error }}</div>
+                            <div class="col-12">
+                                {% for field in form %}
+                                    {% if field.name|startswith:'passenger_name_' or field.name|startswith:'passenger_age_' or field.name|startswith:'passenger_email_' or field.name|startswith:'passenger_contact_' %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="form-floating">
+                                                <label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label>
+                                                {{ field }}
+                                            </div>
+                                            {% for error in field.errors %}
+                                                <div class="text-danger small mt-1">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
                                 {% endfor %}
                             </div>
-                        {% endif %}
-                    {% endfor %}
-                </div>
+                        </div>
+                        <h4 class="section-title mt-5 mb-4"><i class="bi bi-2-circle-fill"></i> Seat Reservation</h4>
+                        <div class="card booking-section-card mb-4">
+                            <div class="card-body p-0">
+                                <p>Number of Seats: </p>
+                            </div>
+                        </div>
+                        <h4 class="section-title mt-5 mb-4"><i class="bi bi-3-circle-fill"></i> Payment</h4>
+                        <div class="card booking-section-card mb-4">
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="creditCard" checked>
+                                    <label class="form-check-label" for="creditCard">
+                                        Credit Card
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="paypal">
+                                    <label class="form-check-label" for="paypal">
+                                        PayPal
+                                    </label>
+                                </div>
 
-                <div class="d-flex justify-content-around mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg">Confirm Booking</button>
-                    <button type="button" class="btn btn-danger btn-lg" onclick="goBack()">Cancel</button>
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                                    <label class="form-check-label" for="termsCheck">
+                                        I declare to have read and agree to the <a href="#">Privacy Policy</a> and <a href="#">T&C of Booking</a> and <a href="#">T&C of Carriage</a>.
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-success btn-lg pay-now-button">Pay now</button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
-    </section>
-</article>
+
+        <!-- Right Column: Your Booking Summary -->
+        <div class="col-md-4">
+            <div class="card booking-summary-card shadow-sm sticky-top">
+                <div class="card-header d-flex justify-content-between align-items-center bg-transparent border-bottom">
+                    <h5 class="mb-0">Your Booking</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2 text-muted"><strong>{{ trip.date|date:"D, d M" }}</strong></p>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-dot-circle me-2 text-muted"></i>
+                        <div>
+                            <p class="mb-0 fw-bold">{{ trip.origin }}</p>
+                            <p class="mb-0 text-muted small">{{ trip.departure_time|time:"H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-dot-circle me-2 text-muted"></i>
+                        <div>
+                            <p class="mb-0 fw-bold">{{ trip.destination }}</p>
+                            <p class="mb-0 text-muted small">{{ trip.arrival_time|time:"H:i" }}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">Total (incl. VAT)</span>
+                        <span class="fw-bold fs-5">Php{{ total_price|floatformat:2|intcomma }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

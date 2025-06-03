@@ -23,8 +23,40 @@ class BookingConfirmationForm(forms.ModelForm):
 
         for i in range(self.num_passengers):
             self.fields[f'passenger_name_{i+1}'] = forms.CharField(
-                label=f'Passenger {i+1} Name',
-                max_length=100,
-                required=True,
-                widget=forms.TextInput(attrs={'placeholder': f'Full Name of Passenger {i+1}'})
+                    label=f'Passenger {i+1}',
+                    max_length=100,
+                    required=True,
+                    widget=forms.TextInput(attrs={'placeholder': f'Full Name {i+1}'})
             )
+
+            self.fields[f'passenger_age_{i+1}'] = forms.IntegerField(
+                    label='Age',
+                    min_value=0,
+                    required=True,
+                    widget=forms.NumberInput(attrs={'placeholder': f'Age of Passenger {i+1}', 'class': 'form-control'})
+            )
+
+            self.fields[f'passenger_email_{i+1}'] = forms.CharField(
+                    label='Email Address',
+                    max_length=255,
+                    required=True,
+                    widget=forms.TextInput(attrs={'placeholder': f'Email Address of Passenger {i+1}', 'class': 'form-control'})
+            )
+
+            self.fields[f'passenger_contact_{i+1}'] = forms.CharField(
+                    label='Contact Number',
+                    max_length=20,
+                    required=True,
+                    widget=forms.TextInput(attrs={'placeholder': f'Contact Number of Passenger {i+1}', 'class': 'form-control'})
+            )
+            
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if self.trip and self.trip.available_seats < self.num_passengers:
+            raise forms.ValidationError(
+                f"Not enough available seats for {self.num_passengers} passengers. Only {self.trip.available_seats} seats remaining."
+            )
+
+        return cleaned_data
+
