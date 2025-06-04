@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load humanize %}
 {% load booking_filters %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'booking/css/booking_form.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container my-5 booking-page-container">
@@ -77,7 +82,6 @@
                                     <!-- Used to display form errors -->
                                     <div class="mb-3 text-danger" id="card-errors" role="alert"></div>
                                     <!-- Pass the client secret to the view so we can get the payment intent id -->
-                                    </div>
                                 </div>
                                 <div class="form-check mb-3">
                                     <input class="form-check-input" type="radio" name="payment_method" id="otherPayment" value="other">
@@ -151,41 +155,9 @@
 {% endblock %}
 
 {% block postload_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const bookingForm = document.getElementById('bookingForm');
-    const paymentMethodRadios = document.querySelectorAll('input[name="payment_method"]');
-    const cardPaymentDetails = document.getElementById('cardPaymentDetails');
-    const otherPaymentDetails = document.getElementById('otherPaymentDetails');
-    const cardInputs = cardPaymentDetails.querySelectorAll('input');
-  
-    // Function to update the visibility of payment details sections
-    function updatePaymentDetailsVisibility() {
-        let selectedMethod = null;
-        for (const radio of paymentMethodRadios) {
-            if (radio.checked) {
-                selectedMethod = radio.value;
-                break;
-            }
-        }
-
-        if (selectedMethod === 'card') {
-            cardPaymentDetails.style.display = 'block';
-            otherPaymentDetails.style.display = 'none';
-            cardInputs.forEach(input => input.disabled = false);
-        } else if (selectedMethod === 'other') {
-            cardPaymentDetails.style.display = 'none';
-            otherPaymentDetails.style.display = 'block';
-            cardInputs.forEach(input => input.disabled = true);
-        }
-    }
-
-    paymentMethodRadios.forEach(radio => {
-        radio.addEventListener('change', updatePaymentDetailsVisibility);
-    });
-
-    updatePaymentDetailsVisibility();
-
-});
-</script>
+    {{ block.super }}
+    {{ stripe_public_key|json_script:"id_stripe_public_key" }}
+    {{ client_secret|json_script:"id_client_secret" }}
+    <script src="{% static 'booking/js/booking_form.js' %}" ></script>
+    <script src="{% static 'booking/js/stripe_elements.js' %}"></script>
 {% endblock %}

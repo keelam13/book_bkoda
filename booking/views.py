@@ -68,6 +68,8 @@ def book_trip(request, trip_id, number_of_passengers):
             'trip': trip,
             'number_of_passengers': num_passengers,
             'total_price': total_price,
+            'stripe_public_key': 'pk_test_51RERfiHxb6VU9KshZoAqQUq5AcgDbRj8dny6bo7yrLln0fdLPOo0gHaqXMoXBxiw8RaMpVA5MLtNt7Odl1IKLsBd00zguHgc8a',
+            'client_secret': 'test_client_secret_123',
         }
         return render(request, 'booking/booking_form.html', context)
 
