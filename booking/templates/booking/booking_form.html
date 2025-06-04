@@ -58,23 +58,41 @@
                         <h4 class="section-title mt-5 mb-4"><i class="bi bi-2-circle-fill"></i> Seat Reservation</h4>
                         <div class="card booking-section-card mb-4">
                             <div class="card-body p-0">
-                                <p>Number of Seats: </p>
+                                <p>Number of Seats: {{ number_of_passengers}}</p>
                             </div>
                         </div>
                         <h4 class="section-title mt-5 mb-4"><i class="bi bi-3-circle-fill"></i> Payment</h4>
                         <div class="card booking-section-card mb-4">
                             <div class="card-body">
                                 <div class="form-check mb-3">
-                                    <input class="form-check-input" type="radio" name="payment_method" id="creditCard" checked>
+                                    <input class="form-check-input" type="radio" name="payment_method" id="creditCard" value="card" checked>
                                     <label class="form-check-label" for="creditCard">
-                                        Credit Card
+                                        Debit/Credit Card
                                     </label>
                                 </div>
+                                <div id="cardPaymentDetails" class="payment-details-section card p-3 mb-3 border-info" style="display: none;">
+                                    <h6 class="mb-3">Enter Card Details</h6>
+                                    <!-- A Stripe card element will go here -->
+                                    <div class="mb-3" id="card-element"></div>
+                                    <!-- Used to display form errors -->
+                                    <div class="mb-3 text-danger" id="card-errors" role="alert"></div>
+                                    <!-- Pass the client secret to the view so we can get the payment intent id -->
+                                    </div>
+                                </div>
                                 <div class="form-check mb-3">
-                                    <input class="form-check-input" type="radio" name="payment_method" id="paypal">
-                                    <label class="form-check-label" for="paypal">
-                                        PayPal
+                                    <input class="form-check-input" type="radio" name="payment_method" id="otherPayment" value="other">
+                                    <label class="form-check-label" for="otherPayment">
+                                        Cash (Payment Centers) / Money Wallet (GCash)
                                     </label>
+                                </div>
+                                <div id="otherPaymentDetails" class="payment-details-section card p-3 mb-3 border-info" style="display: none;">
+                                    <h6 class="mb-3">Payment Instructions:</h6>
+                                    <p class="small text-muted">
+                                        If you select this option, your booking will be held for **24 hours**. You must complete your payment within this period via our designated payment centers or GCash to confirm your seats. Details will be provided upon successful booking submission.
+                                    </p>
+                                    <p class="small text-danger">
+                                        **Your booking will be automatically cancelled if payment is not received within 24 hours.**
+                                    </p>
                                 </div>
 
                                 <div class="form-check mt-4">
@@ -88,7 +106,7 @@
 
 
                         <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-success btn-lg pay-now-button">Pay now</button>
+                            <button type="submit" class="btn btn-success btn-lg pay-now-button">Continue</button>
                         </div>
                     </form>
                 </div>
@@ -130,4 +148,44 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block postload_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const bookingForm = document.getElementById('bookingForm');
+    const paymentMethodRadios = document.querySelectorAll('input[name="payment_method"]');
+    const cardPaymentDetails = document.getElementById('cardPaymentDetails');
+    const otherPaymentDetails = document.getElementById('otherPaymentDetails');
+    const cardInputs = cardPaymentDetails.querySelectorAll('input');
+  
+    // Function to update the visibility of payment details sections
+    function updatePaymentDetailsVisibility() {
+        let selectedMethod = null;
+        for (const radio of paymentMethodRadios) {
+            if (radio.checked) {
+                selectedMethod = radio.value;
+                break;
+            }
+        }
+
+        if (selectedMethod === 'card') {
+            cardPaymentDetails.style.display = 'block';
+            otherPaymentDetails.style.display = 'none';
+            cardInputs.forEach(input => input.disabled = false);
+        } else if (selectedMethod === 'other') {
+            cardPaymentDetails.style.display = 'none';
+            otherPaymentDetails.style.display = 'block';
+            cardInputs.forEach(input => input.disabled = true);
+        }
+    }
+
+    paymentMethodRadios.forEach(radio => {
+        radio.addEventListener('change', updatePaymentDetailsVisibility);
+    });
+
+    updatePaymentDetailsVisibility();
+
+});
+</script>
 {% endblock %}
