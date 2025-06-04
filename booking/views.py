@@ -6,7 +6,7 @@ from .models import Booking, Passenger
 from .forms import BookingConfirmationForm
 from decimal import Decimal
 
-@login_required
+
 def book_trip(request, trip_id, number_of_passengers):
     """
     View to handle the booking confirmation process.
@@ -61,10 +61,7 @@ def book_trip(request, trip_id, number_of_passengers):
                 'total_price': total_price,
             }
             return render(request, 'booking/booking_confirmation.html', context)
-
-    # --- Handle GET request (initial display of the form) ---
     else:
-        # Pass trip and num_passengers to the form for dynamic field creation
         form = BookingConfirmationForm(trip=trip, num_passengers=num_passengers)
         context = {
             'form': form,

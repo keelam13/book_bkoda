@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from trips.models import Trip
 from decimal import Decimal
+from datetime import datetime
 
 
 class Booking(models.Model):
@@ -42,7 +43,7 @@ class Booking(models.Model):
             and generate booking reference.
             """
             if not self.booking_reference:
-                self.booking_reference = f"BKODA-{self.user.id}-{self.trip.id}-{self.booking_date.strftime('%Y%m%d%H%M%S')}"
+                self.booking_reference = f"BKODA-{self.user.id}-{self.trip.trip_id}-{self.pk}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
 
             if self.pk:
                 original_passengers = Booking.objects.get(pk=self.pk).number_of_passengers
