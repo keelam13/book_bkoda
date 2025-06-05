@@ -108,9 +108,11 @@
                             </div>
                         </div>
 
+                        <input type="hidden" name="payment_method" id="selected-payment-method" value="card">
+                        <input type="hidden" name="payment_intent_id" id="payment-intent-id">
 
                         <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-success btn-lg submit-button">Continue</button>
+                            <button type="submit" id="submit-booking-btn" class="btn btn-success btn-lg submit-button">Continue</button>
                         </div>
                     </form>
                 </div>
@@ -159,5 +161,4 @@
     {{ stripe_public_key|json_script:"id_stripe_public_key" }}
     {{ client_secret|json_script:"id_client_secret" }}
     <script src="{% static 'booking/js/booking_form.js' %}" ></script>
-    <script src="{% static 'booking/js/stripe_elements.js' %}"></script>
 {% endblock %}
