@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load booking_filters %} {# Include any custom filters needed #}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'booking/css/booking_form.css' %}"> {# Re-use if styles are general #}
+    <style>
+        /* Add specific styles for confirmation page if needed */
+        .confirmation-icon {
+            font-size: 4rem;
+            color: #28a745; /* Green color for success */
+        }
+        .summary-card {
+            background-color: #f8f9fa; /* Light background for summary */
+            border-left: 5px solid #28a745; /* Green border for visual emphasis */
+        }
+        .sticky-top {
+            top: 20px; /* Adjust as needed to keep it from sticking too high */
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5 booking-page-container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card booking-section-card mb-4 text-center">
+                <div class="card-body">
+                    <i class="fas fa-check-circle confirmation-icon mb-3"></i>
+                    <h2 class="section-title mb-2">Booking Confirmed!</h2>
+                    <p class="lead mb-4">Your trip is now booked. Thank you for choosing us!</p>
+                    <p class="mb-4 fs-4 fw-bold">Booking Reference: <span class="text-primary">{{ booking.booking_reference }}</span></p>
+
+                    <hr class="my-4">
+
+                    <h4 class="section-title mt-5 mb-4 text-start"><i class="bi bi-info-circle-fill"></i> Booking Details</h4>
+                    <div class="card summary-card mb-4 text-start">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-3">Trip Information</h5>
+                            <p class="mb-2 text-muted"><strong>Date: {{ booking.trip.date|date:"D, d M Y" }}</strong></p>
+
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-dot-circle me-2 text-muted"></i>
+                                <div>
+                                    <p class="mb-0 fw-bold">{{ booking.trip.origin }}</p>
+                                    <p class="mb-0 text-muted small">Departure: {{ booking.trip.departure_time|time:"H:i" }}</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-map-marker-alt me-2 text-muted"></i>
+                                <div>
+                                    <p class="mb-0 fw-bold">{{ booking.trip.destination }}</p>
+                                    <p class="mb-0 text-muted small">Arrival: {{ booking.trip.arrival_time|time:"H:i" }}</p>
+                                </div>
+                            </div>
+                            <p class="mb-2">Total Passengers: <span class="fw-bold">{{ booking.number_of_passengers }}</span></p>
+                            <p class="mb-2">Booking Date: {{ booking.booking_date|date:"d M Y, H:i" }}</p>
+
+                            <hr>
+
+                            <h5 class="fw-bold mb-3">Passenger Details</h5>
+                            {% for passenger in passengers %}
+                                <div class="mb-2">
+                                    <p class="mb-0 fw-bold">Passenger {{ forloop.counter }}: {{ passenger.name }}</p>
+                                    <p class="mb-0 small text-muted">Age: {{ passenger.age|default:"N/A" }}</p>
+                                    <p class="mb-0 small text-muted">Contact: {{ passenger.contact_number|default:"N/A" }}</p>
+                                    <p class="mb-0 small text-muted">Email: {{ passenger.email|default:"N/A" }}</p>
+                                </div>
+                                {% if not forloop.last %}<hr class="my-2 small">{% endif %}
+                            {% empty %}
+                                <p class="text-muted">No passenger details recorded.</p>
+                            {% endfor %}
+
+                            <hr>
+
+                            <h5 class="fw-bold mb-3">Payment Summary</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Booking Status:</span>
+                                <span class="fw-bold">{{ booking.status }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Payment Status:</span>
+                                <span class="fw-bold">{{ booking.payment_status }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="fw-bold fs-5">Total Paid:</span>
+                                <span class="fw-bold fs-4 text-success">Php{{ booking.total_price|floatformat:2|intcomma }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if payment_method_chosen == 'other' and booking.payment_status != 'PAID' %}
+                        <h4 class="section-title mt-5 mb-4 text-start"><i class="bi bi-wallet-fill"></i> Important Payment Instructions</h4>
+                        <div class="card booking-section-card mb-4 text-start border-warning">
+                            <div class="card-body">
+                                <p class="small text-muted">
+                                    Your booking (Reference: <span class="fw-bold text-primary">{{ booking.booking_reference }}</span>) is currently **PENDING PAYMENT**.
+                                    It will be held for **24 hours** from now (until **{{ booking.booked_at|date:"d M Y" }} {{ booking.booked_at|time:"H:i" }} + 24 hours|date:"H:i" }}**).
+                                </p>
+                                <p class="small text-danger fw-bold">
+                                    To confirm your seats, you must complete your payment within this period.
+                                    Failure to do so will result in automatic cancellation of your booking.
+                                </p>
+                                <p class="mb-0">
+                                    **Payment Options:**
+                                    <ul>
+                                        <li>**Payment Centers:** Visit any authorized payment center (e.g., 7-Eleven, Bayad Center). Present your Booking Reference.</li>
+                                        <li>**Money Wallet (GCash):** Send the total amount to [Your GCash Number/Account Name]. Make sure to include your Booking Reference in the notes.</li>
+                                    </ul>
+                                </p>
+                                <p class="mb-0 small text-muted">
+                                    Please allow some time for payment processing and status update. You will receive an email notification once your payment is confirmed.
+                                </p>
+                            </div>
+                        </div>
+                    {% elif booking.payment_status == 'PAID' %}
+                        <h4 class="section-title mt-5 mb-4 text-start"><i class="bi bi-wallet-fill"></i> Payment Status</h4>
+                        <div class="card booking-section-card mb-4 text-start border-success">
+                            <div class="card-body">
+                                <p class="lead text-success fw-bold mb-0">Your payment has been successfully received!</p>
+                                <p class="small text-muted">Your booking is fully confirmed.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="d-grid mt-4">
+                        <a href="" class="btn btn-primary btn-lg mb-3">Go to My Bookings</a>
+                        <button class="btn btn-outline-secondary btn-lg" onclick="window.print()">Print Confirmation</button>
+                    </div>
+
+                    <p class="mt-4 text-muted small">
+                        A detailed confirmation email has also been sent to your registered email address
+                        {% if booking.user.email %}{{ booking.user.email }}{% else %} (if provided){% endif %}.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block postload_js %}
+    {{ block.super }}
+    {# No need for stripe or booking_form.js on confirmation page unless for specific tracking/analytics #}
+{% endblock %}
