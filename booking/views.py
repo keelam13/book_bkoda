@@ -5,6 +5,7 @@ from trips.models import Trip
 from .models import Booking, Passenger
 from .forms import BookingConfirmationForm
 from decimal import Decimal
+from datetime import timedelta
 import json
 
 import stripe
@@ -166,18 +167,26 @@ def book_trip(request, trip_id, number_of_passengers):
         }
         return render(request, 'booking/booking_form.html', context)
 
-
 def booking_success(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
     passengers =booking.passengers.all()
     payment_method_chosen = 'card'
-    if booking.payment_status == 'PENDING' or booking.payment_status == 'FAILED':
-        payment_method_chosen = 'other'
+    booking_expiry_date = booking.booking_date + timedelta(hours=24)
 
     context = {
         'booking': booking,
         'trip': booking.trip,
         'passengers': passengers,
         'payment_method_chosen': payment_method_chosen,
+        'booking_expiry_date': booking_expiry_date,
     }
-    return render(request, 'booking/booking_success.html', context)
+
+    if booking.payment_status == 'PAID' or booking.payment_status == 'CONFIRMED':
+        return render(request, 'booking/booking_success.html', context)
+    else:
+        payment_method_chosen = 'other'
+        return render(request, 'booking/booking_pending.html', context)
+
+
+    
+    
