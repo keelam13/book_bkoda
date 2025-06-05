@@ -9,7 +9,7 @@ class Booking(models.Model):
     """
     Represents a reservation made by a user for a trip.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
     number_of_passengers = models.PositiveBigIntegerField(default=1)
     booking_date = models.DateTimeField(auto_now_add=True)
@@ -35,32 +35,51 @@ class Booking(models.Model):
         ],
         default='PENDING'
     )
-    booking_reference = models.CharField(max_length=100, unique=True, blank=True)
+    booking_reference = models.CharField(max_length=100, unique=True, blank=True, null=True)
 
     def save(self, *args, **kwargs):
-            """
-            Overrides the save method to update trip's available seats
-            and generate booking reference.
-            """
-            if not self.booking_reference:
-                self.booking_reference = f"BKODA-{self.user.id}-{self.trip.trip_id}-{self.pk}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        """
+        Overrides the save method to update trip's available seats
+        and generate booking reference.
+        """
+        is_new_booking = not self.pk
 
-            if self.pk:
-                original_passengers = Booking.objects.get(pk=self.pk).number_of_passengers
+        if is_new_booking:
+            if self.status in ['PENDING', 'CONFIRMED']:
+                self.trip.update_available_seats(self.number_of_passengers, 'subtract')
+                self.trip.save()
+        else:
+            try:
+                original_booking = Booking.objects.get(pk=self.pk)
+                original_passengers = original_booking.number_of_passengers
                 passenger_diff = self.number_of_passengers - original_passengers
                 if passenger_diff != 0:
                     if passenger_diff > 0:
                         self.trip.update_available_seats(passenger_diff, 'subtract')
                     else:
                         self.trip.update_available_seats(abs(passenger_diff), 'add')
-            else:
-                if self.status in ['PENDING', 'CONFIRMED']:
-                    self.trip.update_available_seats(self.number_of_passengers, 'subtract')
+                    self.trip.save()
+            except Booking.DoesNotExist:
 
-            super().save(*args, **kwargs)
+                pass
+
+        super().save(*args, **kwargs)
+
+        if is_new_booking and not self.booking_reference:
+            user_identifier = self.user.id if self.user else "ANON"
+
+            trip_identifier = self.trip.pk
+
+            self.booking_reference = (
+                f"BKODA-{user_identifier}-{trip_identifier}-{self.pk}-"
+                f"{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            )
+            self.save(update_fields=['booking_reference'])
+
 
     def __str__(self):
-        return f"Booking {self.booking_reference} for {self.user.username} on {self.trip}"
+        user_display = self.user.username if self.user else "Anonymous"
+        return f"Booking {self.booking_reference or 'N/A'} for {user_display} on {self.trip}"
 
 
 class Passenger(models.Model):
@@ -71,4 +90,5 @@ class Passenger(models.Model):
     email = models.EmailField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.name} (Booking: {self.booking.booking_reference})"
+        booking_ref_display = self.booking.booking_reference or 'N/A'
+        return f"{self.name} (Booking: {booking_ref_display})"
