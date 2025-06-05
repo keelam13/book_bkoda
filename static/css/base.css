@@ -105,6 +105,7 @@ a i {
 
 /* Trips */
 article.trips-display{
+    position: relative;
     z-index: 1;
 }
 
