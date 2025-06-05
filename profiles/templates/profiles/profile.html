@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Your Profile: {{ request.user.username }}</h3>
+                </div>
+                    <h4 class="mb-3">Personal Information</h4>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <button type="submit" class="btn btn-primary mt-3">Update Profile</button>
+                    </form>
+
+                    <h4 class="mt-5 mb-3">Account Details</h4>
+                    <p><strong>Username:</strong> {{ request.user.username }}</p>
+                    <p><strong>Email:</strong> {{ request.user.email }}</p>
+                    <p><strong>Joined On:</strong> {{ request.user.date_joined|date:"d M Y" }}</p>
+
+                    <hr>
+
+                    <h4 class="mt-4 mb-3">User Profile Specifics</h4> 
+                    <p><strong>Phone Number:</strong> {{ user_profile.phone_number|default:"N/A" }}</p>
+                    <p><strong>Street Address 1:</strong> {{ user_profile.street_address1|default:"N/A" }}</p>
+                    <p><strong>Street Address 2:</strong> {{ user_profile.street_address2|default:"N/A" }}</p>
+                    <p><strong>City:</strong> {{ user_profile.city|default:"N/A" }}</p>
+                    <p><strong>Post Code:</strong> {{ user_profile.postcode|default:"N/A" }}</p>
+                    <p><strong>Country:</strong> {{ user_profile.country|default:"N/A" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
