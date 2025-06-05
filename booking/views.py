@@ -1,20 +1,19 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.conf import settings
 from trips.models import Trip
 from .models import Booking, Passenger
 from .forms import BookingConfirmationForm
 from decimal import Decimal
 
+import stripe
+
 
 def book_trip(request, trip_id, number_of_passengers):
-    """
-    View to handle the booking confirmation process.
+    stripe_public_key = settings.STRIPE_PUBLIC_KEY
+    stripe_secret_key = settings.STRIPE_SECRET_KEY
 
-    This view first validates the number of passengers against
-    available seats. If valid, it presents a confirmation form,
-    and upon POST, creates the booking and associated passenger records.
-    """
     trip = get_object_or_404(Trip, pk=trip_id)
     num_passengers = int(number_of_passengers)
 
@@ -29,12 +28,19 @@ def book_trip(request, trip_id, number_of_passengers):
         return redirect('trips')
 
     total_price = trip.price * Decimal(str(num_passengers))
+    stripe_total = round(total_price * 100)
+    stripe.api_key = stripe_secret_key
+    intent = stripe.PaymentIntent.create(
+        amount=stripe_total,
+        currency=settings.STRIPE_CURRENCY,
+    )
 
     if request.method == 'POST':
         form = BookingConfirmationForm(request.POST, trip=trip, num_passengers=num_passengers)
         if form.is_valid():
+            user = request.user if request.user.is_authenticated else None
             booking = Booking.objects.create(
-                user=request.user,
+                user=user,
                 trip=trip,
                 number_of_passengers=num_passengers,
                 total_price=total_price,
@@ -48,9 +54,15 @@ def book_trip(request, trip_id, number_of_passengers):
                     booking=booking,
                     name=passenger_name
                 )
-
+            context = {
+                'form': form,
+                'trip': trip,
+                'number_of_passengers': num_passengers,
+                'total_price': total_price,
+            }
+            template = 'booking/booking_form.html'
             messages.success(request, f"Booking for {num_passengers} passengers confirmed! Your reference is {booking.booking_reference}.")
-            return redirect('booking_success', booking_id=booking.id)
+            return render(request, template)
 
         else:
             messages.error(request, "Please correct the errors below.")
@@ -60,7 +72,7 @@ def book_trip(request, trip_id, number_of_passengers):
                 'number_of_passengers': num_passengers,
                 'total_price': total_price,
             }
-            return render(request, 'booking/booking_confirmation.html', context)
+            return render(request, 'booking/booking_form.html', context)
     else:
         form = BookingConfirmationForm(trip=trip, num_passengers=num_passengers)
         context = {
@@ -68,8 +80,8 @@ def book_trip(request, trip_id, number_of_passengers):
             'trip': trip,
             'number_of_passengers': num_passengers,
             'total_price': total_price,
-            'stripe_public_key': 'pk_test_51RERfiHxb6VU9KshZoAqQUq5AcgDbRj8dny6bo7yrLln0fdLPOo0gHaqXMoXBxiw8RaMpVA5MLtNt7Odl1IKLsBd00zguHgc8a',
-            'client_secret': 'test_client_secret_123',
+            'stripe_public_key': stripe_public_key,
+            'client_secret': intent.client_secret,
         }
         return render(request, 'booking/booking_form.html', context)
 
