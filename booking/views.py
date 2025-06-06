@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.conf import settings
 from trips.models import Trip
+from profiles.models import UserProfile
 from .models import Booking, Passenger
 from .forms import BookingConfirmationForm
 from decimal import Decimal
@@ -15,8 +16,10 @@ def book_trip(request, trip_id, number_of_passengers):
     stripe_public_key = settings.STRIPE_PUBLIC_KEY
     stripe_secret_key = settings.STRIPE_SECRET_KEY
 
+    
     trip = get_object_or_404(Trip, pk=trip_id)
     num_passengers = int(number_of_passengers)
+    passenger_range = range(1, num_passengers + 1)
 
 
     if num_passengers <= 0:
@@ -35,7 +38,7 @@ def book_trip(request, trip_id, number_of_passengers):
         currency=settings.STRIPE_CURRENCY,
         metadata={
             'trip_id': trip.trip_id,
-            'number_of_passengers': num_passengers,
+            'num_passengers': num_passengers,
             'total_price': str(total_price),
         }
     )
@@ -50,17 +53,17 @@ def book_trip(request, trip_id, number_of_passengers):
             booking = Booking.objects.create(
                 user=user,
                 trip=trip,
-                number_of_passengers=num_passengers,
+                number_of_passengers=number_of_passengers,
                 total_price=total_price,
                 status='PENDING',
                 payment_status='PENDING'
             )
 
             for i in range(num_passengers):
-                passenger_name = form.cleaned_data[f'passenger_name_{i+1}']
-                passenger_age = form.cleaned_data.get(f'passenger_age_{i+1}')
-                passenger_contact = form.cleaned_data.get(f'passenger_contact_{i+1}')
-                passenger_email = form.cleaned_data.get(f'passenger_email_{i+1}')
+                passenger_name = form.cleaned_data[f'passenger_name{i+1}']
+                passenger_age = form.cleaned_data.get(f'passenger_age{i+1}')
+                passenger_contact = form.cleaned_data.get(f'passenger_contact_number{i+1}')
+                passenger_email = form.cleaned_data.get(f'passenger_email{i+1}')
 
                 Passenger.objects.create(
                     booking=booking,
@@ -69,7 +72,20 @@ def book_trip(request, trip_id, number_of_passengers):
                     contact_number=passenger_contact,
                     email=passenger_email
                 )
-            
+
+            if request.user.is_authenticated and form.cleaned_data.get('save_info'):
+                user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+                if form.cleaned_data.get('passenger_contact_number1'):
+                    user_profile.default_phone_number = form.cleaned_data['passenger_contact_number1']
+
+                if form.cleaned_data.get('passenger_email1'):
+                    request.user.email = form.cleaned_data['passenger_email1']
+                    request.user.save()
+
+                user_profile.save()
+                messages.info(request, 'First passenger details saved to your profile for future bookings!')
+
             if payment_method == 'card':
                 if payment_intent_id:
                     try:
@@ -88,7 +104,7 @@ def book_trip(request, trip_id, number_of_passengers):
                             context = {
                                 'form': form,
                                 'trip': trip,
-                                'number_of_passengers': num_passengers,
+                                'num_passengers': num_passengers,
                                 'total_price': total_price,
                                 'stripe_public_key': stripe_public_key,
                                 'client_secret': intent.client_secret,
@@ -103,7 +119,7 @@ def book_trip(request, trip_id, number_of_passengers):
                         context = {
                             'form': form,
                             'trip': trip,
-                            'number_of_passengers': num_passengers,
+                            'num_passengers': num_passengers,
                             'total_price': total_price,
                             'stripe_public_key': stripe_public_key,
                             'client_secret': intent.client_secret,
@@ -117,7 +133,7 @@ def book_trip(request, trip_id, number_of_passengers):
                     context = {
                         'form': form,
                         'trip': trip,
-                        'number_of_passengers': num_passengers,
+                        'num_passengers': num_passengers,
                         'total_price': total_price,
                         'stripe_public_key': stripe_public_key,
                         'client_secret': intent.client_secret,
@@ -136,7 +152,7 @@ def book_trip(request, trip_id, number_of_passengers):
                 context = {
                     'form': form,
                     'trip': trip,
-                    'number_of_passengers': num_passengers,
+                    'num_passengers': num_passengers,
                     'total_price': total_price,
                     'stripe_public_key': stripe_public_key,
                     'client_secret': intent.client_secret,
@@ -148,7 +164,7 @@ def book_trip(request, trip_id, number_of_passengers):
             context = {
                 'form': form,
                 'trip': trip,
-                'number_of_passengers': num_passengers,
+                'num_passengers': num_passengers,
                 'total_price': total_price,
                 'stripe_public_key': stripe_public_key,
                 'client_secret': intent.client_secret,
@@ -157,15 +173,29 @@ def book_trip(request, trip_id, number_of_passengers):
 
     else:
         form = BookingConfirmationForm(trip=trip, num_passengers=num_passengers)
+
+        if request.user.is_authenticated:
+            user_profile = UserProfile.objects.filter(user=request.user).first()
+
+            if user_profile:
+                initial_data = {
+                    'passenger_name1': request.user.get_full_name() or request.user.username,
+                    'passenger_contact_number1': user_profile.default_phone_number,
+                    'passenger_email1': request.user.email,
+                }
+                form = BookingConfirmationForm(initial=initial_data, trip=trip, num_passengers=num_passengers, request=request)
+
         context = {
             'form': form,
             'trip': trip,
-            'number_of_passengers': num_passengers,
+            'num_passengers': num_passengers,
+            'passenger_range': passenger_range,
             'total_price': total_price,
             'stripe_public_key': stripe_public_key,
             'client_secret': intent.client_secret,
         }
         return render(request, 'booking/booking_form.html', context)
+
 
 def booking_success(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
@@ -186,7 +216,3 @@ def booking_success(request, booking_id):
     else:
         payment_method_chosen = 'other'
         return render(request, 'booking/booking_pending.html', context)
-
-
-    
-    
