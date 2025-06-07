@@ -64,8 +64,8 @@
                                     href="{% url 'home' %}">Home</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if request.path == reservation_list_url %}active{% endif %}"
-                                    aria-current="page" href="">My Profile</a>
+                                <a class="nav-link {% if request.path == profiles_url %}active{% endif %}"
+                                    aria-current="page" href="{% url 'profiles:profile' %}">My Profile</a>
                             </li>
                             {% if user.is_authenticated %}
                             <li class="nav-item">

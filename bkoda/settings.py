@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'trips',
     'booking',
     'profiles',
+    'manage_booking',
 
     # others
     'django_countries',
