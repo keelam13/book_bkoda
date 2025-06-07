@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">My Bookings</h2>
+    {% if bookings %}
+    <div class="list-group">
+        {% for booking in bookings %}
+        <a href="{% url 'manage_booking:booking_detail' booking.id %}" class="list-group-item list-group-item-action mb-3 shadow-sm rounded">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">Trip: {{ booking.trip.trip_number }}</h5>
+                <small class="text-muted">Booked on: {{ booking.booking_date|date:"F d, Y H:i" }}</small>
+            </div>
+            <p class="mb-1">Reference: <strong>{{ booking.booking_reference }}</strong></p>
+            <p class="mb-1">Status: <span class="badge {% if booking.status == 'CONFIRMED' %}bg-success{% elif booking.status == 'PENDING' %}bg-warning{% elif booking.status == 'CANCELED' %}bg-danger{% else %}bg-secondary{% endif %}">{{ booking.status }}</span></p>
+            <p class="mb-1">Payment: <span class="badge {% if booking.payment_status == 'PAID' %}bg-success{% elif booking.payment_status == 'PENDING' %}bg-warning{% elif booking.payment_status == 'FAILED' %}bg-danger{% else %}bg-info{% endif %}">{{ booking.payment_status }}</span></p>
+            <small>Passengers: {{ booking.number_of_passengers }}</small>
+            <div class="text-end">
+                <span class="fs-5 text-primary">Total: &euro;{{ booking.total_price }}</span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center" role="alert">
+        You haven't made any bookings yet.
+        <a href="{% url 'trips:trip_list' %}" class="alert-link">Explore trips!</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}
