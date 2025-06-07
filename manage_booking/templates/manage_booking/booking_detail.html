@@ -1,4 +1,4 @@
-{% extends "base.html" %} {# Extend your base template #}
+{% extends "base.html" %}
 {% load static %}
 
 {% block content %}
@@ -15,8 +15,8 @@
                     <p><strong>Trip Number:</strong> {{ booking.trip.trip_number }}</p>
                     <p><strong>Destination:</strong> {{ booking.trip.destination }}</p>
                     <p><strong>Date:</strong> {{ booking.trip.date|date:"F d, Y" }}</p>
-                    <p><strong>Departure Time:</strong> {{ booking.trip.departure_time }}</p>
-                    <p><strong>Arrival Time:</strong> {{ booking.trip.aarival_time }}</p>
+                    <p><strong>Departure Time:</strong> {{ booking.trip.departure_time|time:"H:i" }}</p>
+                    <p><strong>Arrival Time:</strong> {{ booking.trip.aarival_time|"H:i" }}</p>
                     <p><strong>Price per Person:</strong> &euro;{{ booking.trip.price }}</p>
                 </div>
                 <div class="col-md-6">
