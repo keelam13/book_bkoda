@@ -1,35 +1,35 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const bookingForm = document.getElementById('booking-form');
-    const submitButton = document.getElementById('submit-booking-btn');
-    const cardRadio = document.getElementById('creditCard');
-    const otherRadio = document.getElementById('otherPayment');
-    const selectedPaymentMethodInput = document.getElementById('selected-payment-method');
-    const cardPaymentDetails = document.getElementById('cardPaymentDetails');
-    const otherPaymentDetails = document.getElementById('otherPaymentDetails');
-    const cardErrors = document.getElementById('card-errors');
-    const paymentIntentIdInput = document.getElementById('payment-intent-id');
+    const bookingForm = $('#booking-form');
+    const cardRadio = $('#creditCard');
+    const otherRadio = $('#otherPayment');
+    const selectedPaymentMethodInput = $('#selected-payment-method');
+    const cardPaymentDetails = $('#cardPaymentDetails');
+    const otherPaymentDetails = $('#otherPaymentDetails');
+    const cardErrors = $('#card-errors');
+    const paymentIntentIdInput = $('#payment-intent-id');
+    const submitButton = $('#submit-booking-btn');
 
-    if (cardRadio.checked) {
-        cardPaymentDetails.style.display = 'block';
-        otherPaymentDetails.style.display = 'none';
+    if (cardRadio.prop('checked')) {
+        cardPaymentDetails.css('display', 'block');
+        otherPaymentDetails.css('display', 'none');
     } else {
-        cardPaymentDetails.style.display = 'none';
-        otherPaymentDetails.style.display = 'block';
+        cardPaymentDetails.css('display', 'none');
+        otherPaymentDetails.css('display', 'block');
     }
 
-    cardRadio.addEventListener('change', function() {
-        if (this.checked) {
-            selectedPaymentMethodInput.value = 'card';
-            cardPaymentDetails.style.display = 'block';
-            otherPaymentDetails.style.display = 'none';
+    cardRadio.on('change', function() {
+        if ($(this).prop('checked')) {
+            selectedPaymentMethodInput.val('card');
+            cardPaymentDetails.css('display', 'block');
+            otherPaymentDetails.css('display', 'none');
         }
     });
 
-    otherRadio.addEventListener('change', function() {
-        if (this.checked) {
-            selectedPaymentMethodInput.value = 'other';
-            cardPaymentDetails.style.display = 'none';
-            otherPaymentDetails.style.display = 'block';
+    otherRadio.on('change', function() {
+        if ($(this).prop('checked')) {
+            selectedPaymentMethodInput.val('other');
+            cardPaymentDetails.css('display', 'none');
+            otherPaymentDetails.css('display', 'block');
         }
     });
 
@@ -57,7 +57,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle realtime validation errors on the card element
     card.addEventListener('change', function (event) {
-        var errorDiv = document.getElementById('card-errors');
         if (event.error) {
             var html = `
                 <span class="icon" role="alert">
@@ -65,50 +64,68 @@ document.addEventListener('DOMContentLoaded', function() {
                 </span>
                 <span>${event.error.message}</span>
             `;
-            $(errorDiv).html(html);
+            cardErrors.html(html);
         } else {
-            errorDiv.textContent = '';
+            cardErrors.text('');
         }
     });
 
-
     // Handle form submission
-    bookingForm.addEventListener('submit', async function(event) {
+    bookingForm.on('submit', async function(event) {
         event.preventDefault();
+        card.update({disabled: true});
+        submitButton.attr('disabled', true);
+        $('#booking-form').fadeToggle(100);
+        $('#loading-overlay').fadeToggle(100);
 
-        submitButton.disabled = true;
-        cardErrors.textContent = '';
+        cardErrors.text('');;
 
-        const paymentMethod = selectedPaymentMethodInput.value;
+        const paymentMethod = selectedPaymentMethodInput.val();
 
         if (paymentMethod === 'card') {
-            const clientSecret = JSON.parse(document.getElementById('id_client_secret').textContent);
+            const clientSecret = JSON.parse($('#id_client_secret').text());
+            const passengerName1 = $('#passenger_name1').val();
+            const passengerEmail1 = $('#passenger_email1').val();
+            const passengerContactNumber1 = $('#passenger_contact_number1').val();
 
             // Confirm the card payment with Stripe
             const {paymentIntent, error} = await stripe.confirmCardPayment(clientSecret, {
                 payment_method: {
                     card: card,
-                },
+                    billing_details: {
+                    name: $.trim(passengerName1),
+                    phone: $.trim(passengerContactNumber1),
+                    email: $.trim(passengerEmail1),
+                    },
+                }
             });
 
             if (error) {
                 if (error.type === "card_error" || error.type === "validation_error") {
-                    cardErrors.textContent = error.message;
+                    cardErrors.text(error.message);
                 } else {
-                    cardErrors.textContent = "An unexpected error occurred. Please try again.";
+                    cardErrors.text("An unexpected error occurred. Please try again.");
                 }
-                submitButton.disabled = false;
+
+                $('#booking-form').fadeToggle(100);
+                $('#loading-overlay').fadeToggle(100);
+                card.update({ 'disabled': false });
+                submitButton.attr('disabled', false);
+
             } else {
                 if (paymentIntent.status === 'succeeded') {
-                    paymentIntentIdInput.value = paymentIntent.id;
-                    bookingForm.submit();
+                    paymentIntentIdInput.val(paymentIntent.id);
+                    bookingForm.off('submit').submit();
                 } else {
-                    cardErrors.textContent = "Payment not successful. Status: " + paymentIntent.status;
-                    submitButton.disabled = false;
+                    cardErrors.text("Payment not successful. Status: " + paymentIntent.status);
+                    $('#booking-form').fadeToggle(100);
+                    $('#loading-overlay').fadeToggle(100);
+                    card.update({ 'disabled': false});
+                    submitButton.attr('disabled', false);
                 }
             }
         } else {
-            bookingForm.submit();
+            bookingForm.off('submit').submit();
         }
     });
 });
