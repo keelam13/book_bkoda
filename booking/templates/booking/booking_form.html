@@ -82,64 +82,65 @@
                                 <p>Number of Seats: {{ number_of_passengers}}</p>
                             </div>
                         </div>
-                <h4 class="section-title mt-5 mb-4"><i class="bi bi-3-circle-fill"></i> Payment</h4>
-                <div class="card booking-section-card mb-4">
-                    <div class="card-body">
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="payment_method" id="creditCard"
-                                value="card" checked>
-                            <label class="form-check-label" for="creditCard">
-                                Debit/Credit Card
-                            </label>
-                        </div>
-                        <div id="cardPaymentDetails" class="payment-details-section card p-3 mb-3 border-info"
-                            style="display: none;">
-                            <h6 class="mb-3">Enter Card Details</h6>
-                             <!-- A Stripe card element will go here -->
-                            <div class="mb-3" id="card-element"></div>
-                            <!-- Used to display form errors -->
-                            <div class="mb-3 text-danger" id="card-errors" role="alert"></div>
-                            <!-- Pass the client secret to the view so we can get the payment intent id -->
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="payment_method" id="otherPayment"
-                                value="other">
-                            <label class="form-check-label" for="otherPayment">
-                                Cash (Payment Centers) / Money Wallet (GCash)
-                            </label>
-                        </div>
-                        <div id="otherPaymentDetails" class="payment-details-section card p-3 mb-3 border-info"
-                            style="display: none;">
-                            <h6 class="mb-3">Payment Instructions:</h6>
-                            <p class="small text-muted">
-                                If you select this option, your booking will be held for **24 hours**. You must complete
-                                your payment within this period via our designated payment centers or GCash to confirm
-                                your seats. Details will be provided upon successful booking submission.
-                            </p>
-                            <p class="small text-danger">
-                                **Your booking will be automatically cancelled if payment is not received within 24
-                                hours.**
-                            </p>
+                        <h4 class="section-title mt-5 mb-4"><i class="bi bi-3-circle-fill"></i> Payment</h4>
+                        <div class="card booking-section-card mb-4">
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="creditCard"
+                                        value="card" checked>
+                                    <label class="form-check-label" for="creditCard">
+                                        Debit/Credit Card
+                                    </label>
+                                </div>
+                                <div id="cardPaymentDetails" class="payment-details-section card p-3 mb-3 border-info"
+                                    style="display: none;">
+                                    <h6 class="mb-3">Enter Card Details</h6>
+                                    <!-- A Stripe card element will go here -->
+                                    <div class="mb-3" id="card-element"></div>
+                                    <!-- Used to display form errors -->
+                                    <div class="mb-3 text-danger" id="card-errors" role="alert"></div>
+                                    <!-- Pass the client secret to the view so we can get the payment intent id -->
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="otherPayment"
+                                        value="other">
+                                    <label class="form-check-label" for="otherPayment">
+                                        Cash (Payment Centers) / Money Wallet (GCash)
+                                    </label>
+                                </div>
+                                <div id="otherPaymentDetails" class="payment-details-section card p-3 mb-3 border-info"
+                                    style="display: none;">
+                                    <h6 class="mb-3">Payment Instructions:</h6>
+                                    <p class="small text-muted">
+                                        If you select this option, your booking will be held for **24 hours**. You must complete
+                                        your payment within this period via our designated payment centers or GCash to confirm
+                                        your seats. Details will be provided upon successful booking submission.
+                                    </p>
+                                    <p class="small text-danger">
+                                        **Your booking will be automatically cancelled if payment is not received within 24
+                                        hours.**
+                                    </p>
+                                </div>
+
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                                    <label class="form-check-label" for="termsCheck">
+                                        I declare to have read and agree to the <a href="#">Privacy Policy</a> and <a
+                                            href="#">T&C of Booking</a> and <a href="#">T&C of Carriage</a>.
+                                    </label>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="form-check mt-4">
-                            <input class="form-check-input" type="checkbox" id="termsCheck" required>
-                            <label class="form-check-label" for="termsCheck">
-                                I declare to have read and agree to the <a href="#">Privacy Policy</a> and <a
-                                    href="#">T&C of Booking</a> and <a href="#">T&C of Carriage</a>.
-                            </label>
+                        <input type="hidden" name="payment_method" id="selected-payment-method" value="card">
+                        <input type="hidden" name="payment_intent_id" id="payment-intent-id">
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" id="submit-booking-btn"
+                                class="btn btn-success btn-lg submit-button">Continue</button>
                         </div>
-                    </div>
+                    </form>
                 </div>
-
-                <input type="hidden" name="payment_method" id="selected-payment-method" value="card">
-                <input type="hidden" name="payment_intent_id" id="payment-intent-id">
-
-                <div class="d-grid mt-4">
-                    <button type="submit" id="submit-booking-btn"
-                        class="btn btn-success btn-lg submit-button">Continue</button>
-                </div>
-                </form>
             </div>
         </div>
     </div>

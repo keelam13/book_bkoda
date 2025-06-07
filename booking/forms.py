@@ -29,10 +29,12 @@ class BookingConfirmationForm(forms.ModelForm):
         self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
 
+        print(f"DEBUG FORM: In __init__: Request user authenticated: {self.request.user.is_authenticated if self.request and self.request.user else 'N/A'}")
 
         if not self.request or not self.request.user.is_authenticated:
             if 'save_info' in self.fields:
                 del self.fields['save_info']
+
 
         for i in range(self.num_passengers):
 

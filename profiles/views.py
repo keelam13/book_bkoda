@@ -27,7 +27,7 @@ def profile(request):
     }
     return render(request, 'profiles/profile.html', context)
 
-def order_history(request, booking_reference):
+def booking_history(request, booking_reference):
     """
     Render the user's booking history page.
     """

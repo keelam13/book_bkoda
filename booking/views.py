@@ -44,11 +44,13 @@ def book_trip(request, trip_id, number_of_passengers):
     )
 
     if request.method == 'POST':
-        form = BookingConfirmationForm(request.POST, trip=trip, num_passengers=num_passengers)
+        print(f"DEBUG (Pre-Form): request.POST = {request.POST}")
+        form = BookingConfirmationForm(request.POST, trip=trip, num_passengers=num_passengers, request=request)
         payment_method = request.POST.get('payment_method')
         payment_intent_id = request.POST.get('payment_intent_id')
 
         if form.is_valid():
+            print(f"DEBUG (Post-Validation): form.cleaned_data = {form.cleaned_data}")
             user = request.user if request.user.is_authenticated else None
             booking = Booking.objects.create(
                 user=user,
@@ -76,15 +78,14 @@ def book_trip(request, trip_id, number_of_passengers):
             if request.user.is_authenticated and form.cleaned_data.get('save_info'):
                 user_profile, created = UserProfile.objects.get_or_create(user=request.user)
 
-                if form.cleaned_data.get('passenger_contact_number1'):
-                    user_profile.default_phone_number = form.cleaned_data['passenger_contact_number1']
-
-                if form.cleaned_data.get('passenger_email1'):
-                    request.user.email = form.cleaned_data['passenger_email1']
-                    request.user.save()
-
+                user_profile.default_name = form.cleaned_data.get('passenger_name1')
+                user_profile.default_phone_number = form.cleaned_data.get('passenger_contact_number1')
                 user_profile.save()
+                print(f"DEBUG: User profile updated for {request.user.username} with name {user_profile.default_name} and phone {user_profile.default_phone_number}")
                 messages.info(request, 'First passenger details saved to your profile for future bookings!')
+            else:
+                messages.error(request, 'First passenger details not saved to your profile. Please check the "Save my info" box if you want to save it for future bookings.')
+                print(f"DEBUG: User profile not updated for {request.user.username} as 'save_info' was not checked.")
 
             if payment_method == 'card':
                 if payment_intent_id:
