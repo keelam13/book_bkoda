@@ -75,6 +75,18 @@ def booking_detail(request, booking_id):
         time_until_departure = departure_datetime - current_time
         time_until_departure_hours = time_until_departure.total_seconds() / 3600
 
+        print(f"\n--- DEBUGGING BOOKING ID: {booking.id} ---")
+        print(f"TRIP DATE (naive): {booking.trip.date}")
+        print(f"TRIP TIME (naive): {booking.trip.departure_time}")
+        print(f"DEPARTURE DATETIME (aware): {departure_datetime}")
+        print(f"CURRENT TIME (aware): {current_time}")
+        print(f"TIME UNTIL DEPARTURE (timedelta): {time_until_departure}")
+        print(f"TIME UNTIL DEPARTURE (HOURS): {time_until_departure_hours}")
+        print(f"POLICY: free_cancellation_cutoff_hours: {policy.free_cancellation_cutoff_hours}")
+        print(f"POLICY: late_cancellation_cutoff_hours: {policy.late_cancellation_cutoff_hours}")
+        print("-------------------------------------------\n")
+
+
         if eligible_status_for_action:
             if time_until_departure_hours > policy.free_cancellation_cutoff_hours:
                 # Free cancellation/rescheduling
@@ -152,6 +164,22 @@ def booking_cancel(request, booking_id):
         time_until_departure = departure_datetime - current_time
         time_until_departure_hours = time_until_departure.total_seconds() / 3600
 
+        print(f"\n--- DEBUGGING BOOKING ID: {booking.id} ---")
+        print(f"TRIP DATE (naive): {booking.trip.date}")
+        print(f"TRIP TIME (naive): {booking.trip.departure_time}")
+        print(f"DEPARTURE DATETIME (aware): {departure_datetime}")
+        print(f"CURRENT TIME (aware): {current_time}")
+        print(f"TIME UNTIL DEPARTURE (timedelta): {time_until_departure}")
+        print(f"TIME UNTIL DEPARTURE (HOURS): {time_until_departure_hours}")
+        print(f"POLICY: free_cancellation_cutoff_hours: {policy.free_cancellation_cutoff_hours}")
+        print(f"POLICY: late_cancellation_cutoff_hours: {policy.late_cancellation_cutoff_hours}")
+        print("-------------------------------------------\n")
+
+
+        print(f"DEBUG: Booking ID {booking.id} Status: {booking.status}")
+        print(f"DEBUG: Booking ID {booking.id} Payment Status: {booking.payment_status}")
+        print(f"DEBUG: Eligible for action: {eligible_status_for_action}")
+
         if eligible_status_for_action:
             if time_until_departure_hours > policy.free_cancellation_cutoff_hours:
                 can_proceed_with_cancellation = True
@@ -186,6 +214,18 @@ def booking_cancel(request, booking_id):
             time_until_departure_recheck = departure_datetime_recheck - timezone.now()
             time_until_departure_hours_recheck = time_until_departure_recheck.total_seconds() / 3600
 
+            print(f"\n--- DEBUGGING BOOKING ID: {booking.id} ---")
+            print(f"TRIP DATE (naive): {booking.trip.date}")
+            print(f"TRIP TIME (naive): {booking.trip.departure_time}")
+            print(f"DEPARTURE DATETIME (aware): {departure_datetime}")
+            print(f"CURRENT TIME (aware): {current_time}")
+            print(f"TIME UNTIL DEPARTURE (timedelta): {time_until_departure}")
+            print(f"TIME UNTIL DEPARTURE (HOURS): {time_until_departure_hours}")
+            print(f"POLICY: free_cancellation_cutoff_hours: {policy.free_cancellation_cutoff_hours}")
+            print(f"POLICY: late_cancellation_cutoff_hours: {policy.late_cancellation_cutoff_hours}")
+            print("-------------------------------------------\n")
+
+
             if eligible_status_for_action:
                 if time_until_departure_hours_recheck > policy.free_cancellation_cutoff_hours:
                     recalc_can_proceed = True
@@ -207,24 +247,27 @@ def booking_cancel(request, booking_id):
         try:
             # Step 1: Process Refund if applicable
             if recalc_refund_amount > 0 and booking.stripe_payment_intent_id:
-                stripe_refund_amount_cents = round(refund_amount * 100)
-
-                refund = stripe.Refund.create(
-                    payment_intent=booking.stripe_payment_intent_id,
-                    amount=stripe_refund_amount_cents,
-                    metadata={
-                        'booking_id': str(booking.id),
-                        'booking_reference': booking.booking_reference,
-                        'refund_type': recalc_refund_type_message,
-                    }
-                )
-                
-                if refund.status == 'succeeded':
+                if settings.STRIPE_MOCK_REFUNDS:
                     booking.payment_status = 'REFUNDED' if recalc_refund_amount == booking.total_price else 'PARTIALLY_REFUNDED'
-                    messages.success(request, f"Refund of Php{recalc_refund_amount} processed successfully via Stripe.")
+                    messages.success(request, f"MOCKED REFUND of Php{recalc_refund_amount} processed successfully (Stripe API call skipped).")
                 else:
-                    booking.payment_status = 'REFUND_PENDING'
-                    messages.warning(request, f"Stripe refund status: {refund.status}. It may still be processing or require review. We will inform you once it's complete.")
+                    stripe_refund_amount_cents = round(refund_amount * 100)
+                    refund = stripe.Refund.create(
+                        payment_intent=booking.stripe_payment_intent_id,
+                        amount=stripe_refund_amount_cents,
+                        metadata={
+                            'booking_id': str(booking.id),
+                            'booking_reference': booking.booking_reference,
+                            'refund_type': recalc_refund_type_message,
+                        }
+                    )
+                    
+                    if refund.status == 'succeeded':
+                        booking.payment_status = 'REFUNDED' if recalc_refund_amount == booking.total_price else 'PARTIALLY_REFUNDED'
+                        messages.success(request, f"Refund of Php{recalc_refund_amount} processed successfully via Stripe.")
+                    else:
+                        booking.payment_status = 'REFUND_PENDING'
+                        messages.warning(request, f"Stripe refund status: {refund.status}. It may still be processing or require review. We will inform you once it's complete.")
 
             elif recalc_refund_amount > 0 and not booking.stripe_payment_intent_id:
                 booking.payment_status = 'REFUND_PENDING_MANUAL'
@@ -276,5 +319,6 @@ def booking_cancel(request, booking_id):
         'time_until_departure_hours': time_until_departure_hours,
         'refund_amount': refund_amount,
         'can_proceed_with_cancellation': can_proceed_with_cancellation,
+        'policy': policy,
     }
     return render(request, 'manage_booking/booking_cancel_confirm.html', context)

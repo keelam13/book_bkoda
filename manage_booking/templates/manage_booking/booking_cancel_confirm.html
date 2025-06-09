@@ -19,7 +19,7 @@
             {% if time_until_departure_hours > policy.free_cancellation_cutoff_hours %}
                 <p class="lead text-success">This cancellation is **FREE OF CHARGE**.</p>
                 <p class="mb-3">You will receive a **FULL REFUND** of <strong>Php{{ booking.total_price|floatformat:2 }}</strong>.</p>
-            {% elif time_until_departure_hours > policy.late_cancellation_cutoff_hours %}
+            {% elif time_until_departure_hours >= policy.late_cancellation_cutoff_hours %}
                 <p class="lead text-warning">This is a **LATE CANCELLATION**.</p>
                 <p class="mb-3">A **{{ policy.late_cancellation_fee_percentage|mul:100|floatformat:0 }}% cancellation fee** will be applied.</p>
                 <p>You will receive a refund of <strong>Php{{ refund_amount|floatformat:2 }}</strong>.</p>

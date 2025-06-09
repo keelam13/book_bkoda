@@ -175,5 +175,8 @@ STRIPE_CURRENCY = 'php'
 STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY', '')
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
 
+# Set to True to bypass actual Stripe refund calls for local testing.
+STRIPE_MOCK_REFUNDS = True
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
