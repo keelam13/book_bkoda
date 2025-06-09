@@ -11,8 +11,24 @@
         </div>
         <div class="card-body">
             <p>You are about to cancel your booking for the trip to <strong>{{ booking.trip.destination }}</strong> on <strong>{{ booking.trip.date|date:"F d, Y" }}</strong> at <strong>{{ booking.trip.departure_time|time:"H:i" }}</strong>.</p>
+             {% if refund_amount > 0 %}
+                <div class="alert alert-success">
+                    <p>Upon cancellation, a refund of <strong>Php {{ refund_amount }}</strong> will be processed.</p>
+                    <p>This is a <strong>{{ refund_type_message }}</strong> refund based on our policy.</p>
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    <p>Upon cancellation, <strong>no refund will be issued</strong> as per our policy due to the proximity to departure time.</p>
+                    <p>This is a <strong>{{ refund_type_message }}</strong> refund scenario.</p>
+                </div>
+            {% endif %}
             <p>Number of Passengers: <strong>{{ booking.number_of_passengers }}</strong></p>
             <p>Total Price Paid: <strong>Php{{ booking.total_price }}</strong></p>
+            {% if booking.refund_status != 'NONE' and booking.refund_status != 'COMPLETED' %}
+                <div class="alert alert-info">
+                    <p><strong>Note:</strong> This booking currently has a pending refund status of {{ booking.refund_status }}.</p>
+                </div>
+            {% endif %}
 
             <hr>
 

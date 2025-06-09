@@ -154,7 +154,8 @@ def booking_cancel(request, booking_id):
 
     can_proceed_with_cancellation = False
     refund_amount = Decimal('0.00')
-    cancellation_fee_rate = policy.late_cancellation_fee_percentage 
+    cancellation_fee_rate = policy.late_cancellation_fee_percentage
+    refund_type_message = "N/A"
 
     eligible_status_for_action = (
         booking.status == 'CONFIRMED' and booking.payment_status == 'PAID'
@@ -248,69 +249,72 @@ def booking_cancel(request, booking_id):
             return redirect('manage_booking:booking_detail', booking_id=booking.id)
 
         try:
+            with transaction.atomic():
             # Step 1: Process Refund if applicable
-            if recalc_refund_amount > 0 and booking.stripe_payment_intent_id:
-                if settings.STRIPE_MOCK_REFUNDS:
-                    booking.payment_status = 'REFUNDED' if recalc_refund_amount == booking.total_price else 'PARTIALLY_REFUNDED'
-                    messages.success(request, f"MOCKED REFUND of Php{recalc_refund_amount} processed successfully (Stripe API call skipped).")
-                else:
-                    stripe_refund_amount_cents = round(refund_amount * 100)
-                    refund = stripe.Refund.create(
-                        payment_intent=booking.stripe_payment_intent_id,
-                        amount=stripe_refund_amount_cents,
-                        metadata={
-                            'booking_id': str(booking.id),
-                            'booking_reference': booking.booking_reference,
-                            'refund_type': recalc_refund_type_message,
-                        }
-                    )
-                    
-                    if refund.status == 'succeeded':
-                        booking.payment_status = 'REFUNDED' if recalc_refund_amount == booking.total_price else 'PARTIALLY_REFUNDED'
-                        messages.success(request, f"Refund of Php{recalc_refund_amount} processed successfully via Stripe.")
+                if recalc_refund_amount > 0 and booking.stripe_payment_intent_id:
+                    if settings.STRIPE_MOCK_REFUNDS:
+                        messages.success(request, f"MOCKED REFUND of Php{recalc_refund_amount} processed successfully (Stripe API call skipped).")
+                        booking.refund_status = 'COMPLETED'
+                        booking.refund_amount = recalc_refund_amount
                     else:
-                        booking.payment_status = 'REFUND_PENDING'
-                        messages.warning(request, f"Stripe refund status: {refund.status}. It may still be processing or require review. We will inform you once it's complete.")
+                        stripe_refund_amount_cents = round(refund_amount * 100)
+                        try:
+                            refund = stripe.Refund.create(
+                                payment_intent=booking.stripe_payment_intent_id,
+                                amount=stripe_refund_amount_cents,
+                                metadata={
+                                    'booking_id': str(booking.id),
+                                    'booking_reference': booking.booking_reference,
+                                    'refund_type': recalc_refund_type_message,
+                                }
+                            )
+                            if refund.status == 'succeeded':
+                                booking.refund_status = 'COMPLETED'
+                                booking.refund_amount = recalc_refund_amount
+                                messages.success(request, f"Refund of Php{recalc_refund_amount:.2f} processed successfully via Stripe.")
+                            else:
+                                booking.refund_status = 'PENDING'
+                                messages.warning(request, f"Stripe refund status: {refund.status}. It may still be processing or require review. We will inform you once it's complete.")
+                        except stripe.error.StripeError as e:
+                            messages.error(request, f"A Stripe error occurred during refund processing: {e}. Please contact support.")
+                            booking.refund_status = 'FAILED'
+                            booking.save()
+                            return redirect('manage_booking:booking_detail', booking_id=booking.id)
 
-            elif recalc_refund_amount > 0 and not booking.stripe_payment_intent_id:
-                booking.payment_status = 'REFUND_PENDING_MANUAL'
-                messages.info(request, f"Your booking is cancelled. A refund of Php{recalc_refund_amount} is pending manual processing (non-card payment). Please check your email for instructions.")
+                elif recalc_refund_amount > 0 and not booking.stripe_payment_intent_id:
+                    booking.refund_status = 'PENDING'
+                    booking.refund_amount = recalc_refund_amount
+                    messages.info(request, f"Your booking is cancelled. A refund of Php{recalc_refund_amount:.2f} is pending manual processing (non-card payment). Please check your email for instructions.")
 
-            else:
-                booking.payment_status = 'NO_REFUND'
-                messages.info(request, "Your booking has been cancelled. No refund was issued as per policy.")
-            
-            # Step 2: Update Booking Status
-            booking.status = 'CANCELED'
-            
-            # Step 3: Release Seats (update Trip available_seats)
-            if booking.trip.available_seats is not None:
-                print(f"DEBUG: Trip ID: {booking.trip.trip_id}")
-                print(f"DEBUG: Available seats BEFORE adding: {booking.trip.available_seats}")
-                print(f"DEBUG: Passengers to add back: {booking.number_of_passengers}")
+                else:
+                    booking.refund_status = 'NONE'
+                    booking.refund_amount = Decimal('0.00')
+                    messages.info(request, "Your booking has been cancelled. No refund was issued as per policy.")
+                
+                # Step 2: Update Booking Status
+                booking.status = 'CANCELED'
+                
+                # Step 3: Release Seats (update Trip available_seats)
+                if booking.trip.available_seats is not None:
+                    print(f"DEBUG: Trip ID: {booking.trip.trip_id}")
+                    print(f"DEBUG: Available seats BEFORE adding: {booking.trip.available_seats}")
+                    print(f"DEBUG: Passengers to add back: {booking.number_of_passengers}")
 
-                booking.trip.available_seats += booking.number_of_passengers
-                # DEBUG PRINT 2: Show seats AFTER addition, before save
-                print(f"DEBUG: Available seats AFTER adding (before save): {booking.trip.available_seats}")
+                    booking.trip.available_seats += booking.number_of_passengers
+                    # DEBUG PRINT 2: Show seats AFTER addition, before save
+                    print(f"DEBUG: Available seats AFTER adding (before save): {booking.trip.available_seats}")
 
-                booking.trip.save()
+                    booking.trip.save()
 
-                # DEBUG PRINT 3: Confirm save was attempted
-                print(f"DEBUG: Trip.save() called for Trip ID: {booking.trip.trip_id}")
-            else:
-                messages.warning(request, "Could not update trip available seats as it's null.")
-                print(f"DEBUG: Warning - Trip available_seats is NULL for Trip ID: {booking.trip.trip_id}")
+                    # DEBUG PRINT 3: Confirm save was attempted
+                    print(f"DEBUG: Trip.save() called for Trip ID: {booking.trip.trip_id}")
+                else:
+                    messages.warning(request, "Could not update trip available seats as it's null.")
+                    print(f"DEBUG: Warning - Trip available_seats is NULL for Trip ID: {booking.trip.trip_id}")
 
-            booking.save()
-            messages.success(request, f"Booking {booking.booking_reference} has been successfully cancelled.")
-            return redirect('manage_booking:booking_detail', booking_id=booking.id)
-
-        except stripe.error.StripeError as e:
-            messages.error(request, f"A Stripe error occurred during refund processing: {e}. Please contact support.")
-            booking.status = 'CANCELLATION_FAILED'
-            booking.payment_status = 'REFUND_FAILED'
-            booking.save()
-            return redirect('manage_booking:booking_detail', booking_id=booking.id)
+                booking.save()
+                messages.success(request, f"Booking {booking.booking_reference} has been successfully cancelled.")
+                return redirect('manage_booking:booking_detail', booking_id=booking.id)
 
         except Exception as e:
             messages.error(request, f"An unexpected error occurred during cancellation: {e}. Please contact support.")
@@ -323,6 +327,7 @@ def booking_cancel(request, booking_id):
         'refund_amount': refund_amount,
         'can_proceed_with_cancellation': can_proceed_with_cancellation,
         'policy': policy,
+        'refund_type_message': refund_type_message,
     }
     return render(request, 'manage_booking/booking_cancel_confirm.html', context)
 
@@ -491,17 +496,22 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id, number_of_passe
                     # Implement Stripe payment processing here
                     # For now, simulate success
                     messages.success(request, f"Payment of Php{amount_to_pay:.2f} required. (Stripe integration goes here).")
-                    original_booking.payment_status = 'PAID' # Or 'PENDING_PAYMENT_CONFIRMATION'
-                    # If payment fails, set status to FAILED and return with error
+                    original_booking.payment_status = 'PAID'
+                    original_booking.refund_status = 'NONE'
+                    original_booking.refund_amount = Decimal('0.00')
                 elif amount_to_refund > 0:
                     # Implement Stripe refund processing here
                     # For now, simulate success
                     messages.success(request, f"Refund of Php{amount_to_refund:.2f} initiated. (Stripe refund integration goes here).")
-                    original_booking.payment_status = 'REFUNDED' # Or 'PARTIALLY_REFUNDED'
+                    original_booking.payment_status = 'PAID'
+                    original_booking.refund_status = 'COMPLETED'
+                    original_booking.refund_amount = amount_to_refund 
                 else:
                     messages.info(request, "No additional payment or refund required for this reschedule.")
                     # Keep payment status as PAID if no changes needed
                     original_booking.payment_status = 'PAID'
+                    original_booking.refund_status = 'NONE'
+                    original_booking.refund_amount = Decimal('0.00')
 
 
                 # 2. Update Seat Availability

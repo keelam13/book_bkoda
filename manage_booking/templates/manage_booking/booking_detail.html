@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
+{% load humanize %}
+
 
 {% block content %}
 <div class="container mt-5">
@@ -18,16 +20,25 @@
                     <p><strong>Date:</strong> {{ booking.trip.date|date:"F d, Y" }}</p>
                     <p><strong>Departure Time:</strong> {{ booking.trip.departure_time|time:"H:i" }}</p>
                     <p><strong>Arrival Time:</strong> {{ booking.trip.arrival_time|time:"H:i" }}</p>
-                    <p><strong>Price per Person:</strong> &euro;{{ booking.trip.price }}</p>
+                    <p><strong>Price per Person:</strong> Php{{ booking.trip.price }}</p>
                 </div>
                 <div class="col-md-6">
                     <h5>Booking Overview</h5>
                     <p><strong>Booked By:</strong> {{ booking.user.get_full_name|default:booking.user.username }}</p>
                     <p><strong>Booking Date:</strong> {{ booking.booking_date|date:"F d, Y H:i" }}</p>
                     <p><strong>Number of Passengers:</strong> {{ booking.number_of_passengers }}</p>
-                    <p><strong>Total Price:</strong> &euro;{{ booking.total_price }}</p>
+                    <p><strong>Total Price:</strong> Php{{ booking.total_price }}</p>
                     <p><strong>Booking Status:</strong> <span class="badge {% if booking.status == 'CONFIRMED' %}bg-success{% elif booking.status == 'PENDING' %}bg-warning text-dark{% elif booking.status == 'CANCELED' %}bg-danger{% else %}bg-secondary{% endif %}">{{ booking.status }}</span></p>
                     <p><strong>Payment Status:</strong> <span class="badge {% if booking.payment_status == 'PAID' %}bg-success{% elif booking.payment_status == 'PENDING' %}bg-warning text-dark{% elif booking.payment_status == 'FAILED' %}bg-danger{% else %}bg-info{% endif %}">{{ booking.payment_status }}</span></p>
+                    {% if booking.refund_status != 'NONE' %}
+                        <p><strong>Refund Status:</strong> {{ booking.refund_status }}</p>
+                        <p><strong>Refund Amount:</strong> Php {{ booking.refund_amount }}</p>
+                        {% if booking.refund_status == 'PENDING' %}
+                            <div class="alert alert-info mt-2">
+                                Your refund is currently pending. Please allow time for processing.
+                            </div>
+                        {% endif %}
+                    {% endif %}
                 </div>
             </div>
 

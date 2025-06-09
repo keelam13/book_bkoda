@@ -29,18 +29,32 @@ class Booking(models.Model):
     payment_status = models.CharField(
         max_length=30,
         choices=[
-            ('PENDING', 'Pending'),
+            ('PENDING', 'Pending Payment'),
             ('PAID', 'Paid'),
             ('REFUNDED', 'Refunded'),
-            ('FAILED', 'Failed'),
-            ('PARTIALLY_REFUNDED', 'Partially Refunded'),
-            ('REFUND_PENDING', 'Refund Pending (Stripe)'),
-            ('REFUND_PENDING_MANUAL', 'Refund Pending (Manual)'),
-            ('REFUND_FAILED', 'Refund Failed'),
-            ('NO_REFUND','No Refund'),
+            ('FAILED', 'Payment Failed'),
         ],
         default='PENDING'
     )
+    refund_status = models.CharField(
+        max_length=20,
+        help_text="Status of any refunds associated with this booking.",
+        choices=[
+            ('NONE', 'No Refund Made'),
+            ('PENDING', 'Refund Pending'),
+            ('COMPLETED', 'Refund Completed'),
+            ('FAILED', 'Refund Failed'),
+        ],
+        default='NONE',
+    )
+    
+    refund_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
+        help_text="Total amount refunded for this booking."
+    )
+
     booking_reference = models.CharField(max_length=100, unique=True, blank=True, null=True)
     stripe_payment_intent_id = models.CharField(max_length=255, blank=True, null=True)
 
