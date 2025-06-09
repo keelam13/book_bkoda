@@ -59,19 +59,19 @@
             </div>
 
             <div class="row mt-3 justify-content-center">
-                <div class="col-auto"> {# Use col-auto to keep button width natural #}
+                <div class="col-auto">
                     <button type="submit" class="btn btn-primary">Let's Go!</button>
                 </div>
             </div>
             
-            {# Hidden fields for other form management if any #}
-            {% for hidden_field in form.hidden_fields %}
-                {{ hidden_field }}
-            {% endfor %}
+            {% if is_rescheduling_mode %}
+            <input type="hidden" name="reschedule_booking_id" value="{{ original_booking_id }}">
+            {% endif %}
         </form>
     </div>
 </section>
 
+{# ... rest of your JavaScript for the form ... #}
 {# Move all the JavaScript related to the form (date input, swap button) here, or include it from a static file. #}
 {# This ensures the JS runs whenever this partial is included. #}
 <script>

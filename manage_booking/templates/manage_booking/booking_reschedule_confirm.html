@@ -27,7 +27,7 @@
                     <p><strong>Route:</strong> {{ new_trip.origin }} to {{ new_trip.destination }}</p>
                     <p><strong>Date:</strong> {{ new_trip.date|date:"F d, Y" }}</p>
                     <p><strong>Departure:</strong> {{ new_trip.departure_time|time:"h:i A" }}</p>
-                    <p><strong>Passengers:</strong> {{ original_booking.number_of_passengers }}</p>
+                    <p><strong>Passengers:</strong> {{ number_of_passengers }}</p>
                     <p><strong>New Trip Base Price:</strong> Php{{ new_total_price_base|floatformat:2 }}</p>
                 </div>
             </div>
@@ -101,7 +101,7 @@
 
             <p class="text-danger fw-bold text-center mt-4">Please review the details above carefully. Are you sure you want to proceed with this reschedule?</p>
 
-            <form action="{% url 'manage_booking:booking_reschedule_confirm' original_booking.id new_trip.trip_id %}" method="post" class="text-center">
+            <form action="{% url 'manage_booking:booking_reschedule_confirm' booking_id=original_booking.id new_trip_id=new_trip.trip_id number_of_passengers=number_of_passengers %}" method="post" class="text-center">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-warning btn-lg me-3">Confirm Reschedule</button>
                 <a href="{% url 'manage_booking:booking_detail' original_booking.id %}" class="btn btn-secondary btn-lg">Cancel & Go Back</a>

@@ -385,9 +385,11 @@ def booking_reschedule_select_trip(request, booking_id):
 
 
 @login_required
-def booking_reschedule_confirm(request, booking_id, new_trip_id):
+def booking_reschedule_confirm(request, booking_id, new_trip_id, number_of_passengers):
     original_booking = get_object_or_404(Booking.objects.select_related('trip'), pk=booking_id, user=request.user)
     new_trip = get_object_or_404(Trip, pk=new_trip_id)
+    num_travelers = int(number_of_passengers)
+    print(f"DEBUG: Rescheduling booking ID {booking_id} to new trip ID {new_trip_id} for {num_travelers} passengers.")
 
     try:
         policy = BookingPolicy.objects.first()
@@ -435,7 +437,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
 
     # --- Financial Calculation ---
     original_total_price = original_booking.total_price
-    new_total_price_base = new_trip.price * original_booking.number_of_passengers
+    new_total_price_base = new_trip.price * num_travelers
     fare_difference = new_total_price_base - original_total_price
     rescheduling_charge = Decimal('0.00')
 
@@ -476,6 +478,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
             'rescheduling_charge': rescheduling_charge,
             'amount_to_pay': amount_to_pay,
             'amount_to_refund': amount_to_refund,
+            'number_of_passengers': num_travelers,
         }
         return render(request, 'manage_booking/booking_reschedule_confirm.html', context)
 
@@ -487,13 +490,13 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                 if amount_to_pay > 0:
                     # Implement Stripe payment processing here
                     # For now, simulate success
-                    messages.success(request, f"Payment of Php{amount_to_pay|floatformat:2} required. (Stripe integration goes here).")
+                    messages.success(request, f"Payment of Php{amount_to_pay:.2f} required. (Stripe integration goes here).")
                     original_booking.payment_status = 'PAID' # Or 'PENDING_PAYMENT_CONFIRMATION'
                     # If payment fails, set status to FAILED and return with error
                 elif amount_to_refund > 0:
                     # Implement Stripe refund processing here
                     # For now, simulate success
-                    messages.success(request, f"Refund of Php{amount_to_refund|floatformat:2} initiated. (Stripe refund integration goes here).")
+                    messages.success(request, f"Refund of Php{amount_to_refund:.2f} initiated. (Stripe refund integration goes here).")
                     original_booking.payment_status = 'REFUNDED' # Or 'PARTIALLY_REFUNDED'
                 else:
                     messages.info(request, "No additional payment or refund required for this reschedule.")
@@ -511,6 +514,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
 
                 # 3. Update Booking
                 original_booking.trip = new_trip
+                original_booking.number_of_passengers = num_travelers
                 original_booking.total_price = new_total_price_base + rescheduling_charge
                 original_booking.status = 'CONFIRMED'
                 original_booking.save()
