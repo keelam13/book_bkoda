@@ -17,9 +17,15 @@
 </article>
 
 <article class="container trips-display mt-4">
+     {% if is_rescheduling_mode %}
+        <div class="alert alert-info text-center" role="alert">
+            Rescheduling Booking: <strong>{{ original_booking.booking_reference }}</strong> (Original Trip: {{ original_booking.trip.origin }} to {{ original_booking.trip.destination }} on {{ original_booking.trip.date|date:"F d, Y" }})
+            <br>Select a new trip below.
+        </div>
+    {% endif %}
     <div class="mb-3 d-flex flex-column flex-sm-row justify-content-sm-around">
         <div class="col-md-4 mb-2 mb-sm-0 text-center">
-            <a href="{% url 'trips' %}?departure_date={{ previous_day|date:'Y-m-d' }}&origin={{ origin }}&destination={{ destination }}&num_travelers={{ number_of_passengers }}"
+            <a href="{% url 'trips' %}?departure_date={{ previous_day|date:'Y-m-d' }}&origin={{ origin }}&destination={{ destination }}&num_travelers={{ number_of_passengers }}{% if is_rescheduling_mode %}&reschedule_booking_id={{ original_booking_id }}{% endif %}"
                 class="btn btn-sm btn-primary w-100 d-flex align-items-center justify-content-center py-2"
                 aria-label="Previous Day" title="Previous Day">Previous Day</a>
         </div>
@@ -27,7 +33,7 @@
             <span class="btn btn-sm btn-light w-100 d-flex align-items-center justify-content-center py-2">{{ current_day|date:"F d, Y" }}</span>
         </div>
         <div class="col-md-4 mb-2 mb-sm-0 text-center">
-            <a href="{% url 'trips' %}?departure_date={{ next_day|date:'Y-m-d' }}&origin={{ origin }}&destination={{ destination }}&num_travelers={{ number_of_passengers }}"
+            <a href="{% url 'trips' %}?departure_date={{ next_day|date:'Y-m-d' }}&origin={{ origin }}&destination={{ destination }}&num_travelers={{ number_of_passengers }}{% if is_rescheduling_mode %}&reschedule_booking_id={{ original_booking_id }}{% endif %}"
                 class="btn btn-sm btn-primary w-100 d-flex align-items-center justify-content-center py-2"
                 aria-label="Next Day" title="Next Day">Next Day</a>
         </div>
@@ -69,15 +75,23 @@
                         </div>
                         <div class="action-buttons">
                             {% if trip.available_seats != 0 %}
-                                <a href="{% url 'book_trip' trip_id=trip.trip_id number_of_passengers=number_of_passengers %}"
-                                    class="btn btn-sm btn-primary"
-                                    aria-label="Reserve Seat" title="Reserve Seat">
-                                    Book Now
-                                </a>
+                                {% if is_rescheduling_mode %}
+                                    <a href="{% url 'manage_booking:booking_reschedule_confirm' booking_id=original_booking_id new_trip_id=trip.trip_id %}"
+                                        class="btn btn-sm btn-warning"
+                                        aria-label="Select New Trip" title="Select New Trip">
+                                        Select for Reschedule
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'book_trip' trip_id=trip.trip_id number_of_passengers=number_of_passengers %}"
+                                        class="btn btn-sm btn-primary"
+                                        aria-label="Reserve Seat" title="Reserve Seat">
+                                        Book Now
+                                    </a>
+                                {% endif %}
                             {% elif trip.date|is_before_now:trip.departure_time %}
-                                <span class="badge badge-danger p-2" title="Past Trip">Past Trip</span>
+                                <span class="badge bg-danger p-2" title="Past Trip">Past Trip</span>
                             {% else %}
-                                <span class="badge badge-warning p-2" title="Fully booked">Fully Booked</span>
+                                <span class="badge bg-warning p-2" title="Fully booked">Fully Booked</span>
                             {% endif %}
                         </div>
                     </div>

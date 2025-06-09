@@ -2,9 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.conf import settings
+from django.urls import reverse
 from booking.models import Booking, BookingPolicy
 from trips.models import Trip
 from django.db.models import Prefetch
+from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -322,3 +324,66 @@ def booking_cancel(request, booking_id):
         'policy': policy,
     }
     return render(request, 'manage_booking/booking_cancel_confirm.html', context)
+
+
+@login_required
+def booking_reschedule_select_trip(request, booking_id):
+    """
+    Checks if a booking is eligible for rescheduling and then redirects
+    to the main trip search page, indicating reschedule mode.
+    """
+    original_booking = get_object_or_404(Booking.objects.select_related('trip'), pk=booking_id, user=request.user)
+
+    try:
+        policy = BookingPolicy.objects.first()
+        if not policy:
+            messages.error(request, "No booking policy found. Please configure a policy in the admin.")
+            return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
+    except BookingPolicy.DoesNotExist:
+        messages.error(request, "No booking policy found. Please configure a policy in the admin.")
+        return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
+
+    can_reschedule = False
+    time_until_departure_hours = -1
+
+    eligible_status_for_action = (
+        original_booking.status == 'CONFIRMED' and original_booking.payment_status == 'PAID'
+    )
+
+    if original_booking.trip.date and original_booking.trip.departure_time:
+        departure_datetime_naive = datetime.combine(original_booking.trip.date, original_booking.trip.departure_time)
+        departure_datetime = timezone.make_aware(departure_datetime_naive)
+        current_time = timezone.now()
+        time_until_departure = departure_datetime - current_time
+        time_until_departure_hours = time_until_departure.total_seconds() / 3600
+
+        # Check policy for rescheduling eligibility
+        if eligible_status_for_action:
+            if time_until_departure_hours > policy.free_rescheduling_cutoff_hours:
+                can_reschedule = True
+            elif time_until_departure_hours >= policy.late_rescheduling_cutoff_hours:
+                can_reschedule = True
+            else:
+                messages.error(request, f"Rescheduling is no longer allowed (less than {policy.late_rescheduling_cutoff_hours} hours before departure).")
+        else:
+            messages.error(request, "This booking cannot be rescheduled due to its current status or payment status.")
+    else:
+        messages.error(request, "Original trip departure date or time is missing, unable to determine rescheduling eligibility.")
+
+    if not can_reschedule:
+        return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
+
+    redirect_url = reverse('trips') + f'?reschedule_booking_id={original_booking.id}' \
+                                      f'&origin={original_booking.trip.origin}' \
+                                      f'&destination={original_booking.trip.destination}' \
+                                      f'&departure_date={original_booking.trip.date.strftime("%Y-%m-%d")}' \
+                                      f'&num_travelers={original_booking.number_of_passengers}'
+
+    messages.info(request, "Please select a new trip from the list below.")
+    return redirect(redirect_url)
+
+
+@login_required
+def booking_reschedule_confirm(request, booking_id, new_trip_id):
+    messages.info(request, f"You selected new trip {new_trip_id} for booking {booking_id}. Confirmation logic will go here.")
+    return redirect('manage_booking:booking_detail', booking_id=booking_id)

@@ -47,7 +47,7 @@
 
             <div class="mt-4 text-center">
                 {% if can_reschedule %}
-                <a href="" class="btn btn-warning me-2">Reschedule Booking</a>
+                <a href="{% url 'manage_booking:booking_reschedule_select_trip' booking.id %}" class="btn btn-warning me-2">Reschedule Booking</a>
                 {% endif %}
                 {% if can_cancel %}
                 <a href="{% url 'manage_booking:booking_cancel' booking.id %}" class="btn btn-danger">Cancel Booking</a>
