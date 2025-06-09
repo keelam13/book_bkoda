@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.conf import settings
+from django.db import transaction
 from django.urls import reverse
 from booking.models import Booking, BookingPolicy
 from trips.models import Trip
@@ -385,5 +386,138 @@ def booking_reschedule_select_trip(request, booking_id):
 
 @login_required
 def booking_reschedule_confirm(request, booking_id, new_trip_id):
-    messages.info(request, f"You selected new trip {new_trip_id} for booking {booking_id}. Confirmation logic will go here.")
-    return redirect('manage_booking:booking_detail', booking_id=booking_id)
+    original_booking = get_object_or_404(Booking.objects.select_related('trip'), pk=booking_id, user=request.user)
+    new_trip = get_object_or_404(Trip, pk=new_trip_id)
+
+    try:
+        policy = BookingPolicy.objects.first()
+        if not policy:
+            messages.error(request, "No booking policy found. Please configure a policy in the admin.")
+            return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
+    except BookingPolicy.DoesNotExist:
+        messages.error(request, "No booking policy found. Please configure a policy in the admin.")
+        return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
+
+    # --- Rescheduling Eligibility Check ---
+    can_proceed_with_reschedule = False
+    reschedule_type_message = ""
+    time_until_departure_hours = -1
+
+    departure_datetime_naive = datetime.combine(original_booking.trip.date, original_booking.trip.departure_time)
+    departure_datetime = timezone.make_aware(departure_datetime_naive)
+    current_time = timezone.now()
+    time_until_departure = departure_datetime - current_time
+    time_until_departure_hours = time_until_departure.total_seconds() / 3600
+
+    if not (original_booking.status == 'CONFIRMED' and original_booking.payment_status == 'PAID'):
+        messages.error(request, "This booking cannot be rescheduled due to its current status or payment status.")
+        return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
+
+    if new_trip.available_seats < original_booking.number_of_passengers:
+        messages.error(request, f"The selected new trip ({new_trip.trip_number}) does not have enough available seats ({new_trip.available_seats}) for {original_booking.number_of_passengers} passengers.")
+        redirect_url = reverse('trips') + f'?reschedule_booking_id={original_booking.id}' \
+                                          f'&origin={original_booking.trip.origin}' \
+                                          f'&destination={original_booking.trip.destination}' \
+                                          f'&departure_date={original_booking.trip.date.strftime("%Y-%m-%d")}' \
+                                          f'&num_travelers={original_booking.number_of_passengers}'
+        return redirect(redirect_url)
+
+    # Prevent rescheduling to the exact same trip
+    if original_booking.trip.trip_id == new_trip.trip_id:
+        messages.warning(request, "You cannot reschedule to the same trip. Please select a different one.")
+        redirect_url = reverse('trips') + f'?reschedule_booking_id={original_booking.id}' \
+                                          f'&origin={original_booking.trip.origin}' \
+                                          f'&destination={original_booking.trip.destination}' \
+                                          f'&departure_date={original_booking.trip.date.strftime("%Y-%m-%d")}' \
+                                          f'&num_travelers={original_booking.number_of_passengers}'
+        return redirect(redirect_url)
+
+
+    # --- Financial Calculation ---
+    original_total_price = original_booking.total_price
+    new_total_price_base = new_trip.price * original_booking.number_of_passengers
+    fare_difference = new_total_price_base - original_total_price
+    rescheduling_charge = Decimal('0.00')
+
+    if time_until_departure_hours > policy.free_rescheduling_cutoff_hours:
+        reschedule_type_message = "Free Reschedule"
+        can_proceed_with_reschedule = True
+    elif time_until_departure_hours >= policy.late_rescheduling_cutoff_hours:
+        reschedule_type_message = "Late Reschedule"
+        rescheduling_charge = original_total_price * policy.late_rescheduling_charge_percentage
+        can_proceed_with_reschedule = True
+    else:
+        reschedule_type_message = "Not Allowed"
+        can_proceed_with_reschedule = False
+        messages.error(request, f"Rescheduling is no longer allowed (less than {policy.late_rescheduling_cutoff_hours} hours before original departure).")
+        return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
+
+    # Calculate final amounts
+    total_due_or_refund = fare_difference + rescheduling_charge # Positive means due, negative means refund
+
+    amount_to_pay = Decimal('0.00')
+    amount_to_refund = Decimal('0.00')
+
+    if total_due_or_refund > 0:
+        amount_to_pay = total_due_or_refund
+    elif total_due_or_refund < 0:
+        amount_to_refund = abs(total_due_or_refund) # Convert negative to positive refund amount
+
+    # --- GET Request (Display Confirmation Page) ---
+    if request.method == 'GET':
+        context = {
+            'original_booking': original_booking,
+            'new_trip': new_trip,
+            'policy': policy,
+            'reschedule_type_message': reschedule_type_message,
+            'original_total_price': original_total_price,
+            'new_total_price_base': new_total_price_base,
+            'fare_difference': fare_difference,
+            'rescheduling_charge': rescheduling_charge,
+            'amount_to_pay': amount_to_pay,
+            'amount_to_refund': amount_to_refund,
+        }
+        return render(request, 'manage_booking/booking_reschedule_confirm.html', context)
+
+    # --- POST Request (Process Reschedule) ---
+    elif request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # 1. Handle Payment/Refund (PLACEHOLDER - INTEGRATE STRIPE HERE)
+                if amount_to_pay > 0:
+                    # Implement Stripe payment processing here
+                    # For now, simulate success
+                    messages.success(request, f"Payment of Php{amount_to_pay|floatformat:2} required. (Stripe integration goes here).")
+                    original_booking.payment_status = 'PAID' # Or 'PENDING_PAYMENT_CONFIRMATION'
+                    # If payment fails, set status to FAILED and return with error
+                elif amount_to_refund > 0:
+                    # Implement Stripe refund processing here
+                    # For now, simulate success
+                    messages.success(request, f"Refund of Php{amount_to_refund|floatformat:2} initiated. (Stripe refund integration goes here).")
+                    original_booking.payment_status = 'REFUNDED' # Or 'PARTIALLY_REFUNDED'
+                else:
+                    messages.info(request, "No additional payment or refund required for this reschedule.")
+                    # Keep payment status as PAID if no changes needed
+                    original_booking.payment_status = 'PAID'
+
+
+                # 2. Update Seat Availability
+                original_booking.trip.available_seats += original_booking.number_of_passengers
+                original_booking.trip.save()
+
+                new_trip.available_seats -= original_booking.number_of_passengers
+                new_trip.save()
+
+
+                # 3. Update Booking
+                original_booking.trip = new_trip
+                original_booking.total_price = new_total_price_base + rescheduling_charge
+                original_booking.status = 'CONFIRMED'
+                original_booking.save()
+
+                messages.success(request, f"Booking {original_booking.booking_reference} successfully rescheduled to {new_trip.trip_number}!")
+                return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
+
+        except Exception as e:
+            messages.error(request, f"An error occurred during rescheduling: {e}")
+            return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
