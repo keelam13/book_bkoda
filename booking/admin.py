@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Booking, Passenger
+from .models import Booking, Passenger, BookingPolicy
 from trips.models import Trip
 
 class PassengerInline(admin.TabularInline):
@@ -66,3 +66,35 @@ class BookingAdmin(admin.ModelAdmin):
     trip_number_display.short_description = 'Trip Number'
 
 admin.site.register(Booking, BookingAdmin)
+admin.site.register(Passenger)
+
+
+@admin.register(BookingPolicy)
+class BookingPolicyAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'free_cancellation_cutoff_hours',
+        'late_cancellation_cutoff_hours',
+        'late_cancellation_fee_percentage',
+        'free_rescheduling_cutoff_hours',
+        'late_rescheduling_charge_percentage',
+    )
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'description')
+        }),
+        ('Cancellation Policy', {
+            'fields': (
+                'free_cancellation_cutoff_hours',
+                'late_cancellation_cutoff_hours',
+                'late_cancellation_fee_percentage',
+            )
+        }),
+        ('Rescheduling Policy', {
+            'fields': (
+                'free_rescheduling_cutoff_hours',
+                'late_rescheduling_cutoff_hours',
+                'late_rescheduling_charge_percentage',
+            )
+        }),
+    )
