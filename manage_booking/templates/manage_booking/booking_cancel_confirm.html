@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Confirm Cancellation</h2>
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0">Cancelling Booking Reference: {{ booking.booking_reference }}</h4>
+        </div>
+        <div class="card-body">
+            <p>You are about to cancel your booking for the trip to <strong>{{ booking.trip.destination }}</strong> on <strong>{{ booking.trip.date|date:"F d, Y" }}</strong> at <strong>{{ booking.trip.departure_time|time:"H:i" }}</strong>.</p>
+            <p>Number of Passengers: <strong>{{ booking.number_of_passengers }}</strong></p>
+            <p>Total Price Paid: <strong>&euro;{{ booking.total_price }}</strong></p>
+
+            <hr>
+
+            {% if time_until_departure_hours > 24 %}
+                <p class="lead text-success">This cancellation is **FREE OF CHARGE**.</p>
+                <p class="mb-3">You will receive a **FULL REFUND** of <strong>&euro;{{ booking.total_price }}</strong>.</p>
+            {% elif time_until_departure_hours > 3 %} {# Between 24 and 3 hours #}
+                <p class="lead text-warning">This is a **LATE CANCELLATION**.</p>
+                <p class="mb-3">A **50% cancellation fee** will be applied.</p>
+                <p>You will receive a refund of <strong>&euro;{{ refund_amount|floatformat:2 }}</strong> (50% of the total fare).</p>
+            {% else %} {# Less than 3 hours, should be prevented by view logic but as a fallback #}
+                <p class="lead text-danger">Cancellation is allowed, but **NO REFUND** will be issued.</p>
+                <p class="mb-3">You will forfeit the entire fare of <strong>Php{{booking.total_price|floatformat:2 }}</strong>.</p>
+                <p>Please review our <a href="#">booking policy</a> for more details.</p>
+            {% endif %}
+
+            <hr>
+
+            {% if can_proceed_with_cancellation %}
+                <p class="text-danger fw-bold">Are you sure you want to proceed with this cancellation?</p>
+                <form action="{% url 'manage_booking:booking_cancel' booking.id %}" method="post" class="text-center">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-lg me-3">Confirm Cancellation</button>
+                    <a href="{% url 'manage_booking:booking_detail' booking.id %}" class="btn btn-secondary btn-lg">Go Back</a>
+                </form>
+            {% else %}
+                <div class="alert alert-info text-center" role="alert">
+                    This booking cannot be cancelled at this time based on our policy.
+                </div>
+                <div class="text-center">
+                    <a href="{% url 'manage_booking:booking_detail' booking.id %}" class="btn btn-secondary btn-lg">Go Back</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

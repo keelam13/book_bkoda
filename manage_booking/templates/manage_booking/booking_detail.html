@@ -13,10 +13,11 @@
                 <div class="col-md-6">
                     <h5>Trip Details</h5>
                     <p><strong>Trip Number:</strong> {{ booking.trip.trip_number }}</p>
+                    <p><strong>Origin:</strong> {{ booking.trip.origin }}</p>
                     <p><strong>Destination:</strong> {{ booking.trip.destination }}</p>
                     <p><strong>Date:</strong> {{ booking.trip.date|date:"F d, Y" }}</p>
                     <p><strong>Departure Time:</strong> {{ booking.trip.departure_time|time:"H:i" }}</p>
-                    <p><strong>Arrival Time:</strong> {{ booking.trip.aarival_time|"H:i" }}</p>
+                    <p><strong>Arrival Time:</strong> {{ booking.trip.arrival_time|time:"H:i" }}</p>
                     <p><strong>Price per Person:</strong> &euro;{{ booking.trip.price }}</p>
                 </div>
                 <div class="col-md-6">
@@ -49,7 +50,7 @@
                 <a href="" class="btn btn-warning me-2">Reschedule Booking</a>
                 {% endif %}
                 {% if can_cancel %}
-                <a href="" class="btn btn-danger">Cancel Booking</a>
+                <a href="{% url 'manage_booking:booking_cancel' booking.id %}" class="btn btn-danger">Cancel Booking</a>
                 {% endif %}
                 <a href="{% url 'manage_booking:booking_list' %}" class="btn btn-secondary ms-2">Back to My Bookings</a>
             </div>

@@ -40,6 +40,8 @@ def book_trip(request, trip_id, number_of_passengers):
             'trip_id': trip.trip_id,
             'num_passengers': num_passengers,
             'total_price': str(total_price),
+            'user_id': request.user.id if request.user.is_authenticated else 'anonymous',
+            'booking_reference': 'temp_ref_on_creation',
         }
     )
 
@@ -95,6 +97,7 @@ def book_trip(request, trip_id, number_of_passengers):
                         if stripe_intent.status == 'succeeded':
                             booking.payment_status = 'PAID'
                             booking.status = 'CONFIRMED'
+                            booking.stripe_payment_intent_id = stripe_intent.id
                             booking.save()
                             messages.success(request, f"Booking confirmed and paid! Reference: {booking.booking_reference}")
                             return redirect('booking_success', booking_id=booking.id)
