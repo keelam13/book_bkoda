@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.conf import settings
-from booking.models import Booking
+from booking.models import Booking, BookingPolicy
 from trips.models import Trip
 from django.db.models import Prefetch
 from django.utils import timezone
@@ -45,6 +45,15 @@ def booking_detail(request, booking_id):
         user=request.user
     )
 
+    try:
+        policy = BookingPolicy.objects.first()
+        if not policy:
+            messages.error(request, "No booking policy found. Please configure a policy in the admin.")
+            return redirect('some_error_page_or_home')
+    except BookingPolicy.DoesNotExist:
+        messages.error(request, "No booking policy found. Please configure a policy in the admin.")
+        return redirect('some_error_page_or_home')
+
     can_cancel = False
     can_reschedule = False
     cancellation_fee_applied = False
@@ -53,6 +62,8 @@ def booking_detail(request, booking_id):
     eligible_status_for_action = (
         booking.status == 'CONFIRMED' and booking.payment_status == 'PAID'
     )
+
+    time_until_departure_hours = -1
 
     if booking.trip.date and booking.trip.departure_time:
         departure_datetime_naive = datetime.combine(booking.trip.date, booking.trip.departure_time)
@@ -65,30 +76,29 @@ def booking_detail(request, booking_id):
         time_until_departure_hours = time_until_departure.total_seconds() / 3600
 
         if eligible_status_for_action:
-            if time_until_departure_hours > 24:
+            if time_until_departure_hours > policy.free_cancellation_cutoff_hours:
                 # Free cancellation/rescheduling
                 can_cancel = True
                 can_reschedule = True
-                messages.info(request, "Cancellation and rescheduling are free if done more than 24 hours before departure.")
-            elif time_until_departure_hours > 3: # Within 24 hours down to 3 hours
+                messages.info(request, f"Cancellation and rescheduling are free if done more than {policy.free_cancellation_cutoff_hours} hours before departure.")
+            elif time_until_departure_hours > policy.late_cancellation_cutoff_hours: # Within 24 hours down to 3 hours
                 # Cancellation with 50% fee
                 can_cancel = True
                 cancellation_fee_applied = True
-                messages.info(request, "Cancellation within 24 to 3 hours before departure incurs a 50% fee.")
+                messages.info(request, f"Cancellation within {policy.free_cancellation_cutoff_hours} to {policy.late_cancellation_cutoff_hours} hours before departure incurs a {int(policy.late_cancellation_fee_percentage * 100)}% fee.")
                 
                 # Rescheduling with 15% charge
                 can_reschedule = True
                 rescheduling_charge_applied = True
-                messages.info(request, "Rescheduling within 24 to 3 hours before departure incurs a 15% charge.")
+                messages.info(request, f"Rescheduling between {policy.free_rescheduling_cutoff_hours} to {policy.late_rescheduling_cutoff_hours} hours before departure incurs a {int(policy.late_rescheduling_charge_percentage * 100)}% charge.")
                 
             else: # CANCELLATION POLICY FOR < 3 HOURS: ALLOW CANCEL, NO REFUND
                 can_cancel = True # Allow cancellation
                 cancellation_fee_applied = False
-                messages.warning(request, "Cancellation is allowed less than 3 hours before departure, but NO REFUND will be issued.")
-                
+                messages.warning(request, f"Cancellation is allowed less than {policy.late_cancellation_cutoff_hours} hours before departure, but NO REFUND will be issued.")
                 # Rescheduling is NOT allowed
                 can_reschedule = False
-                messages.warning(request, "Rescheduling is no longer allowed (less than 3 hours before departure).")
+                messages.warning(request, f"Rescheduling is no longer allowed (less than {policy.late_rescheduling_cutoff_hours} hours before departure).")
 
         else:
             messages.info(request, "This booking cannot be modified due to its current status or payment status.")
@@ -104,7 +114,8 @@ def booking_detail(request, booking_id):
         'can_reschedule': can_reschedule,
         'cancellation_fee_applied': cancellation_fee_applied,
         'rescheduling_charge_applied': rescheduling_charge_applied,
-        'time_until_departure_hours': time_until_departure_hours if 'time_until_departure_hours' in locals() else -1,
+        'time_until_departure_hours': time_until_departure_hours,
+        'policy': policy,
     }
     return render(request, 'manage_booking/booking_detail.html', context)
 
@@ -117,9 +128,18 @@ def booking_cancel(request, booking_id):
         user=request.user
     )
 
+    try:
+        policy = BookingPolicy.objects.first()
+        if not policy:
+            messages.error(request, "No booking policy found. Please configure a policy in the admin.")
+            return redirect('some_error_page_or_home')
+    except BookingPolicy.DoesNotExist:
+        messages.error(request, "No booking policy found. Please configure a policy in the admin.")
+        return redirect('some_error_page_or_home')
+
     can_proceed_with_cancellation = False
     refund_amount = Decimal('0.00')
-    cancellation_fee_rate = Decimal('0.50')
+    cancellation_fee_rate = policy.late_cancellation_fee_percentage 
 
     eligible_status_for_action = (
         booking.status == 'CONFIRMED' and booking.payment_status == 'PAID'
@@ -133,23 +153,22 @@ def booking_cancel(request, booking_id):
         time_until_departure_hours = time_until_departure.total_seconds() / 3600
 
         if eligible_status_for_action:
-            if time_until_departure_hours > 24:
+            if time_until_departure_hours > policy.free_cancellation_cutoff_hours:
                 can_proceed_with_cancellation = True
                 refund_amount = booking.total_price # Full refund
                 refund_type_message = "FULL"
-            elif time_until_departure_hours > 3: # Between 24 and 3 hours
+            elif time_until_departure_hours >= policy.late_cancellation_cutoff_hours:
                 can_proceed_with_cancellation = True
-                refund_amount = booking.total_price * (1 - cancellation_fee_rate) # 50% refund
-                refund_type_message = "50% (due to late cancellation fee)"
-            else: # CANCELLATION POLICY FOR < 3 HOURS: ALLOW CANCEL, NO REFUND
+                refund_amount = booking.total_price * (1 - cancellation_fee_rate)
+                refund_type_message = f"{int((1 - cancellation_fee_rate) * 100)}% (due to late cancellation fee)"
+            else:
                 can_proceed_with_cancellation = True
                 refund_amount = Decimal('0.00') # NO REFUND
-                refund_type_message = "NONE (less than 3 hours before departure)"
+                refund_type_message = f"NONE (less than {policy.late_cancellation_cutoff_hours} hours before departure)"
                 messages.warning(request, "Cancellation is allowed, but no refund will be issued due to proximity to departure time.")
         else:
             messages.error(request, "This booking cannot be cancelled due to its current status or payment status.")
             refund_type_message = "N/A"
-
     else:
         messages.error(request, "Departure date or time is missing for this trip, unable to determine cancellation eligibility.")
         refund_type_message = "N/A"
@@ -157,13 +176,37 @@ def booking_cancel(request, booking_id):
 
     # --- Handle POST request (Confirm Cancellation) ---
     if request.method == 'POST':
-        if not can_proceed_with_cancellation:
+         
+        recalc_can_proceed = False
+        recalc_refund_amount = Decimal('0.00')
+        recalc_refund_type_message = "N/A"
+
+        if booking.trip.date and booking.trip.departure_time:
+            departure_datetime_recheck = timezone.make_aware(datetime.combine(booking.trip.date, booking.trip.departure_time))
+            time_until_departure_recheck = departure_datetime_recheck - timezone.now()
+            time_until_departure_hours_recheck = time_until_departure_recheck.total_seconds() / 3600
+
+            if eligible_status_for_action:
+                if time_until_departure_hours_recheck > policy.free_cancellation_cutoff_hours:
+                    recalc_can_proceed = True
+                    recalc_refund_amount = booking.total_price
+                    recalc_refund_type_message = "FULL"
+                elif time_until_departure_hours_recheck >= policy.late_cancellation_cutoff_hours:
+                    recalc_can_proceed = True
+                    recalc_refund_amount = booking.total_price * (1 - cancellation_fee_rate)
+                    recalc_refund_type_message = f"{int((1 - cancellation_fee_rate) * 100)}% (due to late cancellation fee)"
+                else: # Allow cancel, no refund
+                    recalc_can_proceed = True
+                    recalc_refund_amount = Decimal('0.00')
+                    recalc_refund_type_message = f"NONE (less than {policy.late_cancellation_cutoff_hours} hours before departure)"
+
+        if not recalc_can_proceed:
             messages.error(request, "Cancellation cannot be processed at this time based on policy or booking status.")
             return redirect('manage_booking:booking_detail', booking_id=booking.id)
 
         try:
             # Step 1: Process Refund if applicable
-            if refund_amount > 0 and booking.stripe_payment_intent_id:
+            if recalc_refund_amount > 0 and booking.stripe_payment_intent_id:
                 stripe_refund_amount_cents = round(refund_amount * 100)
 
                 refund = stripe.Refund.create(
@@ -172,20 +215,20 @@ def booking_cancel(request, booking_id):
                     metadata={
                         'booking_id': str(booking.id),
                         'booking_reference': booking.booking_reference,
-                        'refund_type': refund_type_message,
+                        'refund_type': recalc_refund_type_message,
                     }
                 )
                 
                 if refund.status == 'succeeded':
-                    booking.payment_status = 'REFUNDED' if refund_amount == booking.total_price else 'PARTIALLY_REFUNDED'
-                    messages.success(request, f"Refund of €{refund_amount} processed successfully via Stripe.")
+                    booking.payment_status = 'REFUNDED' if recalc_refund_amount == booking.total_price else 'PARTIALLY_REFUNDED'
+                    messages.success(request, f"Refund of Php{recalc_refund_amount} processed successfully via Stripe.")
                 else:
                     booking.payment_status = 'REFUND_PENDING'
                     messages.warning(request, f"Stripe refund status: {refund.status}. It may still be processing or require review. We will inform you once it's complete.")
 
-            elif refund_amount > 0 and not booking.stripe_payment_intent_id:
+            elif recalc_refund_amount > 0 and not booking.stripe_payment_intent_id:
                 booking.payment_status = 'REFUND_PENDING_MANUAL'
-                messages.info(request, f"Your booking is cancelled. A refund of Php{refund_amount} is pending manual processing (non-card payment). Please check your email for instructions.")
+                messages.info(request, f"Your booking is cancelled. A refund of Php{recalc_refund_amount} is pending manual processing (non-card payment). Please check your email for instructions.")
 
             else:
                 booking.payment_status = 'NO_REFUND'

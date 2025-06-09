@@ -14,3 +14,8 @@ def get_field(form, field_name):
 def concat_strings(value1, value2):
     """Concatenates two values as strings."""
     return str(value1) + str(value2)
+
+@register.filter
+def mul(value, arg):
+    "Multiplies the value by the argument"
+    return value * arg

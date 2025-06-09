@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load booking_filters %}
 
 {% block content %}
 <div class="container mt-5">
@@ -11,20 +12,20 @@
         <div class="card-body">
             <p>You are about to cancel your booking for the trip to <strong>{{ booking.trip.destination }}</strong> on <strong>{{ booking.trip.date|date:"F d, Y" }}</strong> at <strong>{{ booking.trip.departure_time|time:"H:i" }}</strong>.</p>
             <p>Number of Passengers: <strong>{{ booking.number_of_passengers }}</strong></p>
-            <p>Total Price Paid: <strong>&euro;{{ booking.total_price }}</strong></p>
+            <p>Total Price Paid: <strong>Php{{ booking.total_price }}</strong></p>
 
             <hr>
 
-            {% if time_until_departure_hours > 24 %}
+            {% if time_until_departure_hours > policy.free_cancellation_cutoff_hours %}
                 <p class="lead text-success">This cancellation is **FREE OF CHARGE**.</p>
-                <p class="mb-3">You will receive a **FULL REFUND** of <strong>&euro;{{ booking.total_price }}</strong>.</p>
-            {% elif time_until_departure_hours > 3 %} {# Between 24 and 3 hours #}
+                <p class="mb-3">You will receive a **FULL REFUND** of <strong>Php{{ booking.total_price|floatformat:2 }}</strong>.</p>
+            {% elif time_until_departure_hours > policy.late_cancellation_cutoff_hours %}
                 <p class="lead text-warning">This is a **LATE CANCELLATION**.</p>
-                <p class="mb-3">A **50% cancellation fee** will be applied.</p>
-                <p>You will receive a refund of <strong>&euro;{{ refund_amount|floatformat:2 }}</strong> (50% of the total fare).</p>
-            {% else %} {# Less than 3 hours, should be prevented by view logic but as a fallback #}
+                <p class="mb-3">A **{{ policy.late_cancellation_fee_percentage|mul:100|floatformat:0 }}% cancellation fee** will be applied.</p>
+                <p>You will receive a refund of <strong>Php{{ refund_amount|floatformat:2 }}</strong>.</p>
+            {% else %}
                 <p class="lead text-danger">Cancellation is allowed, but **NO REFUND** will be issued.</p>
-                <p class="mb-3">You will forfeit the entire fare of <strong>Php{{booking.total_price|floatformat:2 }}</strong>.</p>
+                <p class="mb-3">You will forfeit the entire fare of <strong>Php{{ booking.total_price|floatformat:2 }}</strong>.</p>
                 <p>Please review our <a href="#">booking policy</a> for more details.</p>
             {% endif %}
 
@@ -39,7 +40,7 @@
                 </form>
             {% else %}
                 <div class="alert alert-info text-center" role="alert">
-                    This booking cannot be cancelled at this time based on our policy.
+                    This booking cannot be cancelled at this time based on its current status or payment status.
                 </div>
                 <div class="text-center">
                     <a href="{% url 'manage_booking:booking_detail' booking.id %}" class="btn btn-secondary btn-lg">Go Back</a>
