@@ -566,9 +566,30 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                     messages.error(request, "Payment needs to be completed via the payment form.")
                     return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id, number_of_passengers]))
             elif selected_payment_method == 'other':
-                messages.success(request, f"Booking created! Please complete payment via the selected method. Your reference is {original_booking.booking_reference}.")
-                return redirect(reverse('manage_booking:booking_detail', args=[original_booking.id]))
-        
+                try:
+                    with transaction.atomic():
+                        # Update Seat Availability
+                        original_booking.trip.available_seats += original_booking.number_of_passengers
+                        original_booking.trip.save()
+                        new_trip.available_seats -= num_passengers
+                        new_trip.save()
+
+                        # Update Booking details
+                        original_booking.trip = new_trip
+                        original_booking.number_of_passengers = num_passengers
+                        original_booking.total_price = new_total_price_base_post + rescheduling_charge_post
+                        original_booking.status = 'PENDING_PAYMENT'
+                        original_booking.payment_status = 'PENDING'
+                        original_booking.stripe_payment_intent_id = None
+                        original_booking.save()
+
+                        messages.success(request, f"Booking {original_booking.booking_reference} successfully rescheduled to {new_trip.trip_number}! Please complete payment via the selected method.")
+                        return redirect(reverse('manage_booking:booking_detail', args=[original_booking.id]))
+
+                except Exception as e:
+                    messages.error(request, f"An error occurred during rescheduling with manual payment: {e}")
+                    return redirect(reverse('manage_booking:booking_detail', args=[original_booking.id]))
+
         else:
             try:
                 with transaction.atomic():
