@@ -71,9 +71,6 @@
     </div>
 </section>
 
-{# ... rest of your JavaScript for the form ... #}
-{# Move all the JavaScript related to the form (date input, swap button) here, or include it from a static file. #}
-{# This ensures the JS runs whenever this partial is included. #}
 <script>
     document.addEventListener('DOMContentLoaded', (event) => {
         const dateInputId = "{{ form.departure_date.id_for_label }}";

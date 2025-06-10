@@ -19,7 +19,7 @@
         <div class="col-md-8">
             <div class="card booking-section-card mb-4">
                 <div class="card-body">
-                    <form method="post" id="booking-form" action="{% url 'manage_booking:booking_reschedule_confirm' booking_id=original_booking.id new_trip_id=new_trip.trip_id number_of_passengers=number_of_passengers %}">
+                    <form method="post" id="booking-form" action="{% url 'manage_booking:booking_reschedule_confirm' booking_id=original_booking.id new_trip_id=new_trip.trip_id %}">
                         {% csrf_token %}
                         <h4 class="section-title mt-5 mb-4"><i class="bi bi-arrow-repeat"></i> Confirm Reschedule</h4>
 
@@ -39,7 +39,7 @@
                                 <p><strong>Route:</strong> {{ new_trip.origin }} to {{ new_trip.destination }}</p>
                                 <p><strong>Date:</strong> {{ new_trip.date|date:"F d, Y" }}</p>
                                 <p><strong>Departure:</strong> {{ new_trip.departure_time|time:"h:i A" }}</p>
-                                <p><strong>Passengers:</strong> {{ number_of_passengers }}</p>
+                                <p><strong>Passengers:</strong> {{ original_booking.number_of_passengers }}</p>
                                 <p><strong>New Trip Base Price:</strong> Php{{ new_total_price_base|floatformat:2 }}</p>
                             </div>
                         </div>
@@ -120,7 +120,7 @@
                                             Cash (Payment Centers) / Money Wallet (GCash)
                                         </label>
                                     </div>
-                                    <div id="otherPaymentDetails" class="payment-details-section card p-3 mb-3 border-info" style="display: none;"> {# Hidden #}
+                                    <div id="otherPaymentDetails" class="payment-details-section card p-3 mb-3 border-info" style="display: none;">
                                         <h6 class="mb-3">Payment Instructions:</h6>
                                         <p class="small text-muted">If you select this option, your booking will be held for **24 hours**. You must complete
                                         your payment within this period via our designated payment centers or GCash to confirm

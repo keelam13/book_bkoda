@@ -461,7 +461,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
 
 
     # --- Financial Calculation ---
-    financials = -_calculate_reschedule_financials(original_booking, new_trip, policy)
+    financials = _calculate_reschedule_financials(original_booking, new_trip, policy)
     amount_to_pay = financials['amount_to_pay']
     amount_to_refund = financials['amount_to_refund']
     reschedule_type_message = financials['reschedule_type_message']
@@ -502,7 +502,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
             'rescheduling_charge': financials['rescheduling_charge'],
             'amount_to_pay': amount_to_pay,
             'amount_to_refund': amount_to_refund,
-            'number_of_passengers': num_passengers,
+            # 'number_of_passengers': num_passengers,
             'client_secret': client_secret,
             'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
         }
@@ -529,7 +529,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                             expected_amount_cents = int(amount_to_pay * 100)
                             if payment_intent.amount != expected_amount_cents:
                                 messages.error(request, "Payment amount mismatch. Please contact support.")
-                                return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id, number_of_passengers]))
+                                return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
 
                             with transaction.atomic():
                                 # Update seats
@@ -551,20 +551,20 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
 
                         elif payment_intent.status in ['requires_payment_method', 'requires_confirmation', 'requires_action', 'processing']:
                             messages.error(request, "Payment is still pending or requires further action. Please try again.")
-                            return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id, number_of_passengers]))
+                            return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id, ]))
                         else:
                             messages.error(request, f"Payment failed with status: {payment_intent.status}. Please try again.")
-                            return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id, number_of_passengers]))
+                            return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
 
                     except stripe.error.StripeError as e:
                         messages.error(request, f"Stripe error: {e}")
-                        return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id, number_of_passengers]))
+                        return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
                     except Exception as e:
                         messages.error(request, f"An unexpected error occurred: {e}")
-                        return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id, number_of_passengers]))
+                        return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
                 else:
                     messages.error(request, "Payment needs to be completed via the payment form.")
-                    return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id, number_of_passengers]))
+                    return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
             elif selected_payment_method == 'other':
                 try:
                     with transaction.atomic():

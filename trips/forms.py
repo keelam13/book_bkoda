@@ -27,3 +27,15 @@ class TripSearchForm(forms.Form):
         widget=forms.NumberInput(attrs={'placeholder': '1 Passenger', 'min': '1', 'class': 'form-control'}),
         label=""
     )
+
+
+    def __init__(self, *args, **kwargs):
+        is_rescheduling_mode = kwargs.pop('is_rescheduling_mode', False)
+        fixed_num_travelers = kwargs.pop('fixed_num_travelers', None)
+        super().__init__(*args, **kwargs)
+
+        if is_rescheduling_mode:
+            if fixed_num_travelers is not None:
+                self.fields['num_travelers'].initial = fixed_num_travelers
+            self.fields['num_travelers'].widget.attrs['readonly'] = True
+            self.fields['num_travelers'].help_text = "Number of travelers is fixed for reschedule."
