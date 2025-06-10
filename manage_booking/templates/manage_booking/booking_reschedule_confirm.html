@@ -2,111 +2,227 @@
 {% load static %}
 {% load humanize %}
 {% load mathfilters %}
+{% load crispy_forms_tags %}
+{% load booking_filters %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'booking/css/booking_form.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Confirm Reschedule</h2>
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-warning text-dark">
-            <h4 class="mb-0">Reschedule Booking: {{ original_booking.booking_reference }}</h4>
+<div class="container my-5 booking-page-container">
+    <div class="row">
+        <div class="col-12 mb-3">
+            <a href="javascript:history.back()" class="back-link">
+                <i class="fas fa-arrow-left me-2"></i> Back</a>
         </div>
-        <div class="card-body">
-            <p class="lead">You are about to reschedule your trip.</p>
+        <div class="col-md-8">
+            <div class="card booking-section-card mb-4">
+                <div class="card-body">
+                    <form method="post" id="booking-form" action="{% url 'manage_booking:booking_reschedule_confirm' booking_id=original_booking.id new_trip_id=new_trip.trip_id number_of_passengers=number_of_passengers %}">
+                        {% csrf_token %}
+                        <h4 class="section-title mt-5 mb-4"><i class="bi bi-arrow-repeat"></i> Confirm Reschedule</h4>
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <h5>Original Trip Details</h5>
-                    <p><strong>Route:</strong> {{ original_booking.trip.origin }} to {{ original_booking.trip.destination }}</p>
-                    <p><strong>Date:</strong> {{ original_booking.trip.date|date:"F d, Y" }}</p>
-                    <p><strong>Departure:</strong> {{ original_booking.trip.departure_time|time:"h:i A" }}</p>
-                    <p><strong>Passengers:</strong> {{ original_booking.number_of_passengers }}</p>
-                    <p><strong>Original Total Price:</strong> <span class="text-muted">Php{{ original_total_price|floatformat:2 }}</span></p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <h5>New Trip Details</h5>
-                    <p><strong>Route:</strong> {{ new_trip.origin }} to {{ new_trip.destination }}</p>
-                    <p><strong>Date:</strong> {{ new_trip.date|date:"F d, Y" }}</p>
-                    <p><strong>Departure:</strong> {{ new_trip.departure_time|time:"h:i A" }}</p>
-                    <p><strong>Passengers:</strong> {{ number_of_passengers }}</p>
-                    <p><strong>New Trip Base Price:</strong> Php{{ new_total_price_base|floatformat:2 }}</p>
+                        <p class="lead text-center mb-4">Please review the changes and confirm your reschedule.</p>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <h5>Original Trip Details</h5>
+                                <p><strong>Route:</strong> {{ original_booking.trip.origin }} to {{ original_booking.trip.destination }}</p>
+                                <p><strong>Date:</strong> {{ original_booking.trip.date|date:"F d, Y" }}</p>
+                                <p><strong>Departure:</strong> {{ original_booking.trip.departure_time|time:"h:i A" }}</p>
+                                <p><strong>Passengers:</strong> {{ original_booking.number_of_passengers }}</p>
+                                <p><strong>Original Total Price:</strong> <span class="text-muted">Php{{ original_total_price|floatformat:2 }}</span></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h5>New Trip Details</h5>
+                                <p><strong>Route:</strong> {{ new_trip.origin }} to {{ new_trip.destination }}</p>
+                                <p><strong>Date:</strong> {{ new_trip.date|date:"F d, Y" }}</p>
+                                <p><strong>Departure:</strong> {{ new_trip.departure_time|time:"h:i A" }}</p>
+                                <p><strong>Passengers:</strong> {{ number_of_passengers }}</p>
+                                <p><strong>New Trip Base Price:</strong> Php{{ new_total_price_base|floatformat:2 }}</p>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <h5>Rescheduling Summary</h5>
+                        <table class="table table-bordered table-sm">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Rescheduling Type:</strong></td>
+                                    <td>{{ reschedule_type_message }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Fare Difference:</strong></td>
+                                    <td>
+                                        {% if fare_difference > 0 %}
+                                            <span class="text-success">+ Php{{ fare_difference|floatformat:2 }}</span>
+                                        {% elif fare_difference < 0 %}
+                                            <span class="text-danger">- Php{{ fare_difference|abs|floatformat:2 }}</span>
+                                        {% else %}
+                                            Php0.00
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Rescheduling Charge ({{ policy.late_rescheduling_charge_percentage|mul:100|floatformat:0 }}%):</strong></td>
+                                    <td>Php{{ rescheduling_charge|floatformat:2 }}</td>
+                                </tr>
+                                <tr class="table-info">
+                                    <td><strong>Total Amount Due:</strong></td>
+                                    <td>
+                                        {% if amount_to_pay > 0 %}
+                                            <span class="text-success fw-bold">Php{{ amount_to_pay|floatformat:2 }}</span>
+                                        {% else %}
+                                            Php0.00
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td><strong>Total Amount to Refund:</strong></td>
+                                    <td>
+                                        {% if amount_to_refund > 0 %}
+                                            <span class="text-danger fw-bold">Php{{ amount_to_refund|floatformat:2 }}</span>
+                                        {% else %}
+                                            Php0.00
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <hr>
+
+                        {% if amount_to_pay > 0 %}
+                            <div class="alert alert-warning text-center">
+                                An additional payment of <strong>Php{{ amount_to_pay|floatformat:2 }}</strong> is required to complete this reschedule.
+                            </div>
+                            <h4 class="section-title mt-5 mb-4"><i class="bi bi-3-circle-fill"></i> Payment</h4>
+                            <div class="card booking-section-card mb-4">
+                                <div class="card-body">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="creditCard"
+                                            value="card" checked>
+                                        <label class="form-check-label" for="creditCard">
+                                            Debit/Credit Card
+                                        </label>
+                                    </div>
+                                    <div id="cardPaymentDetails" class="payment-details-section card p-3 mb-3 border-info">
+                                        <h6 class="mb-3">Enter Card Details</h6>
+                                        <div class="mb-3" id="card-element"></div>
+                                        <div class="mb-3 text-danger" id="card-errors" role="alert"></div>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="otherPayment"
+                                            value="other">
+                                        <label class="form-check-label" for="otherPayment">
+                                            Cash (Payment Centers) / Money Wallet (GCash)
+                                        </label>
+                                    </div>
+                                    <div id="otherPaymentDetails" class="payment-details-section card p-3 mb-3 border-info" style="display: none;"> {# Hidden #}
+                                        <h6 class="mb-3">Payment Instructions:</h6>
+                                        <p class="small text-muted">If you select this option, your booking will be held for **24 hours**. You must complete
+                                        your payment within this period via our designated payment centers or GCash to confirm
+                                        your seats. Details will be provided upon successful booking submission.</p>
+                                    </div>
+
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                                        <label class="form-check-label" for="termsCheck">
+                                            I declare to have read and agree to the <a href="#">Privacy Policy</a> and <a
+                                                href="#">T&C of Booking</a> and <a href="#">T&C of Carriage</a>.
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        {% elif amount_to_refund > 0 %}
+                            <div class="alert alert-success text-center">
+                                You will receive a refund of <strong>Php{{ amount_to_refund|floatformat:2 }}</strong> for this reschedule.
+                                <p class="mt-2"><em>(Stripe refund processing will occur upon confirmation)</em></p>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info text-center">
+                                No additional payment or refund is required for this reschedule.
+                            </div>
+                        {% endif %}
+
+                        <input type="hidden" name="payment_method" id="selected-payment-method" value="card">
+                        <input type="hidden" name="payment_intent_id" id="payment-intent-id">
+                        <input type="hidden" id="passenger_name1" value="{{ request.user.get_full_name|default:request.user.username }}">
+                        <input type="hidden" id="passenger_email1" value="{{ request.user.email }}">
+                        <input type="hidden" id="passenger_contact_number1" value="{{ request.user.profile.contact_number|default:'' }}">
+
+
+                        <div class="d-grid mt-4">
+                            {% if amount_to_pay > 0 %}
+                                <button type="submit" id="submit-booking-btn" class="btn btn-warning btn-lg submit-button">
+                                    Pay Php{{ amount_to_pay|floatformat:2 }} & Confirm Reschedule
+                                </button>
+                            {% else %}
+                                <button type="submit" id="submit-booking-btn" class="btn btn-warning btn-lg submit-button">
+                                    Confirm Reschedule
+                                </button>
+                            {% endif %}
+                            <a href="{% url 'manage_booking:booking_detail' original_booking.id %}" class="btn btn-secondary btn-lg mt-2">Cancel & Go Back</a>
+                        </div>
+                    </form>
                 </div>
             </div>
+        </div>
 
-            <hr>
-
-            <h5>Rescheduling Summary</h5>
-            <table class="table table-bordered table-sm">
-                <tbody>
-                    <tr>
-                        <td><strong>Rescheduling Type:</strong></td>
-                        <td>{{ reschedule_type_message }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Fare Difference:</strong></td>
-                        <td>
-                            {% if fare_difference > 0 %}
-                                <span class="text-success">+ Php{{ fare_difference|floatformat:2 }}</span>
-                            {% elif fare_difference < 0 %}
-                                <span class="text-danger">- Php{{ fare_difference|abs|floatformat:2 }}</span>
-                            {% else %}
-                                Php0.00
-                            {% endif %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>Rescheduling Charge ({{ policy.late_rescheduling_charge_percentage|mul:100|floatformat:0 }}%):</strong></td>
-                        <td>Php{{ rescheduling_charge|floatformat:2 }}</td>
-                    </tr>
-                    <tr class="table-info">
-                        <td><strong>Total Amount Due:</strong></td>
-                        <td>
-                            {% if amount_to_pay > 0 %}
-                                <span class="text-success fw-bold">Php{{ amount_to_pay|floatformat:2 }}</span>
-                            {% else %}
-                                Php0.00
-                            {% endif %}
-                        </td>
-                    </tr>
-                    <tr class="table-danger">
-                        <td><strong>Total Amount to Refund:</strong></td>
-                        <td>
-                            {% if amount_to_refund > 0 %}
-                                <span class="text-danger fw-bold">Php{{ amount_to_refund|floatformat:2 }}</span>
-                            {% else %}
-                                Php0.00
-                            {% endif %}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <hr>
-
-            {% if amount_to_pay > 0 %}
-                <div class="alert alert-warning text-center">
-                    An additional payment of <strong>Php{{ amount_to_pay|floatformat:2 }}</strong> is required to complete this reschedule.
-                    {# Here you would integrate your Stripe payment button/form #}
-                    <p class="mt-2"><em>(Stripe payment integration placeholder)</em></p>
+        <div class="col-md-4">
+            <div class="card booking-summary-card shadow-sm sticky-top">
+                <div class="card-header d-flex justify-content-between align-items-center bg-transparent border-bottom">
+                    <h5 class="mb-0">Reschedule Summary</h5>
                 </div>
-            {% elif amount_to_refund > 0 %}
-                <div class="alert alert-success text-center">
-                    You will receive a refund of <strong>Php{{ amount_to_refund|floatformat:2 }}</strong> for this reschedule.
-                    <p class="mt-2"><em>(Stripe refund processing will occur upon confirmation)</em></p>
-                </div>
-            {% else %}
-                <div class="alert alert-info text-center">
-                    No additional payment or refund is required for this reschedule.
-                </div>
-            {% endif %}
+                <div class="card-body">
+                    <p class="mb-2 text-muted"><strong>New Trip: {{ new_trip.date|date:"D, d M" }}</strong></p>
 
-            <p class="text-danger fw-bold text-center mt-4">Please review the details above carefully. Are you sure you want to proceed with this reschedule?</p>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-dot-circle me-2 text-muted"></i>
+                        <div>
+                            <p class="mb-0 fw-bold">{{ new_trip.origin }}</p>
+                            <p class="mb-0 text-muted small">{{ new_trip.departure_time|time:"H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-dot-circle me-2 text-muted"></i>
+                        <div>
+                            <p class="mb-0 fw-bold">{{ new_trip.destination }}</p>
+                            <p class="mb-0 text-muted small">{{ new_trip.arrival_time|time:"H:i" }}</p>
+                        </div>
+                    </div>
 
-            <form action="{% url 'manage_booking:booking_reschedule_confirm' booking_id=original_booking.id new_trip_id=new_trip.trip_id number_of_passengers=number_of_passengers %}" method="post" class="text-center">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-warning btn-lg me-3">Confirm Reschedule</button>
-                <a href="{% url 'manage_booking:booking_detail' original_booking.id %}" class="btn btn-secondary btn-lg">Cancel & Go Back</a>
-            </form>
+                    <hr>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">Total Amount Due</span>
+                        <span class="fw-bold fs-5">Php{{ amount_to_pay|floatformat:2|intcomma }}</span>
+                    </div>
+                    {% if amount_to_refund > 0 %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 text-danger">
+                        <span class="fw-bold">Total Amount to Refund</span>
+                        <span class="fw-bold fs-5">Php{{ amount_to_refund|floatformat:2|intcomma }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
-{% endblock content %}
+<div id="loading-overlay">
+    <h1 class="text-light logo-font loading-spinner">
+        <span class="icon">
+            <i class="fas fa-3x fa-sync-alt fa-spin"></i>
+        </span>
+    </h1>
+</div>
+{% endblock %}
+
+{% block postload_js %}
+{{ block.super }}
+{{ stripe_public_key|json_script:"id_stripe_public_key" }}
+{{ client_secret|json_script:"id_client_secret" }}
+<script src="{% static 'booking/js/booking_form.js' %}"></script>
+{% endblock %}
