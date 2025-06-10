@@ -17,6 +17,59 @@ import stripe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+def _calculate_reschedule_financials(original_booking, new_trip, policy):
+    """
+    Calculates the financial implications of a reschedule.
+    Assumes the number of passengers remains the same as the original booking.
+    """
+    num_passengers = original_booking.number_of_passengers
+
+    original_total_price = original_booking.total_price
+    new_total_price_base = new_trip.price * num_passengers
+    new_total_price_base = new_total_price_base.quantize(Decimal('0.01'))
+
+    fare_difference = new_total_price_base - original_total_price
+    rescheduling_charge = Decimal('0.00')
+    reschedule_type_message = ""
+
+    # Re-evaluate rescheduling charge based on time until original departure
+    departure_datetime_naive = datetime.combine(original_booking.trip.date, original_booking.trip.departure_time)
+    departure_datetime = timezone.make_aware(departure_datetime_naive)
+    time_until_departure = departure_datetime - timezone.now()
+    time_until_departure_hours = time_until_departure.total_seconds() / 3600
+
+    if time_until_departure_hours > policy.free_rescheduling_cutoff_hours:
+        reschedule_type_message = "Free Reschedule"
+    elif time_until_departure_hours >= policy.late_rescheduling_cutoff_hours:
+        reschedule_type_message = "Late Reschedule"
+        rescheduling_charge = original_total_price * policy.late_rescheduling_charge_percentage
+        rescheduling_charge = rescheduling_charge.quantize(Decimal('0.01'))
+    else:
+        reschedule_type_message = "Not Allowed (too close to departure)"
+
+    total_due_or_refund = fare_difference + rescheduling_charge
+
+    amount_to_pay = Decimal('0.00')
+    amount_to_refund = Decimal('0.00')
+
+    if total_due_or_refund > 0:
+        amount_to_pay = total_due_or_refund
+    elif total_due_or_refund < 0:
+        amount_to_refund = abs(total_due_or_refund)
+
+    return {
+        'original_total_price': original_total_price,
+        'new_total_price_base': new_total_price_base,
+        'fare_difference': fare_difference,
+        'rescheduling_charge': rescheduling_charge,
+        'amount_to_pay': amount_to_pay,
+        'amount_to_refund': amount_to_refund,
+        'reschedule_type_message': reschedule_type_message,
+        'time_until_departure_hours': time_until_departure_hours,
+        'num_passengers': num_passengers # Include this for clarity
+    }
+
+
 @login_required
 def booking_list(request):
     """
@@ -48,14 +101,10 @@ def booking_detail(request, booking_id):
         user=request.user
     )
 
-    try:
-        policy = BookingPolicy.objects.first()
-        if not policy:
+    policy = BookingPolicy.objects.first()
+    if not policy:
             messages.error(request, "No booking policy found. Please configure a policy in the admin.")
             return redirect('some_error_page_or_home')
-    except BookingPolicy.DoesNotExist:
-        messages.error(request, "No booking policy found. Please configure a policy in the admin.")
-        return redirect('some_error_page_or_home')
 
     can_cancel = False
     can_reschedule = False
@@ -70,11 +119,8 @@ def booking_detail(request, booking_id):
 
     if booking.trip.date and booking.trip.departure_time:
         departure_datetime_naive = datetime.combine(booking.trip.date, booking.trip.departure_time)
-
         departure_datetime = timezone.make_aware(departure_datetime_naive)
-        
         current_time = timezone.now()
-
         time_until_departure = departure_datetime - current_time
         time_until_departure_hours = time_until_departure.total_seconds() / 3600
 
@@ -89,35 +135,34 @@ def booking_detail(request, booking_id):
         print(f"POLICY: late_cancellation_cutoff_hours: {policy.late_cancellation_cutoff_hours}")
         print("-------------------------------------------\n")
 
-
         if eligible_status_for_action:
+            # Cancellation Logic
             if time_until_departure_hours > policy.free_cancellation_cutoff_hours:
-                # Free cancellation/rescheduling
                 can_cancel = True
-                can_reschedule = True
-                messages.info(request, f"Cancellation and rescheduling are free if done more than {policy.free_cancellation_cutoff_hours} hours before departure.")
-            elif time_until_departure_hours > policy.late_cancellation_cutoff_hours: # Within 24 hours down to 3 hours
-                # Cancellation with 50% fee
+                messages.info(request, f"Cancellation is free if done more than {policy.free_cancellation_cutoff_hours} hours before departure.")
+            elif time_until_departure_hours >= policy.late_cancellation_cutoff_hours:
                 can_cancel = True
                 cancellation_fee_applied = True
                 messages.info(request, f"Cancellation within {policy.free_cancellation_cutoff_hours} to {policy.late_cancellation_cutoff_hours} hours before departure incurs a {int(policy.late_cancellation_fee_percentage * 100)}% fee.")
-                
-                # Rescheduling with 15% charge
+            else: # < policy.late_cancellation_cutoff_hours
+                can_cancel = True # Allow cancellation
+                cancellation_fee_applied = False # No refund will be issued
+                messages.warning(request, f"Cancellation is allowed less than {policy.late_cancellation_cutoff_hours} hours before departure, but NO REFUND will be issued.")
+
+            # Rescheduling Logic
+            if time_until_departure_hours > policy.free_rescheduling_cutoff_hours:
+                can_reschedule = True
+                messages.info(request, f"Rescheduling is free if done more than {policy.free_rescheduling_cutoff_hours} hours before departure.")
+            elif time_until_departure_hours >= policy.late_rescheduling_cutoff_hours:
                 can_reschedule = True
                 rescheduling_charge_applied = True
                 messages.info(request, f"Rescheduling between {policy.free_rescheduling_cutoff_hours} to {policy.late_rescheduling_cutoff_hours} hours before departure incurs a {int(policy.late_rescheduling_charge_percentage * 100)}% charge.")
-                
-            else: # CANCELLATION POLICY FOR < 3 HOURS: ALLOW CANCEL, NO REFUND
-                can_cancel = True # Allow cancellation
-                cancellation_fee_applied = False
-                messages.warning(request, f"Cancellation is allowed less than {policy.late_cancellation_cutoff_hours} hours before departure, but NO REFUND will be issued.")
-                # Rescheduling is NOT allowed
+            else: # < policy.late_rescheduling_cutoff_hours
                 can_reschedule = False
                 messages.warning(request, f"Rescheduling is no longer allowed (less than {policy.late_rescheduling_cutoff_hours} hours before departure).")
 
         else:
             messages.info(request, "This booking cannot be modified due to its current status or payment status.")
-
 
     else:
         messages.error(request, "Departure date or time is missing for this trip, unable to determine modification eligibility.")
@@ -143,12 +188,8 @@ def booking_cancel(request, booking_id):
         user=request.user
     )
 
-    try:
-        policy = BookingPolicy.objects.first()
-        if not policy:
-            messages.error(request, "No booking policy found. Please configure a policy in the admin.")
-            return redirect('some_error_page_or_home')
-    except BookingPolicy.DoesNotExist:
+    policy = BookingPolicy.objects.first()
+    if not policy:
         messages.error(request, "No booking policy found. Please configure a policy in the admin.")
         return redirect('some_error_page_or_home')
 
@@ -160,6 +201,8 @@ def booking_cancel(request, booking_id):
     eligible_status_for_action = (
         booking.status == 'CONFIRMED' and booking.payment_status == 'PAID'
     )
+
+    time_until_departure_hours = -1
 
     if booking.trip.date and booking.trip.departure_time:
         departure_datetime_naive = datetime.combine(booking.trip.date, booking.trip.departure_time)
@@ -178,8 +221,6 @@ def booking_cancel(request, booking_id):
         print(f"POLICY: free_cancellation_cutoff_hours: {policy.free_cancellation_cutoff_hours}")
         print(f"POLICY: late_cancellation_cutoff_hours: {policy.late_cancellation_cutoff_hours}")
         print("-------------------------------------------\n")
-
-
         print(f"DEBUG: Booking ID {booking.id} Status: {booking.status}")
         print(f"DEBUG: Booking ID {booking.id} Payment Status: {booking.payment_status}")
         print(f"DEBUG: Eligible for action: {eligible_status_for_action}")
@@ -208,7 +249,6 @@ def booking_cancel(request, booking_id):
 
     # --- Handle POST request (Confirm Cancellation) ---
     if request.method == 'POST':
-         
         recalc_can_proceed = False
         recalc_refund_amount = Decimal('0.00')
         recalc_refund_type_message = "N/A"
@@ -251,40 +291,41 @@ def booking_cancel(request, booking_id):
         try:
             with transaction.atomic():
             # Step 1: Process Refund if applicable
-                if recalc_refund_amount > 0 and booking.stripe_payment_intent_id:
-                    if settings.STRIPE_MOCK_REFUNDS:
-                        messages.success(request, f"MOCKED REFUND of Php{recalc_refund_amount} processed successfully (Stripe API call skipped).")
-                        booking.refund_status = 'COMPLETED'
-                        booking.refund_amount = recalc_refund_amount
-                    else:
-                        stripe_refund_amount_cents = round(refund_amount * 100)
-                        try:
-                            refund = stripe.Refund.create(
-                                payment_intent=booking.stripe_payment_intent_id,
-                                amount=stripe_refund_amount_cents,
-                                metadata={
-                                    'booking_id': str(booking.id),
-                                    'booking_reference': booking.booking_reference,
-                                    'refund_type': recalc_refund_type_message,
-                                }
-                            )
-                            if refund.status == 'succeeded':
-                                booking.refund_status = 'COMPLETED'
-                                booking.refund_amount = recalc_refund_amount
-                                messages.success(request, f"Refund of Php{recalc_refund_amount:.2f} processed successfully via Stripe.")
-                            else:
-                                booking.refund_status = 'PENDING'
-                                messages.warning(request, f"Stripe refund status: {refund.status}. It may still be processing or require review. We will inform you once it's complete.")
-                        except stripe.error.StripeError as e:
-                            messages.error(request, f"A Stripe error occurred during refund processing: {e}. Please contact support.")
-                            booking.refund_status = 'FAILED'
-                            booking.save()
-                            return redirect('manage_booking:booking_detail', booking_id=booking.id)
+                if recalc_refund_amount > 0:
+                    if booking.stripe_payment_intent_id:
+                        if settings.STRIPE_MOCK_REFUNDS:
+                            messages.success(request, f"MOCKED REFUND of Php{recalc_refund_amount} processed successfully (Stripe API call skipped).")
+                            booking.refund_status = 'COMPLETED'
+                            booking.refund_amount = recalc_refund_amount
+                        else:
+                            stripe_refund_amount_cents = round(refund_amount * 100)
+                            try:
+                                refund = stripe.Refund.create(
+                                    payment_intent=booking.stripe_payment_intent_id,
+                                    amount=stripe_refund_amount_cents,
+                                    metadata={
+                                        'booking_id': str(booking.id),
+                                        'booking_reference': booking.booking_reference,
+                                        'refund_type': recalc_refund_type_message,
+                                    }
+                                )
+                                if refund.status == 'succeeded':
+                                    booking.refund_status = 'COMPLETED'
+                                    booking.refund_amount = recalc_refund_amount
+                                    messages.success(request, f"Refund of Php{recalc_refund_amount:.2f} processed successfully via Stripe.")
+                                else:
+                                    booking.refund_status = 'PENDING'
+                                    messages.warning(request, f"Stripe refund status: {refund.status}. It may still be processing or require review. We will inform you once it's complete.")
+                            except stripe.error.StripeError as e:
+                                messages.error(request, f"A Stripe error occurred during refund processing: {e}. Please contact support.")
+                                booking.refund_status = 'FAILED'
+                                booking.save()
+                                return redirect('manage_booking:booking_detail', booking_id=booking.id)
 
-                elif recalc_refund_amount > 0 and not booking.stripe_payment_intent_id:
-                    booking.refund_status = 'PENDING'
-                    booking.refund_amount = recalc_refund_amount
-                    messages.info(request, f"Your booking is cancelled. A refund of Php{recalc_refund_amount:.2f} is pending manual processing (non-card payment). Please check your email for instructions.")
+                    else:
+                        booking.refund_status = 'PENDING'
+                        booking.refund_amount = recalc_refund_amount
+                        messages.info(request, f"Your booking is cancelled. A refund of Php{recalc_refund_amount:.2f} is pending manual processing (non-card payment). Please check your email for instructions.")
 
                 else:
                     booking.refund_status = 'NONE'
@@ -301,12 +342,9 @@ def booking_cancel(request, booking_id):
                     print(f"DEBUG: Passengers to add back: {booking.number_of_passengers}")
 
                     booking.trip.available_seats += booking.number_of_passengers
-                    # DEBUG PRINT 2: Show seats AFTER addition, before save
                     print(f"DEBUG: Available seats AFTER adding (before save): {booking.trip.available_seats}")
 
                     booking.trip.save()
-
-                    # DEBUG PRINT 3: Confirm save was attempted
                     print(f"DEBUG: Trip.save() called for Trip ID: {booking.trip.trip_id}")
                 else:
                     messages.warning(request, "Could not update trip available seats as it's null.")
@@ -340,12 +378,8 @@ def booking_reschedule_select_trip(request, booking_id):
     """
     original_booking = get_object_or_404(Booking.objects.select_related('trip'), pk=booking_id, user=request.user)
 
-    try:
-        policy = BookingPolicy.objects.first()
-        if not policy:
-            messages.error(request, "No booking policy found. Please configure a policy in the admin.")
-            return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
-    except BookingPolicy.DoesNotExist:
+    policy = BookingPolicy.objects.first()
+    if not policy:
         messages.error(request, "No booking policy found. Please configure a policy in the admin.")
         return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
 
@@ -390,43 +424,29 @@ def booking_reschedule_select_trip(request, booking_id):
 
 
 @login_required
-def booking_reschedule_confirm(request, booking_id, new_trip_id, number_of_passengers):
+def booking_reschedule_confirm(request, booking_id, new_trip_id):
     original_booking = get_object_or_404(Booking.objects.select_related('trip'), pk=booking_id, user=request.user)
     new_trip = get_object_or_404(Trip, pk=new_trip_id)
-    num_travelers = int(number_of_passengers)
-    print(f"DEBUG: Rescheduling booking ID {booking_id} to new trip ID {new_trip_id} for {num_travelers} passengers.")
+    num_passengers = original_booking.number_of_passengers
+    print(f"DEBUG: Rescheduling booking ID {booking_id} to new trip ID {new_trip_id} for {num_passengers} passengers.")
 
-    try:
-        policy = BookingPolicy.objects.first()
-        if not policy:
-            messages.error(request, "No booking policy found. Please configure a policy in the admin.")
-            return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
-    except BookingPolicy.DoesNotExist:
+    policy = BookingPolicy.objects.first()
+    if not policy:
         messages.error(request, "No booking policy found. Please configure a policy in the admin.")
         return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
 
     # --- Rescheduling Eligibility Check ---
-    can_proceed_with_reschedule = False
-    reschedule_type_message = ""
-    time_until_departure_hours = -1
-
-    departure_datetime_naive = datetime.combine(original_booking.trip.date, original_booking.trip.departure_time)
-    departure_datetime = timezone.make_aware(departure_datetime_naive)
-    current_time = timezone.now()
-    time_until_departure = departure_datetime - current_time
-    time_until_departure_hours = time_until_departure.total_seconds() / 3600
-
     if not (original_booking.status == 'CONFIRMED' and original_booking.payment_status == 'PAID'):
         messages.error(request, "This booking cannot be rescheduled due to its current status or payment status.")
         return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
 
-    if new_trip.available_seats < original_booking.number_of_passengers:
+    if new_trip.available_seats < num_passengers:
         messages.error(request, f"The selected new trip ({new_trip.trip_number}) does not have enough available seats ({new_trip.available_seats}) for {original_booking.number_of_passengers} passengers.")
         redirect_url = reverse('trips') + f'?reschedule_booking_id={original_booking.id}' \
                                           f'&origin={original_booking.trip.origin}' \
                                           f'&destination={original_booking.trip.destination}' \
                                           f'&departure_date={original_booking.trip.date.strftime("%Y-%m-%d")}' \
-                                          f'&num_travelers={original_booking.number_of_passengers}'
+                                          f'&num_travelers={num_passengers}'
         return redirect(redirect_url)
 
     # Prevent rescheduling to the exact same trip
@@ -436,50 +456,26 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id, number_of_passe
                                           f'&origin={original_booking.trip.origin}' \
                                           f'&destination={original_booking.trip.destination}' \
                                           f'&departure_date={original_booking.trip.date.strftime("%Y-%m-%d")}' \
-                                          f'&num_travelers={original_booking.number_of_passengers}'
+                                          f'&num_travelers={num_passengers}'
         return redirect(redirect_url)
 
 
     # --- Financial Calculation ---
-    original_total_price = original_booking.total_price
-    new_total_price_base = new_trip.price * num_travelers
-    new_total_price_base = new_total_price_base.quantize(Decimal('0.01'))
-    print(f"DEBUG GET New Total Price Base: {new_total_price_base}")
-    fare_difference = new_total_price_base - original_total_price
-    rescheduling_charge = Decimal('0.00')
+    financials = -_calculate_reschedule_financials(original_booking, new_trip, policy)
+    amount_to_pay = financials['amount_to_pay']
+    amount_to_refund = financials['amount_to_refund']
+    reschedule_type_message = financials['reschedule_type_message']
+    time_until_departure_hours = financials['time_until_departure_hours']
 
-    if time_until_departure_hours > policy.free_rescheduling_cutoff_hours:
-        reschedule_type_message = "Free Reschedule"
-        can_proceed_with_reschedule = True
-    elif time_until_departure_hours >= policy.late_rescheduling_cutoff_hours:
-        reschedule_type_message = "Late Reschedule"
-        rescheduling_charge = original_total_price * policy.late_rescheduling_charge_percentage
-        rescheduling_charge = rescheduling_charge.quantize(Decimal('0.01'))
-        can_proceed_with_reschedule = True
-    else:
-        reschedule_type_message = "Not Allowed"
-        can_proceed_with_reschedule = False
+    if reschedule_type_message == "Not Allowed (too close to departure)":
         messages.error(request, f"Rescheduling is no longer allowed (less than {policy.late_rescheduling_cutoff_hours} hours before original departure).")
         return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
-
-    # Calculate final amounts
-    total_due_or_refund = fare_difference + rescheduling_charge # Positive means due, negative means refund
-
-    amount_to_pay = Decimal('0.00')
-    amount_to_refund = Decimal('0.00')
-
-    if total_due_or_refund > 0:
-        amount_to_pay = total_due_or_refund
-    elif total_due_or_refund < 0:
-        amount_to_refund = abs(total_due_or_refund) # Convert negative to positive refund amount
 
     # --- GET Request (Display Confirmation Page) ---
     if request.method == 'GET':
         client_secret = None
-        print(f"DEBUG GET Amount to pay: {amount_to_pay}")
         if amount_to_pay > 0:
             try:
-                # Create a PaymentIntent on the server
                 stripe_amount = int(amount_to_pay * 100)
                 payment_intent = stripe.PaymentIntent.create(
                     amount=stripe_amount,
@@ -487,7 +483,6 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id, number_of_passe
                     metadata={
                         'booking_id': str(original_booking.id),
                         'new_trip_id': str(new_trip.trip_id),
-                        'num_travelers': str(num_travelers),
                         'action': 'reschedule_payment',
                     },
                 )
@@ -501,13 +496,13 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id, number_of_passe
             'new_trip': new_trip,
             'policy': policy,
             'reschedule_type_message': reschedule_type_message,
-            'original_total_price': original_total_price,
-            'new_total_price_base': new_total_price_base,
-            'fare_difference': fare_difference,
-            'rescheduling_charge': rescheduling_charge,
+            'original_total_price': financials['original_total_price'],
+            'new_total_price_base': financials['new_total_price_base'],
+            'fare_difference': financials['fare_difference'],
+            'rescheduling_charge': financials['rescheduling_charge'],
             'amount_to_pay': amount_to_pay,
             'amount_to_refund': amount_to_refund,
-            'number_of_passengers': num_travelers,
+            'number_of_passengers': num_passengers,
             'client_secret': client_secret,
             'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
         }
@@ -518,33 +513,13 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id, number_of_passe
         selected_payment_method = request.POST.get('payment_method')
         payment_intent_id = request.POST.get('payment_intent_id')
 
-        original_total_price = original_booking.total_price
-        new_total_price_base = new_trip.price * Decimal(num_travelers)
-        new_total_price_base = new_total_price_base.quantize(Decimal('0.01'))
-        print(f"DEBUG PRINT: New total price base: {new_total_price_base}")
-        fare_difference = new_total_price_base - original_total_price
-        rescheduling_charge = Decimal('0.00')
+        financials_post = _calculate_reschedule_financials(original_booking, new_trip, policy)
+        amount_to_pay_post = financials_post['amount_to_pay']
+        amount_to_refund_post = financials_post['amount_to_refund']
+        new_total_price_base_post = financials_post['new_total_price_base']
+        rescheduling_charge_post = financials_post['rescheduling_charge']
 
-        departure_datetime_naive = datetime.combine(original_booking.trip.date, original_booking.trip.departure_time)
-        departure_datetime = timezone.make_aware(departure_datetime_naive)
-        time_until_departure = departure_datetime - timezone.now()
-        time_until_departure_hours = time_until_departure.total_seconds() / 3600
-
-        policy = BookingPolicy.objects.first()
-        if time_until_departure_hours <= policy.free_rescheduling_cutoff_hours:
-            rescheduling_charge = original_total_price * policy.late_rescheduling_charge_percentage
-            rescheduling_charge = rescheduling_charge.quantize(Decimal('0.01'))
-
-        total_due_or_refund = fare_difference + rescheduling_charge
-        amount_to_pay = Decimal('0.00')
-        amount_to_refund = Decimal('0.00')
-
-        if total_due_or_refund > 0:
-            amount_to_pay = total_due_or_refund
-        elif total_due_or_refund < 0:
-            amount_to_refund = abs(total_due_or_refund)
-
-        if amount_to_pay > 0:
+        if amount_to_pay_post > 0:
             if selected_payment_method == 'card':
                 if payment_intent_id:
                     try:
@@ -557,10 +532,18 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id, number_of_passe
                                 return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id, number_of_passengers]))
 
                             with transaction.atomic():
+                                # Update seats
+                                original_booking.trip.available_seats += original_booking.number_of_passengers
+                                original_booking.trip.save()
+                                new_trip.available_seats -= num_passengers
+                                new_trip.save()
+
+                                # Update booking
                                 original_booking.trip = new_trip
-                                original_booking.number_of_passengers = num_travelers
-                                original_booking.total_price = new_total_price_base
+                                original_booking.number_of_passengers = num_passengers
+                                original_booking.total_price = new_total_price_base_post + rescheduling_charge_post
                                 original_booking.status = 'CONFIRMED'
+                                original_booking.payment_status = 'PAID'
                                 original_booking.stripe_payment_intent_id = payment_intent_id
                                 original_booking.save()
                                 messages.success(request, f"Booking {original_booking.booking_reference} successfully rescheduled!")
@@ -586,17 +569,17 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id, number_of_passe
                 messages.success(request, f"Booking created! Please complete payment via the selected method. Your reference is {original_booking.booking_reference}.")
                 return redirect(reverse('manage_booking:booking_detail', args=[original_booking.id]))
         
-        if amount_to_refund > 0:
+        else:
             try:
                 with transaction.atomic():
                     # 1. Handle Payment/Refund
-                    if amount_to_refund > 0:
+                    if amount_to_refund_post > 0:
                         if settings.STRIPE_MOCK_REFUNDS:
-                            messages.success(request, f"MOCKED REFUND of Php{amount_to_refund:.2f} processed successfully (Stripe API call skipped).")
+                            messages.success(request, f"MOCKED REFUND of Php{amount_to_refund_post:.2f} processed successfully (Stripe API call skipped).")
                             original_booking.refund_status = 'COMPLETED'
-                            original_booking.refund_amount = amount_to_refund
+                            original_booking.refund_amount = amount_to_refund_post
                         elif original_booking.stripe_payment_intent_id:
-                            stripe_refund_amount_cents = round(amount_to_refund * 100)
+                            stripe_refund_amount_cents = round(amount_to_refund_post * 100)
                             try:
                                 refund = stripe.Refund.create(
                                     payment_intent=original_booking.stripe_payment_intent_id,
@@ -609,8 +592,8 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id, number_of_passe
                                 )
                                 if refund.status == 'succeeded':
                                     original_booking.refund_status = 'COMPLETED'
-                                    original_booking.refund_amount = amount_to_refund
-                                    messages.success(request, f"Refund of Php{amount_to_refund:.2f} processed successfully via Stripe.")
+                                    original_booking.refund_amount = amount_to_refund_post
+                                    messages.success(request, f"Refund of Php{amount_to_refund_post:.2f} processed successfully via Stripe.")
                                 else:
                                     original_booking.refund_status = 'PENDING'
                                     messages.warning(request, f"Stripe refund status: {refund.status}. It may still be processing or require review.")
@@ -621,8 +604,8 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id, number_of_passe
                                 return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
                         else: # Refund needed for manual payment
                             original_booking.refund_status = 'PENDING'
-                            original_booking.refund_amount = amount_to_refund
-                            messages.info(request, f"Your booking is rescheduled. A refund of Php{amount_to_refund:.2f} is pending manual processing. Please check your email for instructions.")
+                            original_booking.refund_amount = amount_to_refund_post
+                            messages.info(request, f"Your booking is rescheduled. A refund of Php{amount_to_refund_post:.2f} is pending manual processing. Please check your email for instructions.")
                     else:
                         messages.info(request, "No additional payment or refund required for this reschedule.")
                         original_booking.refund_status = 'NONE'
@@ -633,14 +616,14 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id, number_of_passe
                     original_booking.trip.available_seats += original_booking.number_of_passengers
                     original_booking.trip.save()
 
-                    new_trip.available_seats -= original_booking.number_of_passengers
+                    new_trip.available_seats -= num_passengers
                     new_trip.save()
 
 
                     # 3. Update Booking
                     original_booking.trip = new_trip
-                    original_booking.number_of_passengers = num_travelers
-                    original_booking.total_price = new_total_price_base + rescheduling_charge
+                    original_booking.number_of_passengers = num_passengers
+                    original_booking.total_price = new_total_price_base_post + rescheduling_charge_post
                     original_booking.status = 'CONFIRMED'
                     original_booking.payment_status = 'PAID'
                     original_booking.save()
