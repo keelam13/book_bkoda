@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Receipt</title>
+</head>
+<body>
+    <p>Dear {{ user.username }},</p>
+
+    <p>This email confirms that your payment for booking <strong>{{ booking.booking_reference }}</strong> has been successfully processed.</p>
+
+    <h3>Payment Details</h3>
+    <ul>
+        <li><strong>Amount Paid:</strong> Php{{ booking.total_price|floatformat:2 }}</li>
+        <li><strong>Booking Reference:</strong> {{ booking.booking_reference }}</li>
+        <li><strong>Payment Date:</strong> {{ booking.updated_at|date:"F d, Y H:i" }}</li>
+        <li><strong>Trip:</strong> {{ trip.origin }} to {{ trip.destination }}</li>
+        <li><strong>Date:</strong> {{ trip.date|date:"F d, Y" }}</li>
+    </ul>
+
+    <p>Your booking is now fully confirmed. Thank you for your payment!</p>
+    <p>Best regards,<br>Your Bus Company Team</p>
+</body>
+</html>

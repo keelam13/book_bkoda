@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.conf import settings
+from django.core.mail import send_mail, EmailMessage
+from django.template.loader import render_to_string
 from trips.models import Trip
 from profiles.models import UserProfile
 from .models import Booking, Passenger
@@ -10,6 +12,53 @@ from datetime import timedelta
 import json
 
 import stripe
+
+
+# Helper function to send booking confirmation and payment receipt emails
+def send_booking_email(booking, email_type='confirmation'):
+    subject = ''
+    template_name = ''
+
+    if email_type == 'confirmation':
+        subject = f"Booking Confirmation for Trip {booking.booking_reference}"
+        template_name = 'emails/booking_confirmation_email.html'
+    elif email_type == 'receipt':
+        subject = f"Payment Receipt for Booking {booking.booking_reference}"
+        template_name = 'emails/payment_receipt_email.html'
+    else:
+        print(f"Warning: Unknown email type '{email_type}' requested for booking {booking.booking_reference}")
+        return
+
+    context = {
+        'booking': booking,
+        'user': booking.user,
+        'trip': booking.trip,
+        'passengers': booking.passengers.all(),
+        'total_price': booking.total_price,
+        'payment_status': booking.get_payment_status_display(),
+        'booking_status': booking.get_status_display(),
+    }
+
+    html_message = render_to_string(template_name, context)
+    plain_message = f"Dear {booking.user.username},\n\n"
+    if email_type == 'confirmation':
+        plain_message += f"Your booking {booking.booking_reference} for a trip from {booking.trip.origin} to {booking.trip.destination} on {booking.trip.date} is confirmed.\n\n"
+    elif email_type == 'receipt':
+        plain_message += f"Your payment of Php{booking.total_price} for booking {booking.booking_reference} has been received.\n\n"
+    plain_message += "Thank you for booking with us!\n"
+
+    try:
+        email = EmailMessage(
+            subject,
+            html_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [booking.user.email],
+        )
+        email.content_subtype = "html"
+        email.send()
+        print(f"Email '{email_type}' for booking {booking.booking_reference} sent to terminal.")
+    except Exception as e:
+        print(f"Failed to send email '{email_type}' for booking {booking.booking_reference}: {e}")
 
 
 def book_trip(request, trip_id, number_of_passengers):

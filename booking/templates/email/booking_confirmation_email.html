@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking Confirmation</title>
+</head>
+<body>
+    <p>Dear {{ user.username }},</p>
+
+    <p>Thank you for booking with us! Your booking is confirmed and details are below:</p>
+
+    <h3>Booking Details</h3>
+    <ul>
+        <li><strong>Booking Reference:</strong> {{ booking.booking_reference }}</li>
+        <li><strong>Trip:</strong> {{ trip.origin }} to {{ trip.destination }}</li>
+        <li><strong>Date:</strong> {{ trip.date|date:"F d, Y" }}</li>
+        <li><strong>Departure Time:</strong> {{ trip.departure_time|time:"h:i A" }}</li>
+        <li><strong>Arrival Time:</strong> {{ trip.arrival_time|time:"h:i A" }}</li>
+        <li><strong>Number of Passengers:</strong> {{ booking.number_of_passengers }}</li>
+        <li><strong>Total Price:</strong> Php{{ booking.total_price|floatformat:2 }}</li>
+        <li><strong>Booking Status:</strong> {{ booking_status }}</li>
+        <li><strong>Payment Status:</strong> {{ payment_status }}</li>
+    </ul>
+
+    {% if passengers %}
+    <h3>Passenger Information</h3>
+    <ul>
+        {% for passenger in passengers %}
+        <li>{{ forloop.counter }}. {{ passenger.first_name }} {{ passenger.last_name }} ({{ passenger.age }} years old)</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <p>We look forward to seeing you!</p>
+    <p>Best regards,<br>Your Bus Company Team</p>
+</body>
+</html>
