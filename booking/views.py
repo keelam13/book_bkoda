@@ -134,9 +134,9 @@ def book_trip(request, trip_id, number_of_passengers):
 
                 messages.success(request, f"Booking {booking.booking_reference} created! Please proceed to payment.")
                 
-                send_booking_email(booking, email_type='initial_booking_pending_payment', booking_form_data=form.cleaned_data)
+                send_booking_email(booking, email_type='booking_confirmation_email', booking_form_data=form.cleaned_data)
 
-                return redirect('booking:process_payment', booking_id=booking.id)
+                return redirect('process_payment', booking_id=booking.id)
         else:
             messages.error(request, "Please correct the errors below.")
             context = {

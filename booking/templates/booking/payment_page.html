@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Complete Your Payment for Booking {{ booking.booking_reference }}</h3>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Trip: {{ booking.trip.origin }} to {{ booking.trip.destination }}</h5>
+            <p class="card-text">Date: {{ booking.trip.date|date:"F d, Y" }}</p>
+            <p class="card-text">Number of Passengers: {{ booking.number_of_passengers }}</p>
+            <h4 class="text-success mt-4">Amount Due: Php{{ amount_due|floatformat:2 }}</h4>
+
+            <hr>
+
+            <form action="{% url 'process_payment' booking_id=booking.id %}" method="POST" id="payment-form">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="payment_method" class="form-label">Choose Payment Method:</label>
+                    <select class="form-select" id="payment_method" name="payment_method">
+                        <option value="card" selected>Credit / Debit Card</option>
+                        <option value="other">Cash (Payment Centers) / Money Wallet (GCash)</option>
+                    </select>
+                </div>
+                <div id="card-payment-section">
+                    <div id="card-element" class="mb-3 border p-3 rounded">
+                        </div>
+                    <div id="card-errors" role="alert" class="text-danger small mb-3"></div>
+                </div>
+                <input type="hidden" name="payment_intent_id" id="payment_intent_id">
+                <input type="hidden" id="client_secret" value="{{ client_secret }}"> 
+                
+                <button id="submit-button" class="btn btn-success btn-lg mt-3">Confirm Payment <i class="bi bi-lock-fill"></i></button>
+                <a href="{% url 'manage_booking:booking_detail' booking_id=booking.id %}" class="btn btn-secondary btn-lg mt-3">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block postload_js %}
+{{ block.super }}
+{{ stripe_public_key|json_script:"id_stripe_public_key" }}
+{{ client_secret|json_script:"id_client_secret" }}
+<script src="{% static 'booking/js/booking_form.js' %}"></script>
+{% endblock %}
