@@ -17,7 +17,7 @@ import stripe
 
 
 # --- Helper Function for Email Sending (remains largely the same) ---
-def send_booking_email(booking, email_type='payment_receipt', booking_form_data=None):
+def send_booking_email(booking, email_type, booking_form_data=None):
     subject = ''
     template_name = ''
 
@@ -33,7 +33,7 @@ def send_booking_email(booking, email_type='payment_receipt', booking_form_data=
         print(f"Warning: No recipient email found for booking {booking.booking_reference}. Email not sent.")
         return
 
-    if email_type == 'initial_booking_pending_payment':
+    if email_type == 'initial_booking_pending_payment_email':
         subject = f"Booking Received (Action Required) - Trip {booking.booking_reference}"
         template_name = 'emails/initial_booking_pending_payment_email.html'
     elif email_type == 'payment_receipt':
@@ -134,7 +134,7 @@ def book_trip(request, trip_id, number_of_passengers):
 
                 messages.success(request, f"Booking {booking.booking_reference} created! Please proceed to payment.")
                 
-                send_booking_email(booking, email_type='booking_confirmation_email', booking_form_data=form.cleaned_data)
+                send_booking_email(booking, email_type='initial_booking_pending_payment_email', booking_form_data=form.cleaned_data)
 
                 return redirect('process_payment', booking_id=booking.id)
         else:
@@ -191,6 +191,14 @@ def process_payment(request, booking_id):
 
     stripe_total = round(booking.total_price * 100)
 
+    first_passenger_email = ''
+    first_passenger_contact_number = ''
+    if booking.passengers.exists():
+        first_passenger = booking.passengers.first()
+        first_passenger_email = first_passenger.email if first_passenger.email else ''
+        first_passenger_contact_number = first_passenger.contact_number if first_passenger.contact_number else ''
+        print(f"1st Passsenger name : {first_passenger}")
+
     try:
         intent = stripe.PaymentIntent.create(
             amount=stripe_total,
@@ -206,7 +214,7 @@ def process_payment(request, booking_id):
         return redirect('manage_booking:booking_detail', booking_id=booking.id)
 
     if request.method == 'POST':
-        payment_method = request.POST.get('payment_method')
+        payment_method = request.POST.get('selected_payment_method_hidden')
         payment_intent_id = request.POST.get('payment_intent_id')
 
         if payment_method == 'card':
@@ -282,6 +290,8 @@ def process_payment(request, booking_id):
                 'amount_due': booking.total_price,
                 'stripe_public_key': stripe_public_key,
                 'client_secret': intent.client_secret,
+                'first_passenger_email': first_passenger_email,
+                'first_passenger_contact_number': first_passenger_contact_number,
                 'errors': True
             }
             return render(request, 'booking/payment_page.html', context)
@@ -292,7 +302,11 @@ def process_payment(request, booking_id):
             'amount_due': booking.total_price,
             'stripe_public_key': stripe_public_key,
             'client_secret': intent.client_secret,
+            'first_passenger_email': first_passenger_email,
+            'first_passenger_contact_number': first_passenger_contact_number,
+            'errors': True
         }
+        print(f"1st Passenger email: {first_passenger_email}")
         return render(request, 'booking/payment_page.html', context)
     
 
@@ -302,7 +316,7 @@ def booking_success(request, booking_id):
 
     booking_expiry_date = None
     if booking.booking_date:
-        booking_expiry_date = booking.booked_at + timedelta(hours=24)
+        booking_expiry_date = booking.booking_date + timedelta(hours=24)
 
     context = {
         'booking': booking,
