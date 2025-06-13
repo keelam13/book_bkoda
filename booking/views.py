@@ -1,6 +1,5 @@
 from django.core.mail import EmailMultiAlternatives
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.conf import settings
 from django.db import transaction
@@ -77,7 +76,6 @@ def send_booking_email(booking, email_type, booking_form_data=None, **kwargs):
         print(f"Failed to send email '{email_type}' for booking {booking.booking_reference} to {recipient_email}: {e}")
 
 
-@login_required
 def book_trip(request, trip_id, number_of_passengers):
     trip = get_object_or_404(Trip, pk=trip_id)
     num_passengers = int(number_of_passengers)
@@ -129,6 +127,13 @@ def book_trip(request, trip_id, number_of_passengers):
                     user_profile.save()
                     messages.info(request, 'First passenger details saved to your profile for future bookings!')
 
+                if not request.user.is_authenticated:
+                    request.session['anonymous_booking_id'] = booking.id
+                    request.session.modified = True
+                    messages.success(request, f"Your guest booking {booking.booking_reference} created! Please proceed to payment.")
+                else:
+                    messages.success(request, f"Booking {booking.booking_reference} created! Please proceed to payment.")
+
                 messages.success(request, f"Booking {booking.booking_reference} created! Please proceed to payment.")
                 
                 send_booking_email(booking, email_type='pending_payment_instructions', booking_form_data=form.cleaned_data)
@@ -170,14 +175,27 @@ def book_trip(request, trip_id, number_of_passengers):
         return render(request, 'booking/booking_form.html', context)
 
 
-@login_required
 def process_payment(request, booking_id):
-    booking = get_object_or_404(Booking, id=booking_id, user=request.user)
-    
+    booking = None
+
+    if request.user.is_authenticated:
+        booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+    else:
+        session_booking_id = request.session.get('anonymous_booking_id')
+        if session_booking_id and str(session_booking_id) == str(booking_id):
+            booking = get_object_or_404(Booking, id=booking_id)
+        else:
+            messages.error(request, "Access to this booking is unauthorized or your session has expired. Please start a new booking.")
+            return redirect('trips')
+        
+    if not booking:
+        messages.error(request, "Booking not found or not accessible.")
+        return redirect('trips')   
+        
     if booking.payment_status == 'PAID' or booking.status == 'CONFIRMED':
         messages.info(request, "This booking has already been paid or confirmed.")
         return redirect('manage_booking:booking_detail', booking_id=booking.id)
-    
+        
     if booking.status == 'CANCELLED':
         messages.error(request, "This booking has been cancelled and cannot be paid.")
         return redirect('manage_booking:booking_detail', booking_id=booking.id)
@@ -225,6 +243,10 @@ def process_payment(request, booking_id):
                             booking.status = 'CONFIRMED'
                             booking.stripe_payment_intent_id = stripe_intent.id
                             booking.save()
+
+                        if not request.user.is_authenticated and 'anonymous_booking_id' in request.session:
+                            del request.session['anonymous_booking_id']
+                            request.session.modified = True
 
                         messages.success(request, f"Payment successful! Booking {booking.booking_reference} is now confirmed.")
                         send_booking_email(booking, email_type='payment_receipt')
@@ -275,6 +297,10 @@ def process_payment(request, booking_id):
             booking.status = 'PENDING_PAYMENT'
             booking.payment_status = 'PENDING'
             booking.save()
+
+            if not request.user.is_authenticated and 'anonymous_booking_id' in request.session:
+                del request.session['anonymous_booking_id']
+                request.session.modified = True
 
             messages.success(request, f"Booking created! Please complete payment via the selected method. Your reference is {booking.booking_reference}.")
             send_booking_email(booking, email_type='pending_payment_instructions')
