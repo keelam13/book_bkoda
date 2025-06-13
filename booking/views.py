@@ -153,9 +153,9 @@ def book_trip(request, trip_id, number_of_passengers):
             user_profile = UserProfile.objects.filter(user=request.user).first()
             if user_profile:
                 initial_data = {
-                    'passenger_name1': request.user.get_full_name() or request.user.username,
+                    'passenger_name1': user_profile.default_name or request.user.username,
                     'passenger_contact_number1': user_profile.default_phone_number,
-                    'passenger_email1': request.user.email,
+                    'passenger_email1': user_profile.default_email or request.user.email,
                 }
                 form = BookingConfirmationForm(initial=initial_data, trip=trip, num_passengers=num_passengers, request=request)
 

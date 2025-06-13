@@ -15,6 +15,7 @@ class ProfileForm(forms.ModelForm):
         placeholders = {
             'default_name': 'Full Name',
             'default_phone_number': 'Phone Number',
+            'default_email': 'Email',
             'default_street_address1': 'Street Address 1',
             'default_street_address2': 'Street Address 2',
             'default_postcode': 'Postal Code',
