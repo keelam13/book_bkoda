@@ -2,6 +2,10 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'booking/css/booking_form.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="container mt-5">
     <div class="card shadow-sm">
@@ -81,7 +85,13 @@
         </div>
     </div>
 </div>
-
+<div id="loading-overlay">
+    <h1 class="text-light logo-font loading-spinner">
+        <span class="icon">
+            <i class="fas fa-3x fa-sync-alt fa-spin"></i>
+        </span>
+    </h1>
+</div>
 {% endblock %}
 
 {% block postload_js %}
