@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking Confirmed - {{ booking.booking_reference }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        h2, h3 {
+            color: #007bff;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        ul li {
+            margin-bottom: 8px;
+        }
+        strong {
+            color: #555;
+        }
+        .success-message {
+            background-color: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #777;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p>Dear {{ user.username }},</p>
+
+        <div class="success-message">
+            <h2>Your Booking for Reference {{ booking.booking_reference }} is Confirmed!</h2>
+            <p>Thank you for choosing us! Your trip is now fully confirmed.</p>
+        </div>
+
+        <h3>Booking Details</h3>
+        <ul>
+            <li><strong>Booking Reference:</strong> {{ booking.booking_reference }}</li>
+            <li><strong>Route:</strong> {{ trip.origin }} to {{ trip.destination }}</li>
+            <li><strong>Date:</strong> {{ trip.date|date:"F d, Y" }}</li>
+            <li><strong>Departure Time:</strong> {{ trip.departure_time|time:"h:i A" }}</li>
+            <li><strong>Arrival Time:</strong> {{ trip.arrival_time|time:"h:i A" }}</li>
+            <li><strong>Number of Passengers:</strong> {{ booking.number_of_passengers }}</li>
+            <li><strong>Total Price:</strong> Php{{ booking.total_price|floatformat:2 }}</li>
+            <li><strong>Booking Status:</strong> <strong style="color: #28a745;">{{ booking_status }}</strong></li>
+        </ul>
+
+        {% if passengers %}
+        <h3>Passenger Information</h3>
+        <ul>
+            {% for passenger in passengers %}
+            <li>{{ forloop.counter }}. {{ passenger.name }} ({{ passenger.age }} years old)</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <p>We look forward to seeing you!</p>
+        <p>Best regards,<br>The BKODA Transport Team</p>
+
+        <div class="footer">
+            <p>This is an automated email. Please keep this email for your records.</p>
+        </div>
+    </div>
+</body>
+</html>

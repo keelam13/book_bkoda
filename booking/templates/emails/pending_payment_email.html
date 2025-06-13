@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking Confirmation - Pending Payment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        h2, h3 {
+            color: #0056b3;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        ul li {
+            margin-bottom: 8px;
+        }
+        strong {
+            color: #555;
+        }
+        .highlight {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .call-to-action {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 0;
+            background-color: #28a745;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #777;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p>Dear {{ user.username }},</p>
+
+        <p>Thank you for booking with us!</p>
+
+        <div class="highlight">
+            <h2>Action Required: Your Booking is Pending Payment</h2>
+            <p>Your booking (Reference: <strong>{{ booking.booking_reference }}</strong>) has been created, but your payment is still **pending**. To confirm your trip and secure your seats, please complete the payment as soon as possible.</p>
+        </div>
+
+        <h3>Booking Details</h3>
+        <ul>
+            <li><strong>Booking Reference:</strong> {{ booking.booking_reference }}</li>
+            <li><strong>Route:</strong> {{ trip.origin }} to {{ trip.destination }}</li>
+            <li><strong>Date:</strong> {{ trip.date|date:"F d, Y" }}</li>
+            <li><strong>Departure Time:</strong> {{ trip.departure_time|time:"h:i A" }}</li>
+            <li><strong>Arrival Time:</strong> {{ trip.arrival_time|time:"h:i A" }}</li>
+            <li><strong>Number of Passengers:</strong> {{ booking.number_of_passengers }}</li>
+            <li><strong>Total Price:</strong> Php{{ booking.total_price|floatformat:2 }}</li>
+            <li><strong>Booking Status:</strong> <strong style="color: #ffc107;">{{ booking_status }}</strong></li>
+            <li><strong>Payment Status:</strong> <strong style="color: #ffc107;">{{ payment_status }}</strong></li>
+        </ul>
+
+        {% if passengers %}
+        <h3>Passenger Information</h3>
+        <ul>
+            {% for passenger in passengers %}
+            <li>{{ forloop.counter }}. {{ passenger.name }} ({{ passenger.age }} years old)</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <div class="call-to-action">
+            <p>To complete your payment and finalize your booking, please click the button below:</p>
+            <a href="{% if payment_url %}{{ payment_url }}{% else %}#{% endif %}" class="button">Complete Your Payment Now</a>
+            <p>Alternatively, you can follow any specific instructions provided on our website for your chosen payment method.</p>
+            <p>If you've already made your payment, please allow some time for processing. We will send you a separate confirmation email once your payment is successfully received.</p>
+        </div>
+
+        <p>We look forward to seeing you!</p>
+        <p>Best regards,<br>The BKODA Transport Team</p>
+
+        <div class="footer">
+            <p>This is an automated email, please do not reply.</p>
+        </div>
+    </div>
+</body>
+</html>
