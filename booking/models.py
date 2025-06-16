@@ -1,9 +1,38 @@
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.models import User
 from trips.models import Trip
 from decimal import Decimal
 from datetime import datetime
+from .utils import send_booking_email
 
+
+BOOKING_STATUS_CHOICES = [
+    ('PENDING_PAYMENT', 'Pending Payment'),
+    ('CONFIRMED', 'Confirmed'),
+    ('CANCELED', 'Canceled'),
+    ('COMPLETED', 'Completed'),
+    ('CANCELLATION_FAILED', 'Cancellation Failed'),
+]
+
+PAYMENT_STATUS_CHOICES = [
+    ('PENDING', 'Pending Payment'),
+    ('PAID', 'Paid'),
+    ('REFUNDED', 'Refunded'),
+    ('FAILED', 'Payment Failed'),
+]
+
+REFUND_STATUS_CHOICES = [
+    ('NONE', 'No Refund Made'),
+    ('PENDING', 'Refund Pending'),
+    ('COMPLETED', 'Refund Completed'),
+    ('FAILED', 'Refund Failed'),
+]
+
+PAYMENT_METHOD_CHOICES = [
+    ('CARD', 'Card'),
+    ('CASH', 'Cash'),
+    ('GCASH', 'GCash'),
+]
 
 class Booking(models.Model):
     """
@@ -11,59 +40,38 @@ class Booking(models.Model):
     """
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
-    number_of_passengers = models.PositiveBigIntegerField(default=1)
+    number_of_passengers = models.PositiveIntegerField(default=1)
     booking_date = models.DateTimeField(auto_now_add=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
 
     status = models.CharField(
         max_length=20,
-        choices=[
-            ('PENDING', 'Pending'),
-            ('CONFIRMED', 'Confirmed'),
-            ('CANCELED', 'Canceled'),
-            ('COMPLETED', 'Completed'),
-            ('CANCELLATION_FAILED', 'Cancellation Failed'),
-        ],
-        default='PENDING'
+        choices=BOOKING_STATUS_CHOICES,
+        default='PENDING_PAYMENT'
     )
+
     payment_status = models.CharField(
         max_length=30,
-        choices=[
-            ('PENDING', 'Pending Payment'),
-            ('PAID', 'Paid'),
-            ('REFUNDED', 'Refunded'),
-            ('FAILED', 'Payment Failed'),
-        ],
+        choices=PAYMENT_STATUS_CHOICES,
         default='PENDING'
     )
+
     refund_status = models.CharField(
         max_length=20,
         help_text="Status of any refunds associated with this booking.",
-        choices=[
-            ('NONE', 'No Refund Made'),
-            ('PENDING', 'Refund Pending'),
-            ('COMPLETED', 'Refund Completed'),
-            ('FAILED', 'Refund Failed'),
-        ],
+        choices=REFUND_STATUS_CHOICES,
         default='NONE',
     )
     
     refund_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0.00,
+        default=Decimal('0.00'),
         help_text="Total amount refunded for this booking."
     )
 
     booking_reference = models.CharField(max_length=100, unique=True, blank=True, null=True)
     stripe_payment_intent_id = models.CharField(max_length=255, blank=True, null=True)
-
-    PAYMENT_METHOD_CHOICES = [
-        ('CARD', 'Card'),
-        ('CASH', 'Cash'),
-        ('GCASH', 'GCash'),
-        ('BANK_TRANSFER', 'Bank_Transfer')
-    ]
 
     payment_method_type = models.CharField(
         max_length=50,
@@ -91,17 +99,30 @@ class Booking(models.Model):
         help_text="ID of the Stripe PaymentMethod object used for this booking."
     )
 
+    class Meta:
+        ordering = ['-booking_date']
+        verbose_name = 'Booking'
+        verbose_name_plural = 'Bookings'
+
     def save(self, *args, **kwargs):
         """
-        Overrides the save method to update trip's available seats
-        and generate booking reference.
+        Overrides the save method to handle:
+        1. Storing original status for comparison.
+        2. Generating booking reference (if new).
+        3. Updating trip's available seats based on status changes.
+        4. Triggering confirmation/receipt emails on status transition to PAID/CONFIRMED.
         """
         is_new_booking = not self.pk
-        original_booking = None
+        original_payment_status = None
+        original_booking_status = None
+        original_num_passengers = 0
 
         if not is_new_booking:
             try:
                 original_booking = Booking.objects.get(pk=self.pk)
+                original_payment_status = original_booking.payment_status
+                original_booking_status = original_booking.status
+                original_num_passengers = original_booking.number_of_passengers
             except Booking.DoesNotExist:
                 pass
 
@@ -113,16 +134,20 @@ class Booking(models.Model):
                 else:
                     print("WARNING: Trip available_seats is null, cannot subtract seats.")
         elif original_booking:
-            if self.number_of_passengers != original_booking.number_of_passengers:
+            if self.number_of_passengers != original_num_passengers:
                 passenger_diff = self.number_of_passengers - original_booking.number_of_passengers
                 if self.trip.available_seats is not None:
-                    if passenger_diff > 0:
-                        self.trip.available_seats -= passenger_diff
-                    else:
-                        self.trip.available_seats += abs(passenger_diff)
+                    self.trip.available_seats -= passenger_diff
                     self.trip.save()
                 else:
                     print("WARNING: Trip available_seats is null, cannot adjust seats on passenger count change.")
+
+            if self.status == 'CANCELED' and original_booking_status != 'CANCELED':
+                if self.trip.available_seats is not None:
+                    self.trip.available_seats += self.number_of_passengers
+                    self.trip.save(update_fields=['available_seats'])
+                else:
+                    print("WARNING: Trip available_seats is null, cannot return seats on cancellation.")
 
         super().save(*args, **kwargs)
 
@@ -135,6 +160,15 @@ class Booking(models.Model):
             )
             super().save(update_fields=['booking_reference'])
 
+       # --- Email Sending Logic (after final save) ---
+        is_now_paid_and_confirmed = (self.payment_status == 'PAID' and self.status == 'CONFIRMED')
+        was_not_paid_and_confirmed_before = (
+            original_payment_status != 'PAID' or original_booking_status != 'CONFIRMED'
+        )
+
+        if is_now_paid_and_confirmed and was_not_paid_and_confirmed_before:
+            transaction.on_commit(lambda: send_booking_email(self, 'payment_receipt'))
+            transaction.on_commit(lambda: send_booking_email(self, 'booking_confirmation'))
 
     def __str__(self):
         user_display = self.user.username if self.user else "Anonymous"
@@ -172,7 +206,7 @@ class BookingPolicy(models.Model):
     late_cancellation_fee_percentage = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=Decimal('0.50'), # 0.50 for 50%
+        default=Decimal('0.50'),
         help_text="Percentage of total price charged for late cancellation (e.g., 0.50 for 50%)."
     )
 
@@ -188,7 +222,7 @@ class BookingPolicy(models.Model):
     late_rescheduling_charge_percentage = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=Decimal('0.15'), # 0.15 for 15%
+        default=Decimal('0.15'),
         help_text="Percentage of total price charged for late rescheduling (e.g., 0.15 for 15%)."
     )
 
