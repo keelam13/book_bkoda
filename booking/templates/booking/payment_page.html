@@ -42,10 +42,15 @@
                             <div class="mb-3 text-danger" id="card-errors" role="alert"></div>
                         </div>
                         <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="payment_method" id="otherPayment"
-                                value="other">
-                            <label class="form-check-label" for="otherPayment">
-                                Cash (Payment Centers) / Money Wallet (GCash)
+                            <input class="form-check-input" type="radio" name="payment_method" id="cashPayment"
+                                value="CASH"> <label class="form-check-label" for="cashPayment">
+                                Cash (Payment Centers)
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="payment_method" id="gcashPayment"
+                                value="GCASH"> <label class="form-check-label" for="gcashPayment">
+                                Money Wallet (GCash)
                             </label>
                         </div>
                         <div id="otherPaymentDetails" class="payment-details-section card p-3 mb-3 border-info"

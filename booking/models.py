@@ -58,6 +58,39 @@ class Booking(models.Model):
     booking_reference = models.CharField(max_length=100, unique=True, blank=True, null=True)
     stripe_payment_intent_id = models.CharField(max_length=255, blank=True, null=True)
 
+    PAYMENT_METHOD_CHOICES = [
+        ('CARD', 'Card'),
+        ('CASH', 'Cash'),
+        ('GCASH', 'GCash'),
+        ('BANK_TRANSFER', 'Bank_Transfer')
+    ]
+
+    payment_method_type = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        choices=PAYMENT_METHOD_CHOICES,
+        help_text="Type of payment method (e.g., Card, Cash, GCash, Bank Transfer)."
+    )
+    card_brand = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Brand of the card used (e.g., 'Visa', 'Mastercard', 'Amex')."
+    )
+    card_last4 = models.CharField(
+        max_length=4,
+        blank=True,
+        null=True,
+        help_text="Last four digits of the card used."
+    )
+    stripe_payment_method_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="ID of the Stripe PaymentMethod object used for this booking."
+    )
+
     def save(self, *args, **kwargs):
         """
         Overrides the save method to update trip's available seats
