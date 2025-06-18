@@ -104,7 +104,7 @@ def booking_detail(request, booking_id):
     policy = BookingPolicy.objects.first()
     if not policy:
             messages.error(request, "No booking policy found. Please configure a policy in the admin.")
-            return redirect('some_error_page_or_home')
+            return redirect('home')
 
     can_cancel = False
     can_reschedule = False

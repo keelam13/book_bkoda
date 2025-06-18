@@ -6,7 +6,7 @@ from django.db import transaction
 from trips.models import Trip
 from profiles.models import UserProfile
 from .models import Booking, Passenger
-from .forms import BookingConfirmationForm
+from .forms import BookingConfirmationForm, BillingDetailsForm
 from .utils import send_booking_email
 
 from datetime import timedelta
@@ -73,9 +73,7 @@ def book_trip(request, trip_id, number_of_passengers):
                     messages.success(request, f"Booking {booking.booking_reference} created! Please proceed to payment.")
 
                 messages.success(request, f"Booking {booking.booking_reference} created! Please proceed to payment.")
-                
                 send_booking_email(booking, email_type='pending_payment_instructions', booking_form_data=form.cleaned_data)
-
                 return redirect('process_payment', booking_id=booking.id)
         else:
             messages.error(request, "Please correct the errors below.")
@@ -128,20 +126,18 @@ def process_payment(request, booking_id):
         
     if not booking:
         messages.error(request, "Booking not found or not accessible.")
-        return redirect('trips')   
+        return redirect('trips')
         
     if booking.payment_status == 'PAID' or booking.status == 'CONFIRMED':
         messages.info(request, "This booking has already been paid or confirmed.")
         return redirect('manage_booking:booking_detail', booking_id=booking.id)
         
-    if booking.status == 'CANCELLED':
+    if booking.status == 'CANCELED':
         messages.error(request, "This booking has been cancelled and cannot be paid.")
         return redirect('manage_booking:booking_detail', booking_id=booking.id)
 
     stripe_public_key = settings.STRIPE_PUBLIC_KEY
-    stripe_secret_key = settings.STRIPE_SECRET_KEY
-    stripe.api_key = stripe_secret_key
-
+    stripe.api_key = settings.STRIPE_SECRET_KEY
     stripe_total = round(booking.total_price * 100)
 
     first_passenger_email = ''
@@ -150,9 +146,10 @@ def process_payment(request, booking_id):
         first_passenger = booking.passengers.first()
         first_passenger_email = first_passenger.email if first_passenger.email else ''
         first_passenger_contact_number = first_passenger.contact_number if first_passenger.contact_number else ''
-        print(f"1st Passsenger name : {first_passenger}")
     
     intent = None
+    billing_form = None
+    user_profile = None
 
     if request.method == 'GET':
         try:
@@ -175,27 +172,48 @@ def process_payment(request, booking_id):
                     }
                 )
                 booking.stripe_payment_intent_id = intent.id
+                booking.save(update_fields=['stripe_payment_intent_id'])
 
         except stripe.error.StripeError as e:
-            print(f"Error creating/retrieving payment intent for booking {booking.id}: {e}")
             messages.error(request, f"Error preparing payment: {e}. Please try again.")
             return redirect('manage_booking:booking_detail', booking_id=booking.id)
         except Exception as e:
-            print(f"Unexpected error preparing payment for booking {booking.id}: {e}")
             messages.error(request, f"An unexpected error occurred: {e}. Please try again.")
             return redirect('manage_booking:booking_detail', booking_id=booking.id)
 
-    # Handle payment submission
+        # Initialize billing form for GET request
+        if request.user.is_authenticated:
+            user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+            billing_form = BillingDetailsForm(initial={
+                'billing_name': user_profile.default_name or request.user.get_full_name() or request.user.username,
+                'billing_email': user_profile.default_email or request.user.email,
+                'billing_phone': user_profile.default_phone_number,
+                'billing_street_address1': user_profile.default_street_address1,
+                'billing_street_address2': user_profile.default_street_address2,
+                'billing_city': user_profile.default_city,
+                'billing_postcode': user_profile.default_postcode,
+                'billing_country': user_profile.default_country,
+            })
+        else:
+            billing_form = BillingDetailsForm(initial={
+                'billing_name': booking.passengers.first().name if booking.passengers.exists() else '',
+                'billing_email': first_passenger_email,
+                'billing_phone': first_passenger_contact_number,
+            })
+
+    # Handle payment submission (POST request)
     if request.method == 'POST':
         selected_payment_method = request.POST.get('selected_payment_method_hidden')
         payment_intent_id = request.POST.get('payment_intent_id')
+        billing_form = BillingDetailsForm(request.POST)
+        save_info = request.POST.get('save_info') == 'on'
 
         if selected_payment_method == 'card':
             if not payment_intent_id:
                 messages.error(request, "Card payment selected, but Payment Intent ID was not received. Please try again.")
                 booking.payment_status = 'FAILED'
                 booking.save()
-                return redirect('payment_page', booking_id=booking.id)
+                return redirect('process_payment', booking_id=booking.id)
             
             try:
                 stripe_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
@@ -216,68 +234,68 @@ def process_payment(request, booking_id):
 
                         booking.save()
 
-                    if not request.user.is_authenticated and 'anonymous_booking_id' in request.session:
-                        del request.session['anonymous_booking_id']
-                        request.session.modified = True
+                        # --- Update UserProfile default address if requested ---
+                        if request.user.is_authenticated and save_info:
+                            try:
+                                user_profile, created = UserProfile.objects.get_or_create(user=request.user) 
+                                if billing_form.is_valid():
+                                    user_profile.default_name = billing_form.cleaned_data['billing_name']
+                                    user_profile.default_email = billing_form.cleaned_data['billing_email']
+                                    user_profile.default_phone_number = billing_form.cleaned_data['billing_phone']
+                                    user_profile.default_street_address1 = billing_form.cleaned_data['billing_street_address1']
+                                    user_profile.default_street_address2 = billing_form.cleaned_data['billing_street_address2']
+                                    user_profile.default_city = billing_form.cleaned_data['billing_city']
+                                    user_profile.default_postcode = billing_form.cleaned_data['billing_postcode']
+                                    user_profile.default_country = billing_form.cleaned_data['billing_country']
+                                    user_profile.save()
+                                    messages.info(request, 'Billing details saved to your profile.')
+                                else:
+                                    messages.warning(request, "Could not save billing details to profile due to invalid data.")
+                            except UserProfile.DoesNotExist:
+                                messages.error(request, f"Error: UserProfile does not exist for authenticated user {request.user.id} during profile save.")
 
-                    messages.success(request, f"Payment successful! Booking {booking.booking_reference} is now confirmed.")
-                    send_booking_email(booking, email_type='payment_receipt')
-                    send_booking_email(booking, email_type='booking_confirmation')
-                    return redirect('booking_success', booking_id=booking.id)
+                        if not request.user.is_authenticated and 'anonymous_booking_id' in request.session:
+                            del request.session['anonymous_booking_id']
+                            request.session.modified = True
+
+                        messages.success(request, f"Payment successful! Booking {booking.booking_reference} is now confirmed.")
+                        return redirect('booking_success', booking_id=booking.id)
 
                 else:
                     messages.error(request, f"Card payment status: {stripe_intent.status}. Please try again or use another method.")
                     booking.payment_status = 'FAILED'
                     booking.save()
-                    return redirect('payment_page', booking_id=booking.id)
+                    return redirect('process_payment', booking_id=booking.id)
 
             except stripe.error.StripeError as e:
-                print(f"Stripe error during payment confirmation for booking {booking.id}: {e}")
                 messages.error(request, f"A Stripe error occurred: {e}. Please try again.")
                 booking.payment_status = 'FAILED'
                 booking.save()
-                return redirect('payment_page', booking_id=booking.id)
+                return redirect('process_payment', booking_id=booking.id)
 
             except Exception as e:
-                print(f"An unexpected error occurred during Stripe payment confirmation for booking {booking.id}: {e}")
                 messages.error(request, f"An unexpected error occurred: {e}. Please try again.")
                 booking.payment_status = 'FAILED'
                 booking.save()
-                return redirect('payment_page', booking_id=booking.id)
+                return redirect('process_payment', booking_id=booking.id)
 
-        elif selected_payment_method == 'CASH':
+        elif selected_payment_method in ['CASH', 'GCASH']:
             with transaction.atomic():
                 booking.status = 'PENDING_PAYMENT'
                 booking.payment_status = 'PENDING'
-                booking.payment_method_type = 'CASH'
+                booking.payment_method_type = selected_payment_method
                 booking.save()
 
             if not request.user.is_authenticated and 'anonymous_booking_id' in request.session:
                 del request.session['anonymous_booking_id']
                 request.session.modified = True
             
-            messages.info(request, f"Booking {booking.booking_reference} received! Please complete your cash payment at designated centers within 24 hours.")
-            send_booking_email(booking, email_type='pending_payment_instructions')
-            return redirect('booking_success', booking_id=booking.id)
-
-        elif selected_payment_method == 'GCASH':
-            with transaction.atomic():
-                booking.status = 'PENDING_PAYMENT'
-                booking.payment_status = 'PENDING'
-                booking.payment_method_type = 'GCASH'
-                booking.save()
-
-            if not request.user.is_authenticated and 'anonymous_booking_id' in request.session:
-                del request.session['anonymous_booking_id']
-                request.session.modified = True
-            
-            messages.info(request, f"Booking {booking.booking_reference} received! Please complete your GCash payment within 24 hours as per instructions.")
-            send_booking_email(booking, email_type='pending_payment_instructions')
+            messages.info(request, f"Booking {booking.booking_reference} received! Please complete your {selected_payment_method} payment at designated centers within 24 hours.")
             return redirect('booking_success', booking_id=booking.id)
 
         else:
             messages.error(request, "Invalid payment method selected. Please choose a valid option.")
-            return redirect('payment_page', booking_id=booking.id)
+            return redirect('process_payment', booking_id=booking.id)
 
     context = {
         'booking': booking,
@@ -286,8 +304,9 @@ def process_payment(request, booking_id):
         'client_secret': intent.client_secret if intent else None,
         'first_passenger_email': first_passenger_email,
         'first_passenger_contact_number': first_passenger_contact_number,
+        'billing_form': billing_form,
+        'user_profile': user_profile,
     }
-    print(f"1st Passenger email: {first_passenger_email}")
     return render(request, 'booking/payment_page.html', context)
     
 

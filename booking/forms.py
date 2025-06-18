@@ -1,5 +1,7 @@
 from django import forms
 from .models import Booking
+from django_countries.fields import CountryField
+from django_countries.widgets import CountrySelectWidget
 import re
 
 
@@ -29,12 +31,9 @@ class BookingConfirmationForm(forms.ModelForm):
         self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
 
-        print(f"DEBUG FORM: In __init__: Request user authenticated: {self.request.user.is_authenticated if self.request and self.request.user else 'N/A'}")
-
         if not self.request or not self.request.user.is_authenticated:
             if 'save_info' in self.fields:
                 del self.fields['save_info']
-
 
         for i in range(self.num_passengers):
 
@@ -68,41 +67,27 @@ class BookingConfirmationForm(forms.ModelForm):
         }
 
         for field_name, field_obj in self.fields.items():
-            # Handle 'save_info' field separately
             if field_name == 'save_info':
                 field_obj.widget.attrs['class'] = 'form-check-input'
-                print(f"DEBUG FORM: Styled 'save_info' field.Label is: '{field_obj.label}'")
-                continue # Skip general styling for save_info
+                continue
 
-            # Apply general CSS class to all other fields
             field_obj.widget.attrs['class'] = 'stripe-style-input'
-            # Remove labels for all other fields (passenger fields)
             field_obj.label = ''
-            print(f"DEBUG FORM: After setting label: Field '{field_name}' label is '{field_obj.label}' (type: {type(field_obj.label)})")
-                # Get the base placeholder text
+
             if field_name.startswith('passenger'):
-                # Extract the number and type suffix (e.g., '1', 'name') using regex for robustness
                 match = re.match(r'passenger_(.*)(\d+)', field_name)
                 if match:
-                    passenger_number = int(match.group(2)) # e.g., 1
-                    field_type_suffix = match.group(1)    # e.g., 'name'
+                    passenger_number = int(match.group(2))
+                    field_type_suffix = match.group(1)
 
-                    # Get the base placeholder text from the dictionary
                     base_placeholder = passenger_placeholders.get(field_type_suffix, '')
 
-                    # Build the final placeholder string
                     current_placeholder_text = f'{base_placeholder} (Passenger {passenger_number})'
-                    print(f"DEBUG FORM: Initial placeholder for {field_name}: '{current_placeholder_text}'")
-                    # Add required asterisk if necessary
                     if field_obj.required:
-                        current_placeholder_text += ' *' # Use += for string concatenation
-
+                        current_placeholder_text += ' *'
                     field_obj.widget.attrs['placeholder'] = current_placeholder_text
-                    print(f"DEBUG FORM: Styled passenger field: {field_name} with placeholder '{current_placeholder_text}'")
                 else:
-                    # Fallback for field names that don't match the expected pattern
                     field_obj.widget.attrs['placeholder'] = "Error: Invalid Name"
-                    print(f"DEBUG FORM: Warning: Could not parse passenger field name: {field_name}")
             
             if field_name == 'passenger_name1':
                 field_obj.widget.attrs['autofocus'] = True
@@ -116,5 +101,96 @@ class BookingConfirmationForm(forms.ModelForm):
 
         if self.trip and self.trip.available_seats < self.num_passengers:
             self.add_error(None, f"Not enough available seats for {self.num_passengers} passengers. Only {self.trip.available_seats} seats remaining.")
+
+        return cleaned_data
+
+
+class BillingDetailsForm(forms.Form):
+    """
+    A form for collecting billing details.
+    Card element fields are handled by Stripe.js, not directly here.
+    """
+
+    save_info = forms.BooleanField(
+        label='Save this information to my profile for future bookings',
+        required=False,
+        initial=True
+    )
+
+    billing_name = forms.CharField(
+        label="Name on Card",
+        max_length=255,
+        required=True,
+        widget=forms.TextInput(attrs={'placeholder': 'Full Name (as it appears on card)', 'autocomplete': 'name'})
+    )
+    billing_email = forms.EmailField(
+        label="Billing Email",
+        max_length=255,
+        required=True,
+        widget=forms.EmailInput(attrs={'placeholder': 'Email address for billing', 'autocomplete': 'email'})
+    )
+    billing_phone = forms.CharField(
+        label="Phone (Optional)",
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Billing phone number', 'autocomplete': 'tel'})
+    )
+    billing_street_address1 = forms.CharField(
+        label="Street Address 1",
+        max_length=80,
+        required=True,
+        widget=forms.TextInput(attrs={'placeholder': 'House number and street name', 'autocomplete': 'address-line1'})
+    )
+    billing_street_address2 = forms.CharField(
+        label="Street Address 2 (Optional)",
+        max_length=80,
+        required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Apartment, suite, unit etc. (optional)', 'autocomplete': 'address-line2'})
+    )
+    billing_city = forms.CharField(
+        label="City",
+        max_length=40,
+        required=True,
+        widget=forms.TextInput(attrs={'placeholder': 'Town or City', 'autocomplete': 'address-level2'})
+    )
+    billing_postcode = forms.CharField(
+        label="Postal Code",
+        max_length=20,
+        required=True,
+        widget=forms.TextInput(attrs={'placeholder': 'Postal Code (e.g. 90210)', 'autocomplete': 'postal-code'})
+    )
+    billing_country = CountryField().formfield(
+        label="Country",
+        required=True,
+        widget=CountrySelectWidget(attrs={'autocomplete': 'country'})
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
+
+        for field_name, field in self.fields.items():
+            if field_name == 'save_info':
+                field.widget.attrs['class'] = 'form-check-input'
+                continue
+
+            if field_name != 'billing_country':
+                field.widget.attrs['class'] = 'form-control'
+            else:
+                field.widget.attrs['class'] = 'form-select'
+            if field.required:
+                field.label += '*'
+
+            field.widget.attrs['class'] = 'stripe-style-input'
+            field.label = ''
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        street_address1 = cleaned_data.get('billing_street_address1')
+        street_address2 = cleaned_data.get('billing_street_address2')
+
+        if street_address2 and not street_address1:
+            self.add_error('billing_street_address2', "Street Address 2 cannot be provided without Street Address 1.")
 
         return cleaned_data
