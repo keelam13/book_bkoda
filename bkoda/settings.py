@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     'booking',
     'profiles',
     'manage_booking',
-    'satff_app',
+    'staff_app',
 
     # others
     'django_countries',
