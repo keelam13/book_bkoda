@@ -1,0 +1,50 @@
+{% extends 'staff_app/staff_base.html' %}
+{% load static %}
+
+{% block title %}Staff Dashboard - {{ block.super }}{% endblock %}
+
+{% block staff_app_content %}
+<div id="dashboard-section" class="staff-content-section">
+    <h2 class="section-title">Dashboard Overview</h2>
+    <p class="lead">Welcome to the Staff Management Panel!</p>
+    <p>You are logged in as: **{{ request.user.username }}** (ID: {{ request.user.id }})</p>
+    <p>Use the navigation on the left to manage trips and bookings efficiently.</p>
+    <div class="mt-4 p-3 bg-light border rounded">
+        <h5>Quick Stats</h5>
+        <p>Total Trips: <span id="dashboard-total-trips">{{ total_trips }}</span></p>
+        <p>Total Bookings: <span id="dashboard-total-bookings">{{ total_bookings }}</span></p>
+        <p>Pending Bookings: <span>{{ pending_bookings }}</span></p>
+        <p>Confirmed Bookings: <span>{{ confirmed_bookings }}</span></p>
+        <p>Total Confirmed Revenue: Php {{ total_revenue_confirmed|floatformat:2 }}</p>
+    </div>
+
+    <div class="mt-4">
+        <h5>Recent Bookings</h5>
+        <ul class="list-group">
+            {% for booking in recent_bookings %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ booking.user }} - {{ booking.trip.destination }} ({{ booking.number_of_passengers }}
+                    seats)</span>
+                <small class="text-muted">{{ booking.booking_date|date:"M d, Y" }}</small>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted text-center">No recent bookings.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="mt-4">
+        <h5>Upcoming Trips</h5>
+        <ul class="list-group">
+            {% for trip in upcoming_trips %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ trip.origin }} - {{ trip.destination }} ({{ trip.date|date:"M d, Y" }})</span>
+                <small class="text-muted">${{ trip.price|floatformat:2 }}</small>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted text-center">No upcoming trips.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

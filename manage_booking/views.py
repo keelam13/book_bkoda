@@ -27,7 +27,6 @@ def _calculate_reschedule_financials(original_booking, new_trip, policy):
     original_total_price = original_booking.total_price
     new_total_price_base = new_trip.price * num_passengers
     new_total_price_base = new_total_price_base.quantize(Decimal('0.01'))
-
     fare_difference = new_total_price_base - original_total_price
     rescheduling_charge = Decimal('0.00')
     reschedule_type_message = ""
@@ -66,7 +65,7 @@ def _calculate_reschedule_financials(original_booking, new_trip, policy):
         'amount_to_refund': amount_to_refund,
         'reschedule_type_message': reschedule_type_message,
         'time_until_departure_hours': time_until_departure_hours,
-        'num_passengers': num_passengers # Include this for clarity
+        'num_passengers': num_passengers
     }
 
 
@@ -268,7 +267,6 @@ def booking_cancel(request, booking_id):
             print(f"POLICY: free_cancellation_cutoff_hours: {policy.free_cancellation_cutoff_hours}")
             print(f"POLICY: late_cancellation_cutoff_hours: {policy.late_cancellation_cutoff_hours}")
             print("-------------------------------------------\n")
-
 
             if eligible_status_for_action:
                 if time_until_departure_hours_recheck > policy.free_cancellation_cutoff_hours:

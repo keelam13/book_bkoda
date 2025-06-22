@@ -33,4 +33,4 @@ def staff_dashboard(request):
         'recent_bookings': Booking.objects.order_by('-booking_date')[:5],
         'upcoming_trips': Trip.objects.order_by('date')[:5],
     }
-    return render(request, 'staff_app/staff_base.html', context)
+    return render(request, 'staff_app/dashboard.html', context)
