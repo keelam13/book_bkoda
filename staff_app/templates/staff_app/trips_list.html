@@ -1,0 +1,35 @@
+{% extends 'staff_app/staff_base.html' %}
+{% load static %}
+
+{% block title %}Trips List - {{ block.super }}{% endblock %}
+
+{% block staff_app_content %}
+<div class="container mx-auto p-6 bg-white rounded-xl shadow-lg mt-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-3">Trips List</h1>
+
+    {% if trips %}
+    <ul class="space-y-4">
+        {% for trip in trips %}
+        <li class="bg-gray-50 p-4 rounded-lg shadow-sm flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-semibold text-gray-700">Trip {{ trip.trip_number }}: {{ trip.origin }} to {{ trip.destination }}</h2>
+                <p class="text-gray-500">Date: {{ trip.date|date:"F d, Y" }}</p>
+                <p class="text-gray-500">Time: {{ trip.departure_time|time:"H:i" }} - {{ trip.arrival_time|time:"H:i" }} (Duration: {{ trip.duration }})</p>
+                <p class="text-gray-500">Available Seats: {{ trip.available_seats }}</p>
+                <p class="text-gray-500">Price: Php{{ trip.price }}</p>
+            </div>
+            <a href="#" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">View Details</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-gray-600 text-lg">No trips found at the moment.</p>
+    {% endif %}
+
+    <div class="mt-8">
+        <a href="{% url 'staff_app:dashboard' %}" class="inline-block bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300">
+            &larr; Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

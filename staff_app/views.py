@@ -34,3 +34,18 @@ def staff_dashboard(request):
         'upcoming_trips': Trip.objects.order_by('date')[:5],
     }
     return render(request, 'staff_app/dashboard.html', context)
+
+
+@login_required
+def trips_list(request):
+    """
+    View function to display a list of trips.
+    This will fetch actual trip data from the database.
+    """
+    trips_list = Trip.objects.all().order_by('date', 'departure_time')
+
+    context = {
+        'page_title': 'Trips List',
+        'trips': trips_list,
+    }
+    return render(request, 'staff_app/trips_list.html', context)
