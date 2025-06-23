@@ -267,3 +267,15 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 p.instruction-group{
     font-style: italic;
 }
+
+
+.btt-button {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 1050;
+}
+#back-to-top {
+    width: 48px;
+    height: 48px;
+}

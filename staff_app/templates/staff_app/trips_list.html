@@ -7,8 +7,31 @@
 <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg mt-8">
     <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-3">Trips List</h1>
 
+     <!-- Filter Form -->
+    <form method="GET" action="{% url 'staff_app:trips_list' %}" class="mb-4 p-3 border rounded bg-light">
+        <div class="form-row">
+            <div class="form-group col-md-4">
+                <label for="id_date" class="small text-muted">Date:</label>
+                <input type="date" class="form-control form-control-sm" id="id_date" name="date" value="{{ filter_date }}">
+            </div>
+            <div class="form-group col-md-4">
+                <label for="id_origin" class="small text-muted">Origin:</label>
+                <input type="text" class="form-control form-control-sm" id="id_origin" name="origin" value="{{ filter_origin }}" placeholder="e.g., Baguio City">
+            </div>
+            <div class="form-group col-md-4">
+                <label for="id_destination" class="small text-muted">Destination:</label>
+                <input type="text" class="form-control form-control-sm" id="id_destination" name="destination" value="{{ filter_destination }}" placeholder="e.g., Kabayan">
+            </div>
+        </div>
+        <div class="d-flex justify-content-end mt-3">
+            <button type="submit" class="btn btn-primary btn-sm mr-2">Apply Filters</button>
+            <a href="{% url 'staff_app:trips_list' %}" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+        </div>
+    </form>
+    <!-- End Filter Form -->
+     
     {% if trips %}
-    <ul class="space-y-4">
+    <ul class="space-y-4 list-unstyled">
         {% for trip in trips %}
         <li class="bg-gray-50 p-4 rounded-lg shadow-sm flex justify-between items-center">
             <div>
@@ -25,6 +48,13 @@
     {% else %}
     <p class="text-gray-600 text-lg">No trips found at the moment.</p>
     {% endif %}
+    
+    <!-- Back to Top Button -->
+    <div class="btt-button">
+        <a id="back-to-top" class="btn btn-primary rounded-circle shadow d-flex justify-content-center align-items-center">
+            <i class="fas fa-arrow-up text-white mx-auto my-auto"></i>
+        </a>
+    </div>
 
     <div class="mt-8">
         <a href="{% url 'staff_app:dashboard' %}" class="inline-block bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300">
@@ -32,4 +62,16 @@
         </a>
     </div>
 </div>
+{% endblock %}
+
+{% block postload_js %}
+    {{ block.super }}
+    <script type="text/javascript" >
+        $('#back-to-top').click(function(e) {
+            e.preventDefault();
+            $('html, body').animate({
+                scrollTop: 0
+            }, 'slow');
+        });
+    </script>
 {% endblock %}

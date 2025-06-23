@@ -6,6 +6,8 @@ from django.db.models import Sum
 from trips.models import Trip
 from booking.models import Booking
 
+from datetime import datetime
+
 # Helper function to check if a user is staff
 def is_staff_user(user):
     return user.is_authenticated and user.is_staff
@@ -39,13 +41,34 @@ def staff_dashboard(request):
 @login_required
 def trips_list(request):
     """
-    View function to display a list of trips.
-    This will fetch actual trip data from the database.
+    View function to display a list of trips with filtering capabilities.
     """
-    trips_list = Trip.objects.all().order_by('date', 'departure_time')
+    trips_list = Trip.objects.all()
+
+    filter_date = request.GET.get('date')
+    filter_destination = request.GET.get('destination')
+    filter_origin = request.GET.get('origin')
+
+    if filter_date:
+        try:
+            date_obj = datetime.strptime(filter_date, '%Y-%m-%d').date()
+            trips_list = trips_list.filter(date=date_obj)
+        except ValueError:
+            pass
+
+    if filter_destination:
+        trips_list = trips_list.filter(destination__icontains=filter_destination)
+
+    if filter_origin:
+        trips_list = trips_list.filter(origin__icontains=filter_origin)
+
+    trips_list = trips_list.order_by('date', 'departure_time')
 
     context = {
         'page_title': 'Trips List',
         'trips': trips_list,
+        'filter_date': filter_date,
+        'filter_destination': filter_destination,
+        'filter_origin': filter_origin,
     }
     return render(request, 'staff_app/trips_list.html', context)
