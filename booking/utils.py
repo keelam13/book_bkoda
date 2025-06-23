@@ -21,6 +21,14 @@ def send_booking_email(booking, email_type, booking_form_data=None, **kwargs):
     if not recipient_email:
         print(f"Warning: No recipient email found for booking {booking.booking_reference}. Email not sent.")
         return
+    
+    customer_name = 'Valued Customer'
+    if booking.passengers.exists():
+        customer_name = booking.passengers.first().name
+    elif user and user.get_full_name():
+        customer_name = user.get_full_name()
+    elif user and user.username:
+        customer_name = user.username
 
     if email_type == 'pending_payment_instructions':
         subject = f"Your Booking is Pending Payment - Reference: {booking.booking_reference}"
@@ -31,6 +39,11 @@ def send_booking_email(booking, email_type, booking_form_data=None, **kwargs):
     elif email_type == 'booking_confirmation':
         subject = f"Your Booking is Confirmed! Reference: {booking.booking_reference}"
         html_template_name = 'emails/booking_confirmation_email.html'
+    elif email_type == 'cancellation_unpaid':
+        subject = f'Booking {booking.booking_reference} Has Been Cancelled (Unpaid)'
+        html_template_name = 'emails/cancellation_unpaid_email.html'
+        if 'reason' not in kwargs:
+            kwargs['reason'] = 'Your booking was automatically cancelled because payment was not received within 24 hours.'
     else:
         print(f"Warning: Unknown email type '{email_type}' requested for booking {booking.booking_reference}")
         return
@@ -43,6 +56,7 @@ def send_booking_email(booking, email_type, booking_form_data=None, **kwargs):
         'total_price': booking.total_price,
         'payment_status': booking.get_payment_status_display(),
         'booking_status': booking.get_status_display(),
+        'customer_name': customer_name,
         **kwargs,
     }
 

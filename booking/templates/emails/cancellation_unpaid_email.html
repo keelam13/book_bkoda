@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking Cancelled - {{ booking.booking_reference }}</title>
+</head>
+<body>
+    <p>Dear {{ customer_name }},</p>
+    <p>Your booking <strong>{{ booking.booking_reference }}</strong> for the trip from {{ booking.trip.origin }} to {{ booking.trip.destination }} on {{ booking.trip.date|date:"F d, Y" }} at {{ booking.trip.departure_time|time:"H:i" }} has been automatically cancelled.</p>
+    <p><strong>Reason for cancellation:</strong> {{ reason }}</p>
+    <p>If you still wish to book this trip, please create a new booking on our website.</p>
+    <p>Thank you for your understanding.</p>
+    <p>Sincerely,<br>The [Your Company Name] Team</p>
+</body>
+</html>

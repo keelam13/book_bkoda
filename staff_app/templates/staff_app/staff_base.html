@@ -53,35 +53,36 @@
 {% block content %}
     <article class="staff-app-display">
         <section class="sidebar">
-            <a class="navbar-brand" href="">Staff Panel</a>
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'staff_app:dashboard' %}">
-                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if 'trip' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'staff_app:trips_list' %}">
-                        <i class="fas fa-route me-2"></i> Trips
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if 'booking' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'staff_app:bookings_list' %}">
-                        <i class="fas fa-ticket-alt me-2"></i> Bookings
-                    </a>
-                </li>
-
-                <li class="nav-item mt-auto"> {# Push to bottom #}
-                    <a class="nav-link" href="{% url 'account_logout' %}">
-                        <i class="fas fa-sign-out-alt me-2"></i> Logout
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'home' %}">
-                        <i class="fas fa-home me-2"></i> Back to Site
-                    </a>
-                </li>
-            </ul>
+            <h1 class="h3 text-secondary border-bottom pb-3 mb-4">Staff Panel</h1>
+            <nav class="mb-4">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'staff_app:dashboard' %}">
+                            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'trip' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'staff_app:trips_list' %}">
+                            <i class="fas fa-route me-2"></i> Trips
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'booking' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'staff_app:bookings_list' %}">
+                            <i class="fas fa-ticket-alt me-2"></i> Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item mt-auto">
+                        <a class="nav-link" href="{% url 'account_logout' %}">
+                            <i class="fas fa-sign-out-alt me-2"></i> Logout
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">
+                            <i class="fas fa-home me-2"></i> Back to Site
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </section>
         <section class="content">
             {% block staff_app_content %}
