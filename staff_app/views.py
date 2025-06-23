@@ -5,8 +5,8 @@ from django.db.models import Sum
 
 # Import models and forms from your app
 from trips.models import Trip
-from booking.models import Booking
-from staff_app.forms import TripForm
+from booking.models import Booking, BOOKING_STATUS_CHOICES, PAYMENT_STATUS_CHOICES, REFUND_STATUS_CHOICES, PAYMENT_METHOD_CHOICES
+from staff_app.forms import TripForm, BookingForm
 
 from datetime import datetime
 
@@ -102,3 +102,89 @@ def trips_list(request):
         'filter_origin': filter_origin,
     }
     return render(request, 'staff_app/trips_list.html', context)
+
+
+@login_required
+def bookings_list(request):
+    """
+    View function to display a list of all bookings with filtering capabilities,
+    and also handle updates and deletions for individual bookings via POST requests.
+    """
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        booking_pk = request.POST.get('booking_pk')
+
+        if not booking_pk:
+            messages.error(request, 'Invalid request: Booking ID missing.')
+            return redirect('staff_app:bookings_list')
+
+        booking = get_object_or_404(Booking, pk=booking_pk)
+        trip_datetime = datetime.combine(booking.trip.date, booking.trip.departure_time)
+        if action == 'update_booking' and trip_datetime < datetime.now():
+             messages.error(request, f'Cannot update past booking {booking.booking_reference}. Editing is disallowed for past trip dates.')
+             return redirect('staff_app:bookings_list')
+
+        if action == 'update_booking':
+            form = BookingForm(request.POST, instance=booking)
+
+            if form.is_valid():
+                form.save(commit=False)
+                booking.status = form.cleaned_data['status']
+                booking.payment_status = form.cleaned_data['payment_status']
+                booking.save(update_fields=['status', 'payment_status'])
+                messages.success(request, f'Booking {booking.booking_reference} updated successfully!')
+            else:
+                messages.error(request, 'Error updating booking. Please correct the form errors below.')
+        elif action == 'delete_booking':
+            booking.delete()
+            messages.success(request, f'Booking {booking.booking_reference} deleted successfully!')
+        else:
+            messages.error(request, 'Invalid action for booking operation.')
+
+        return redirect('staff_app:bookings_list')
+
+    bookings_list = Booking.objects.all().select_related('trip', 'user').prefetch_related('passengers')
+
+
+    # Get filter parameters
+    filter_trip_number = request.GET.get('trip_number')
+    filter_customer_name = request.GET.get('customer_name')
+    filter_status = request.GET.get('status')
+    filter_trip_date = request.GET.get('trip_date')
+
+    # Apply filters
+    if filter_trip_number:
+        bookings_list = bookings_list.filter(trip__trip_number__icontains=filter_trip_number)
+    
+    if filter_customer_name:
+        bookings_list = bookings_list.filter(passengers__name__icontains=filter_customer_name).distinct()
+    
+    if filter_status:
+        bookings_list = bookings_list.filter(status__iexact=filter_status)
+    
+    if filter_trip_date:
+        try:
+            date_obj = datetime.strptime(filter_trip_date, '%Y-%m-%d').date()
+            bookings_list = bookings_list.filter(trip__date=date_obj)
+        except ValueError:
+            messages.error(request, f"Invalid date format for 'Trip Date'. Please use YYYY-MM-DD. Filter was not applied.")
+        except Exception as e:
+            messages.error(request, f"An unexpected error occurred with the 'Trip Date' filter: {e}")
+
+
+    bookings_list = bookings_list.order_by('-booking_date')
+
+    context = {
+        'page_title': 'Bookings List',
+        'bookings': bookings_list,
+        'filter_trip_number': filter_trip_number,
+        'filter_customer_name': filter_customer_name,
+        'filter_status': filter_status,
+        'filter_trip_date': filter_trip_date,
+        'today': datetime.now(),
+        'BOOKING_STATUS_CHOICES': BOOKING_STATUS_CHOICES,
+        'PAYMENT_STATUS_CHOICES': PAYMENT_STATUS_CHOICES,
+        'REFUND_STATUS_CHOICES': REFUND_STATUS_CHOICES,
+        'PAYMENT_METHOD_CHOICES': PAYMENT_METHOD_CHOICES,
+    }
+    return render(request, 'staff_app/bookings_list.html', context)

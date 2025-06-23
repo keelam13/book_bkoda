@@ -1,0 +1,232 @@
+{% extends 'staff_app/staff_base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Bookings List - {{ block.super }}{% endblock %}
+
+{% block staff_app_content %}
+<div class="container p-3 my-3 bg-white rounded shadow-lg">
+    <h1 class="h3 text-secondary border-bottom pb-3 mb-4">Bookings List</h1>
+
+    <!-- Filter Form for Bookings -->
+    <form method="GET" action="{% url 'staff_app:bookings_list' %}" class="mb-4 p-3 border rounded bg-light">
+        <div class="form-row">
+            <div class="form-group col-md-3">
+                <label for="id_trip_date" class="small text-muted">Trip Date:</label>
+                <input type="date" class="form-control form-control-sm" id="id_trip_date" name="trip_date"
+                    value="{{ filter_trip_date|default_if_none:'' }}">
+            </div>
+            <div class="form-group col-md-3">
+                <label for="id_trip_number" class="small text-muted">Trip Number:</label>
+                <input type="text" class="form-control form-control-sm" id="id_trip_number" name="trip_number"
+                    value="{{ filter_trip_number|default_if_none:'' }}" placeholder="e.g., TRP001">
+            </div>
+            <div class="form-group col-md-3">
+                <label for="id_customer_name" class="small text-muted">Customer Name (Passenger):</label>
+                <input type="text" class="form-control form-control-sm" id="id_customer_name" name="customer_name"
+                    value="{{ filter_customer_name|default_if_none:'' }}" placeholder="e.g., John Doe">
+            </div>
+            <div class="form-group col-md-3">
+                <label for="id_status" class="small text-muted">Status:</label>
+                <select class="form-control form-control-sm" id="id_status" name="status">
+                    <option value="">Any</option>
+                    {% for value, label in BOOKING_STATUS_CHOICES %}
+                    <option value="{{ value }}" {% if filter_status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="d-flex justify-content-end mt-3">
+            <button type="submit" class="btn btn-primary btn-sm mr-2">Apply Filters</button>
+            <a href="{% url 'staff_app:bookings_list' %}" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+        </div>
+    </form>
+    <!-- End Filter Form -->
+
+    {% if bookings %}
+    <ul class="list-unstyled">
+        {% for booking in bookings %}
+        <li class="bg-light p-3 rounded shadow-sm d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="h5 text-secondary">Booking Ref: {{ booking.booking_reference }}</h2>
+                <p class="text-muted mb-1">Trip: {{ booking.trip.trip_number }} ({{ booking.trip.origin }} &rarr; {{ booking.trip.destination }})</p>
+                <p class="text-muted mb-1">Booked by: {{ booking.user.username|default:"Anonymous" }} </p>
+                <p class="text-muted mb-1">Booking Date: {{ booking.booking_date|date:"M d, Y H:i" }}</p>
+                <p class="text-muted mb-1">Status: {{ booking.get_status_display }}</p>
+                <p class="text-muted mb-1">Price: Php {{ booking.total_price }}</p>
+                <p class="text-muted mb-1">No. of Passengers: {{ booking.number_of_passengers }}</p>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal"
+                data-target="#bookingDetailsModal{{ booking.pk }}">
+                View Details
+            </button>
+        </li>
+
+        <!-- Booking Details Modal -->
+        <div class="modal fade" id="bookingDetailsModal{{ booking.pk }}" tabindex="-1" role="dialog"
+            aria-labelledby="bookingDetailsModalLabel{{ booking.pk }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="bookingDetailsModalLabel{{ booking.pk }}">
+                            {% if booking.trip.date|is_before_now:booking.trip.departure_time %}
+                            Booking {{ booking.booking_reference }} Details (Past Booking)
+                            {% else %}
+                            Update Booking {{ booking.booking_reference }}
+                            {% endif %}
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        {% if booking.trip.date|is_before_now:booking.trip.departure_time %}
+                        <div class="alert alert-info alert-modal-info" role="alert">
+                            This booking's associated trip date ({{ booking.trip.date|date:"F d, Y" }}) is in the past.
+                            Details are read-only.
+                        </div>
+                        <h6 class="text-primary mb-3">Booking Information</h6>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item"><strong>Booking Reference:</strong> {{ booking.booking_reference }}</li>
+                            <li class="list-group-item"><strong>Booked by:</strong> {{ booking.user.username|default:"Anonymous" }}</li>
+                            <li class="list-group-item"><strong>Trip:</strong> {{ booking.trip.trip_number }} ({{ booking.trip.origin }} &rarr; {{ booking.trip.destination }})</li>
+                            <li class="list-group-item"><strong>Booking Date:</strong> {{ booking.booking_date|date:"F d, Y H:i" }}</li>
+                            <li class="list-group-item"><strong>Passengers:</strong>
+                                {% if booking.passengers.exists %}
+                                <ul class="list-unstyled ml-3 mb-0">
+                                    {% for passenger in booking.passengers.all %}
+                                    <li>{{ forloop.counter }}. {{ passenger.name }}{% if not forloop.last %}, {% endif %}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                            </li>
+                            <li class="list-group-item"><strong>Total Price:</strong> ${{ booking.total_price }}</li>
+                            <li class="list-group-item"><strong>Refund Status:</strong> {{ booking.get_refund_status_display }}</li>
+                            <li class="list-group-item"><strong>Refund Amount:</strong> Php {{ booking.refund_amount }}</li>
+                            <li class="list-group-item"><strong>Payment Method:</strong> {{ booking.get_payment_method_type_display|default:"N/A" }}</li>
+                            <li class="list-group-item"><strong>Card Brand:</strong> {{ booking.card_brand|default:"N/A" }}</li>
+                            <li class="list-group-item"><strong>Card Last 4:</strong> {{  booking.card_last4|default:"N/A" }}</li>
+                            <li class="list-group-item"><strong>Status:</strong> {{ booking.get_status_display }}</li>
+                            <li class="list-group-item"><strong>Payment Status:</strong> {{  booking.get_payment_status_display }}</li>
+                        </ul>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger mr-auto"
+                                id="deleteBookingButton_{{ booking.pk }}">Delete Booking</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                        {% else %}
+                        <h6 class="text-primary mb-3">Booking Information</h6>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item"><strong>Booking Reference:</strong> {{ booking.booking_reference }}</li>
+                            <li class="list-group-item"><strong>Booked by:</strong> {{ booking.user.username|default:"Anonymous" }}</li>
+                            <li class="list-group-item"><strong>Trip:</strong> {{ booking.trip.trip_number }} ({{ booking.trip.origin }} &rarr; {{ booking.trip.destination }})</li>
+                            <li class="list-group-item"><strong>Booking Date:</strong> {{ booking.booking_date|date:"F d, Y H:i" }}</li>
+                            <li class="list-group-item"><strong>Passengers:</strong>
+                                {% if booking.passengers.exists %}
+                                <ul class="list-unstyled ml-3 mb-0">
+                                    {% for passenger in booking.passengers.all %}
+                                    <li>{{ forloop.counter }}. {{ passenger.name }}{% if not forloop.last %}, {% endif %}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                            </li>
+                            <li class="list-group-item"><strong>Total Price:</strong> ${{ booking.total_price }}</li>
+                            <li class="list-group-item"><strong>Refund Status:</strong> {{ booking.get_refund_status_display }}</li>
+                            <li class="list-group-item"><strong>Refund Amount:</strong> Php {{ booking.refund_amount }}</li>
+                            <li class="list-group-item"><strong>Payment Method:</strong> {{ booking.get_payment_method_type_display|default:"N/A" }}</li>
+                            <li class="list-group-item"><strong>Card Brand:</strong> {{ booking.card_brand|default:"N/A" }}</li>
+                            <li class="list-group-item"><strong>Card Last 4:</strong> {{  booking.card_last4|default:"N/A" }}</li>
+                            <form method="POST" action="{% url 'staff_app:bookings_list' %}"
+                                id="updateBookingForm{{ booking.pk }}">
+                                {% csrf_token %}
+                                <input type="hidden" name="booking_pk" value="{{ booking.pk }}">
+                                <input type="hidden" name="action" value="update_booking"
+                                    id="booking_action_{{ booking.pk }}">
+                                <div class="modal-body">
+                                    <h6 class="text-primary mb-3">Booking Details (Editable):</h6>
+                                    <div class="form-group">
+                                        <label for="id_booking_status_{{ booking.pk }}">Status</label>
+                                        <select class="form-control" id="id_booking_status_{{ booking.pk }}" name="status">
+                                            {% for value, label in BOOKING_STATUS_CHOICES %}
+                                            <option value="{{ value }}" {% if booking.status == value %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="id_booking_payment_status_{{ booking.pk }}">Payment Status</label>
+                                        <select class="form-control" id="id_booking_payment_status_{{ booking.pk }}"
+                                            name="payment_status">
+                                            {% for value, label in PAYMENT_STATUS_CHOICES %}
+                                            <option value="{{ value }}" {% if booking.payment_status == value %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-danger mr-auto"
+                                        id="deleteBookingButton_{{ booking.pk }}">Delete Booking</button>
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-success">Save Changes</button>
+                                </div>
+                            </form>
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted lead">No bookings found matching your criteria.</p>
+    {% endif %}
+
+    <!-- Back to Top Button -->
+    <div class="btt-button">
+        <a id="back-to-top"
+            class="btn btn-primary rounded-circle shadow d-flex justify-content-center align-items-center">
+            <i class="fas fa-arrow-up text-white mx-auto my-auto"></i>
+        </a>
+    </div>
+
+    <div class="mt-8">
+        <a href="{% url 'staff_app:dashboard' %}"
+            class="inline-block bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300">
+            &larr; Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block postloadjs %}
+{{ block.super }}
+<script type="text/javascript">
+    console.log("Bookings list script loaded!");
+
+    // JavaScript for handling Booking Delete button click
+    $('[id^="deleteBookingButton_"]').click(function () {
+        var bookingPk = this.id.replace('deleteBookingButton_', ''); // Use pk
+        var form = $('#updateBookingForm' + bookingPk);
+        var actionInput = $('#booking_action_' + bookingPk);
+
+        if (!form.length) {
+            form = $('<form>', {
+                action: '{% url "staff_app:bookings_list" %}',
+                method: 'POST',
+                style: 'display:none;'
+            });
+            form.append($('<input>', { type: 'hidden', name: 'csrfmiddlewaretoken', value: '{{ csrf_token }}' }));
+            form.append($('<input>', { type: 'hidden', name: 'booking_pk', value: bookingPk }));
+            actionInput = $('<input>', { type: 'hidden', name: 'action', value: 'delete_booking' });
+            form.append(actionInput);
+            $('body').append(form);
+        } else {
+            actionInput.val('delete_booking');
+        }
+
+        if (confirm('Are you sure you want to delete Booking ' + bookingPk + '? This action cannot be undone.')) {
+            form.submit();
+        }
+    });
+</script>
+{% endblock %}

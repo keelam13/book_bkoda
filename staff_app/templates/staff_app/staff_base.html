@@ -53,10 +53,10 @@
 {% block content %}
     <article class="staff-app-display">
         <section class="sidebar">
-            <a class="navbar-brand" href="{% url 'staff_app:dashboard' %}">Staff Panel</a>
+            <a class="navbar-brand" href="">Staff Panel</a>
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'staff_app:dashboard' %}">
                         <i class="fas fa-tachometer-alt me-2"></i> Dashboard
                     </a>
                 </li>
@@ -66,7 +66,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if 'booking' in request.resolver_match.url_name %}active{% endif %}" href="">
+                    <a class="nav-link {% if 'booking' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'staff_app:bookings_list' %}">
                         <i class="fas fa-ticket-alt me-2"></i> Bookings
                     </a>
                 </li>
