@@ -1,5 +1,6 @@
 {% extends 'staff_app/staff_base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block title %}Trips List - {{ block.super }}{% endblock %}
 
@@ -12,7 +13,7 @@
         <div class="form-row">
             <div class="form-group col-md-4">
                 <label for="id_date" class="small text-muted">Date:</label>
-                <input type="date" class="form-control form-control-sm" id="id_date" name="date" value="{{ filter_date }}">
+                <input type="date" class="form-control form-control-sm" id="id_date" name="date" value="{{ filter_date|default_if_none:'' }}">
             </div>
             <div class="form-group col-md-4">
                 <label for="id_origin" class="small text-muted">Origin:</label>
@@ -31,18 +32,127 @@
     <!-- End Filter Form -->
      
     {% if trips %}
-    <ul class="space-y-4 list-unstyled">
+    <ul class="list-unstyled">
         {% for trip in trips %}
-        <li class="bg-gray-50 p-4 rounded-lg shadow-sm flex justify-between items-center">
+        <li class="bg-light p-3 rounded shadow-sm d-flex justify-content-between align-items-center mb-3"> {# Using Bootstrap 4 classes #}
             <div>
-                <h2 class="text-xl font-semibold text-gray-700">Trip {{ trip.trip_number }}: {{ trip.origin }} to {{ trip.destination }}</h2>
-                <p class="text-gray-500">Date: {{ trip.date|date:"F d, Y" }}</p>
-                <p class="text-gray-500">Time: {{ trip.departure_time|time:"H:i" }} - {{ trip.arrival_time|time:"H:i" }} (Duration: {{ trip.duration }})</p>
-                <p class="text-gray-500">Available Seats: {{ trip.available_seats }}</p>
-                <p class="text-gray-500">Price: Php{{ trip.price }}</p>
+                <h2 class="h5 text-secondary">Trip {{ trip.trip_number }}: {{ trip.origin }} to {{ trip.destination }}</h2>
+                <p class="text-muted mb-1">Date: {{ trip.date|date:"F d, Y" }}</p>
+                <p class="text-muted mb-1">Time: {{ trip.departure_time|time:"H:i" }} - {{ trip.arrival_time|time:"H:i" }} (Duration: {{ trip.duration }})</p>
+                <p class="text-muted mb-1">Available Seats: {{ trip.available_seats }}</p>
+                <p class="text-muted mb-0">Price: ${{ trip.price }}</p>
             </div>
-            <a href="#" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">View Details</a>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#tripDetailsModal{{ trip.trip_id }}">
+                View Details
+            </button>
         </li>
+
+        <!-- Trip Details Modal -->
+        <div class="modal fade" id="tripDetailsModal{{ trip.trip_id }}" tabindex="-1" role="dialog" aria-labelledby="tripDetailsModalLabel{{ trip.trip_id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="tripDetailsModalLabel{{ trip.trip_id }}">
+                            {% if trip.date|is_before_now:trip.departure_time %}
+                                Trip {{ trip.trip_number }} Details (Past Trip)
+                            {% else %}
+                                Update Trip {{ trip.trip_number }}
+                            {% endif %}
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% if trip.date|is_before_now:trip.departure_time %}
+                        <div class="modal-body">
+                            <div class="alert alert-info" role="alert">
+                                This trip's date is in the past ({{ trip.date|date:"F d, Y" }}). Details are read-only.
+                            </div>
+                            <h6 class="text-primary mb-3">Trip Information</h6>
+                            <ul class="list-group list-group-flush mb-4">
+                                <li class="list-group-item"><strong>Trip Number:</strong> {{ trip.trip_number }}</li>
+                                <li class="list-group-item"><strong>Origin:</strong> {{ trip.origin }} ({{ trip.origin_station }})</li>
+                                <li class="list-group-item"><strong>Destination:</strong> {{ trip.destination }} ({{ trip.destination_station }})</li>
+                                <li class="list-group-item"><strong>Date:</strong> {{ trip.date|date:"F d, Y" }}</li>
+                                <li class="list-group-item"><strong>Departure Time:</strong> {{ trip.departure_time|time:"H:i" }}</li>
+                                <li class="list-group-item"><strong>Arrival Time:</strong> {{ trip.arrival_time|time:"H:i" }}</li>
+                                <li class="list-group-item"><strong>Duration:</strong> {{ trip.duration }}</li>
+                                <li class="list-group-item"><strong>Available Seats:</strong> {{ trip.available_seats }}</li>
+                                <li class="list-group-item"><strong>Price:</strong> ${{ trip.price }}</li>
+                                <li class="list-group-item"><strong>Company:</strong> {{ trip.company_name }}</li>
+                                <li class="list-group-item"><strong>Bus Number:</strong> {{ trip.bus_number|default:"N/A" }}</li>
+                            </ul>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger mr-auto" id="deleteButton_{{ trip.trip_id }}">Delete Trip</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    {% else %}
+                        <form method="POST" action="{% url 'staff_app:trips_list' %}" id="updateTripForm{{ trip.trip_id }}">
+                            {% csrf_token %}
+                            <input type="hidden" name="trip_id" value="{{ trip.trip_id }}">
+                            <input type="hidden" name="action" value="update_trip" id="action_{{ trip.trip_id }}">
+                            <div class="modal-body">
+                                <h6 class="text-primary mb-3">Current Details (Editable):</h6>
+                                <div class="form-group">
+                                    <label for="id_trip_number_{{ trip.trip_id }}">Trip Number</label>
+                                    <input type="text" class="form-control" id="id_trip_number_{{ trip.trip_id }}" name="trip_number" value="{{ trip.trip_number }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_origin_{{ trip.trip_id }}">Origin</label>
+                                    <input type="text" class="form-control" id="id_origin_{{ trip.trip_id }}" name="origin" value="{{ trip.origin }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_destination_{{ trip.trip_id }}">Destination</label>
+                                    <input type="text" class="form-control" id="id_destination_{{ trip.trip_id }}" name="destination" value="{{ trip.destination }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_date_{{ trip.trip_id }}">Date</label>
+                                    <input type="date" class="form-control" id="id_date_{{ trip.trip_id }}" name="date" value="{{ trip.date|date:'Y-m-d' }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_departure_time_{{ trip.trip_id }}">Departure Time</label>
+                                    <input type="time" class="form-control" id="id_departure_time_{{ trip.trip_id }}" name="departure_time" value="{{ trip.departure_time|time:'H:i' }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_arrival_time_{{ trip.trip_id }}">Arrival Time</label>
+                                    <input type="time" class="form-control" id="id_arrival_time_{{ trip.trip_id }}" name="arrival_time" value="{{ trip.arrival_time|time:'H:i' }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_available_seats_{{ trip.trip_id }}">Available Seats</label>
+                                    <input type="number" class="form-control" id="id_available_seats_{{ trip.trip_id }}" name="available_seats" value="{{ trip.available_seats }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_price_{{ trip.trip_id }}">Price</label>
+                                    <input type="number" step="0.01" class="form-control" id="id_price_{{ trip.trip_id }}" name="price" value="{{ trip.price }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_company_name_{{ trip.trip_id }}">Company Name</label>
+                                    <input type="text" class="form-control" id="id_company_name_{{ trip.trip_id }}" name="company_name" value="{{ trip.company_name }}">
+                                </div>
+                                 <div class="form-group">
+                                    <label for="id_bus_number_{{ trip.trip_id }}">Bus Number</label>
+                                    <input type="text" class="form-control" id="id_bus_number_{{ trip.trip_id }}" name="bus_number" value="{{ trip.bus_number|default:'' }}">
+                                </div>
+                                 <div class="form-group">
+                                    <label for="id_origin_station_{{ trip.trip_id }}">Origin Station</label>
+                                    <input type="text" class="form-control" id="id_origin_station_{{ trip.trip_id }}" name="origin_station" value="{{ trip.origin_station|default:'' }}">
+                                </div>
+                                 <div class="form-group">
+                                    <label for="id_destination_station_{{ trip.trip_id }}">Destination Station</label>
+                                    <input type="text" class="form-control" id="id_destination_station_{{ trip.trip_id }}" name="destination_station" value="{{ trip.destination_station|default:'' }}">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger mr-auto" id="deleteButton_{{ trip.trip_id }}">Delete Trip</button>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-success">Save Changes</button>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
         {% endfor %}
     </ul>
     {% else %}
@@ -67,11 +177,38 @@
 {% block postload_js %}
     {{ block.super }}
     <script type="text/javascript" >
+        // JavaScript for handling Back to top button click
         $('#back-to-top').click(function(e) {
             e.preventDefault();
             $('html, body').animate({
                 scrollTop: 0
             }, 'slow');
+        });
+
+        // JavaScript for handling Delete button click
+        $('[id^="deleteButton_"]').click(function() {
+            var tripId = this.id.replace('deleteButton_', '');
+            var form = $('#updateTripForm' + tripId);
+            var actionInput = $('#action_' + tripId);
+
+            if (!form.length) {
+                form = $('<form>', {
+                    action: '{% url "staff_app:trips_list" %}',
+                    method: 'POST',
+                    style: 'display:none;'
+                });
+                form.append($('<input>', { type: 'hidden', name: 'csrfmiddlewaretoken', value: '{{ csrf_token }}' }));
+                form.append($('<input>', { type: 'hidden', name: 'trip_id', value: tripId }));
+                actionInput = $('<input>', { type: 'hidden', name: 'action', value: 'delete_trip' });
+                form.append(actionInput);
+                $('body').append(form);
+            } else {
+                actionInput.val('delete_trip');
+            }
+
+            if (confirm('Are you sure you want to delete Trip ' + tripId + '? This action cannot be undone.')) {
+                form.submit();
+            }
         });
     </script>
 {% endblock %}
