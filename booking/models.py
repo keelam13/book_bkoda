@@ -5,7 +5,6 @@ from decimal import Decimal
 from datetime import datetime
 from .utils import send_booking_email
 
-
 BOOKING_STATUS_CHOICES = [
     ('PENDING_PAYMENT', 'Pending Payment'),
     ('CONFIRMED', 'Confirmed'),
@@ -224,6 +223,12 @@ class BookingPolicy(models.Model):
         decimal_places=2,
         default=Decimal('0.15'),
         help_text="Percentage of total price charged for late rescheduling (e.g., 0.15 for 15%)."
+    )
+
+    # Offline payment cutoff
+    offline_payment_cutoff_hours_before_departure = models.PositiveIntegerField(
+        default=6,
+        help_text="Hours before trip departure after which only instant payment methods (e.g., Card) are allowed."
     )
 
     class Meta:

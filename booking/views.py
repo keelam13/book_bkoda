@@ -2,14 +2,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.conf import settings
 from django.db import transaction
+from django.utils import timezone
 
 from trips.models import Trip
 from profiles.models import UserProfile
-from .models import Booking, Passenger
+from .models import Booking, Passenger, BookingPolicy, PAYMENT_METHOD_CHOICES
 from .forms import BookingConfirmationForm, BillingDetailsForm
 from .utils import send_booking_email
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 import stripe
 
@@ -29,12 +30,47 @@ def book_trip(request, trip_id, number_of_passengers):
 
     total_price = trip.price * Decimal(str(num_passengers))
 
+    try:
+        booking_policy = BookingPolicy.objects.get(name="Standard Booking Policy")
+    except BookingPolicy.DoesNotExist:
+        booking_policy = BookingPolicy.objects.first()
+        if not booking_policy:
+            booking_policy = BookingPolicy.objects.create(name="Standard Booking Policy")
+
+    trip_datetime_naive = datetime.combine(trip.date, trip.departure_time)
+    trip_datetime_aware = timezone.make_aware(trip_datetime_naive, timezone.get_current_timezone())
+    time_until_departure = trip_datetime_aware - timezone.now()
+    available_payment_methods = list(PAYMENT_METHOD_CHOICES) 
+    offline_payment_cutoff_hours = booking_policy.offline_payment_cutoff_hours_before_departure
+
+    if time_until_departure < timedelta(hours=offline_payment_cutoff_hours):
+        available_payment_methods = [('CARD', 'Card')]
+        messages.warning(request, f"For bookings within {offline_payment_cutoff_hours} hours of departure, only Card payments are accepted to ensure immediate confirmation.")
+
     if request.method == 'POST':
         form = BookingConfirmationForm(request.POST, trip=trip, num_passengers=num_passengers, request=request)
 
         if form.is_valid():
             user = request.user if request.user.is_authenticated else None
             
+            selected_payment_method_on_form = request.POST.get('payment_method_type')
+            is_offline_method_selected = selected_payment_method_on_form in ['CASH', 'GCASH']
+
+            if is_offline_method_selected and time_until_departure < timedelta(hours=offline_payment_cutoff_hours):
+                messages.error(request, f"Cash/GCash payments are not allowed for trips departing within {offline_payment_cutoff_hours} hours. Please select Card payment.")
+                context = {
+                    'form': form,
+                    'trip': trip,
+                    'num_passengers': num_passengers,
+                    'passenger_range': passenger_range,
+                    'total_price': total_price,
+                    'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+                    'available_payment_methods': available_payment_methods,
+                    'offline_payment_cutoff_hours': offline_payment_cutoff_hours,
+                    'time_until_departure': time_until_departure,
+                }
+                return render(request, 'booking/booking_form.html', context)
+
             with transaction.atomic():
                 booking = Booking.objects.create(
                     user=user,
@@ -42,7 +78,8 @@ def book_trip(request, trip_id, number_of_passengers):
                     number_of_passengers=num_passengers,
                     total_price=total_price,
                     status='PENDING_PAYMENT',
-                    payment_status='PENDING'
+                    payment_status='PENDING',
+                    payment_method_type=selected_payment_method_on_form,
                 )
 
                 for i in range(num_passengers):
@@ -84,6 +121,9 @@ def book_trip(request, trip_id, number_of_passengers):
                 'passenger_range': passenger_range,
                 'total_price': total_price,
                 'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+                'available_payment_methods': available_payment_methods,
+                'offline_payment_cutoff_hours': offline_payment_cutoff_hours,
+                'time_until_departure': time_until_departure,
             }
             return render(request, 'booking/booking_form.html', context)
 
@@ -107,6 +147,9 @@ def book_trip(request, trip_id, number_of_passengers):
             'passenger_range': passenger_range,
             'total_price': total_price,
             'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+            'available_payment_methods': available_payment_methods,
+            'offline_payment_cutoff_hours': offline_payment_cutoff_hours,
+            'time_until_departure': time_until_departure,
         }
         return render(request, 'booking/booking_form.html', context)
 
@@ -139,6 +182,24 @@ def process_payment(request, booking_id):
     stripe_public_key = settings.STRIPE_PUBLIC_KEY
     stripe.api_key = settings.STRIPE_SECRET_KEY
     stripe_total = round(booking.total_price * 100)
+
+    try:
+        booking_policy = BookingPolicy.objects.get(name="Standard Booking Policy")
+    except BookingPolicy.DoesNotExist:
+        booking_policy = BookingPolicy.objects.first()
+        if not booking_policy:
+            booking_policy = BookingPolicy.objects.create(name="Standard Booking Policy")
+
+    trip_datetime_naive = datetime.combine(booking.trip.date, booking.trip.departure_time)
+    trip_datetime_aware = timezone.make_aware(trip_datetime_naive, timezone.get_current_timezone())
+    time_until_departure = trip_datetime_aware - timezone.now()
+    offline_payment_cutoff_hours = booking_policy.offline_payment_cutoff_hours_before_departure
+    offline_payment_cutoff_seconds =  offline_payment_cutoff_hours * 3600
+
+    available_payment_methods = list(PAYMENT_METHOD_CHOICES)
+    if time_until_departure < timedelta(hours=offline_payment_cutoff_hours):
+        available_payment_methods = [('CARD', 'Card')]
+
 
     first_passenger_email = ''
     first_passenger_contact_number = ''
@@ -280,6 +341,10 @@ def process_payment(request, booking_id):
                 return redirect('process_payment', booking_id=booking.id)
 
         elif selected_payment_method in ['CASH', 'GCASH']:
+            if time_until_departure < timedelta(hours=offline_payment_cutoff_hours):
+                 messages.error(request, f"Cash/GCash payments are not allowed for trips departing within {offline_payment_cutoff_hours} hours. Please select Card payment.")
+                 return redirect('process_payment', booking_id=booking.id)
+
             with transaction.atomic():
                 booking.status = 'PENDING_PAYMENT'
                 booking.payment_status = 'PENDING'
@@ -306,6 +371,10 @@ def process_payment(request, booking_id):
         'first_passenger_contact_number': first_passenger_contact_number,
         'billing_form': billing_form,
         'user_profile': user_profile,
+        'available_payment_methods': available_payment_methods,
+        'offline_payment_cutoff_hours': offline_payment_cutoff_hours,
+        'offline_payment_cutoff_seconds': offline_payment_cutoff_seconds,
+        'time_until_departure': time_until_departure,
     }
     return render(request, 'booking/payment_page.html', context)
     

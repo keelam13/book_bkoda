@@ -85,6 +85,17 @@
                             <div class="mb-3" id="card-element"></div>
                             <div class="mb-3 text-danger" id="card-errors" role="alert"></div>
                         </div>
+
+                        {% if time_until_departure.total_seconds > 0 and time_until_departure.total_seconds < offline_payment_cutoff_seconds %}
+                        <div class="text-danger d-block mt-1" role="alert">
+                            <p class="mb-1">Offline payment is not available for trips departing within **{{ offline_payment_cutoff_hours }} hours**.</p>
+                            <p class="mb-1">Please select **Card** to complete your booking online now.</p>
+                            <p class="mb-0 small text-muted">Alternatively, you may proceed directly to the bus terminal to secure your seat(s) or inquire as a chance passenger.</p>
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        {% else %}
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="radio" name="payment_method" id="cashPayment"
                                 value="CASH"> <label class="form-check-label" for="cashPayment">
@@ -110,6 +121,7 @@
                                 hours.**
                             </p>
                         </div>
+                        {% endif %}
 
                         <div class="form-check mt-4">
                             <input class="form-check-input" type="checkbox" id="termsCheck" required>
