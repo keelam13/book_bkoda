@@ -1,0 +1,8 @@
+{% extends 'profiles/base_profile.html' %}
+
+{% block profile_content %}
+<h3 class="profile-section-title">Account Details</h3>
+<p><strong>Username:</strong> {{ request.user.username }}</p>
+<p><strong>Email:</strong> {{ request.user.email }}</p>
+<p><strong>Joined On:</strong> {{ request.user.date_joined|date:"d M Y" }}</p>
+{% endblock %}

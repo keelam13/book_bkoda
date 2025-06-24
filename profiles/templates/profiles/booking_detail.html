@@ -1,0 +1,89 @@
+{% extends 'profiles/base_profile.html' %}
+{% load static %} {# Make sure static is loaded #}
+{% load booking_filters %} {# ADD THIS LINE #}
+
+{% block profile_content %}
+<h3 class="profile-section-title">Booking Details - {{ booking.booking_reference }}</h3>
+
+<div class="row">
+    <div class="col-md-6">
+        <h5>Trip Information</h5>
+        <p><strong>Origin:</strong> {{ booking.trip.origin }}</p>
+        <p><strong>Destination:</strong> {{ booking.trip.destination }}</p>
+        <p><strong>Date:</strong> {{ booking.trip.date|date:"F d, Y" }}</p>
+        <p><strong>Departure Time:</strong> {{ booking.trip.departure_time|time:"h:i A" }}</p>
+        <p><strong>Arrival Time:</strong> {{ booking.trip.arrival_time|time:"h:i A" }}</p>
+        <p><strong>Trip Number:</strong> {{ booking.trip.trip_number }}</p>
+        <p><strong>Company:</strong> {{ booking.trip.company_name }}</p>
+    </div>
+    <div class="col-md-6">
+        <h5>Booking Summary</h5>
+        <p><strong>Booking Date:</strong> {{ booking.booking_date|date:"F d, Y H:i" }}</p>
+        <p><strong>Number of Passengers:</strong> {{ booking.number_of_passengers }}</p>
+        <p><strong>Total Price:</strong> Php{{ booking.total_price|floatformat:2 }}</p>
+        <p><strong>Payment Status:</strong> <span class="badge badge-pill badge-{{ booking.payment_status|lower|get_payment_status_badge_class }}">{{ booking.get_payment_status_display }}</span></p>
+        <p><strong>Booking Status:</strong> <span class="badge badge-pill badge-{{ booking.status|lower|get_status_badge_class }}">{{ booking.get_status_display }}</span></p>
+        <p><strong>Payment Method:</strong> {{ booking.get_payment_method_type_display }}</p>
+    </div>
+</div>
+
+<h5 class="mt-4">Passenger Details</h5>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Contact Number</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for passenger in booking.passengers.all %}
+            <tr>
+                <td>{{ passenger.name }}</td>
+                <td>{{ passenger.age|default:"N/A" }}</td>
+                <td>{{ passenger.contact_number|default:"N/A" }}</td>
+                <td>{{ passenger.email|default:"N/A" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'profiles:my_bookings' %}" class="btn btn-secondary">Back to My Bookings</a>
+    {% comment %} Example: Add a cancel button, maybe with a modal confirmation {% endcomment %}
+    {% if booking.status == 'CONFIRMED' and booking.trip.date|add:" "|add:booking.trip.departure_time|date:"YmdHi"|stringformat:"i" > now|date:"YmdHi"|stringformat:"i" %}
+        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#cancelBookingModal{{ booking.id }}">Cancel Booking</button>
+
+        <!-- Cancel Booking Modal -->
+        <div class="modal fade" id="cancelBookingModal{{ booking.id }}" tabindex="-1" role="dialog" aria-labelledby="cancelBookingModalLabel{{ booking.id }}" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="cancelBookingModalLabel{{ booking.id }}">Confirm Cancellation</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to cancel booking {{ booking.booking_reference }}? This action cannot be undone.
+                        <br><br>
+                        This will **NOT** automatically refund any payments. Refund eligibility is based on our Booking Policy.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <form action="{% url 'manage_booking:process_payment' booking.id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="cancel_booking">
+                            <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
