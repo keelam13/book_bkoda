@@ -5,7 +5,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from trips.models import Trip
-from profiles.models import UserProfile
+from my_account.models import UserProfile
 from .models import Booking, Passenger, BookingPolicy, PAYMENT_METHOD_CHOICES
 from .forms import BookingConfirmationForm, BillingDetailsForm
 from .utils import send_booking_email

@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'home',
     'trips',
     'booking',
-    'profiles',
+    'my_account',
     'manage_booking',
     'staff_app',
 

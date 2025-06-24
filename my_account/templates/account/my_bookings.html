@@ -1,4 +1,4 @@
-{% extends 'profiles/base_profile.html' %}
+{% extends 'account/account_base.html' %}
 {% load static %}
 {% load booking_filters %}
 
@@ -12,11 +12,11 @@
         {% for booking in upcoming_confirmed_bookings %}
         <li class="bg-light p-3 rounded shadow-sm d-flex justify-content-between align-items-center mb-3">
             <div>
-                <h2 class="h5 text-secondary">Booking Reference: {{ booking.booking_reference }}</h2>
-                <p class="text-muted mb-1">Trip Details: {{ booking.trip.origin }} &rarr; {{ booking.trip.destination }}</p>
-                <p class="text-muted mb-1">Date & Time: {{ booking.trip.date|date:"F d, Y" }} at {{ booking.trip.departure_time|time:"H:i" }}</p>
-                <p class="text-muted mb-1">No. of Passengers: {{ booking.number_of_passengers }}</p>
-                <p class="text-muted mb-1">Total Price: Php{{ booking.total_price|floatformat:2 }}</p>
+                <h2 class="h5 text-secondary"><strong>Booking Reference:</strong> {{ booking.booking_reference }}</h2>
+                <p class="text-muted mb-1"><strong>Trip Details:</strong> {{ booking.trip.origin }} &rarr; {{ booking.trip.destination }}</p>
+                <p class="text-muted mb-1"><strong>Date & Time:</strong> {{ booking.trip.date|date:"F d, Y" }} at {{ booking.trip.departure_time|time:"H:i" }}</p>
+                <p class="text-muted mb-1"><strong>No. of Passengers:</strong> {{ booking.number_of_passengers }}</p>
+                <p class="text-muted mb-1"><strong>Total Price:</strong> Php{{ booking.total_price|floatformat:2 }}</p>
             </div>
             <button type="button" class="btn btn-primary btn-sm" data-toggle="modal"
                 data-target="#bookingDetailsModal{{ booking.pk }}">

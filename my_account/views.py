@@ -1,5 +1,3 @@
-# profiles/views.py
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -8,14 +6,14 @@ from datetime import datetime
 
 from .forms import ProfileForm
 from booking.models import Booking
-from profiles.models import UserProfile
+from .models import UserProfile
 
 @login_required
 def account_details(request):
     """
     Displays account details for the logged-in user.
     """
-    return render(request, 'profiles/account_details.html')
+    return render(request, 'account/account_details.html')
 
 @login_required
 def personal_info(request):
@@ -34,7 +32,7 @@ def personal_info(request):
     else:
         form = ProfileForm(instance=user_profile)
 
-    template = 'profiles/personal_info.html'
+    template = 'account/personal_info.html'
     context = {
         'form': form,
     }
@@ -64,7 +62,7 @@ def my_bookings(request):
 
     upcoming_confirmed_bookings.sort(key=lambda b: datetime.combine(b.trip.date, b.trip.departure_time))
 
-    template = 'profiles/my_bookings.html'
+    template = 'account/my_bookings.html'
     context = {
         'upcoming_confirmed_bookings': upcoming_confirmed_bookings,
         'other_bookings': other_bookings,
@@ -78,7 +76,7 @@ def booking_detail(request, booking_id):
     Displays detailed information for a single booking belonging to the logged-in user.
     """
     booking = get_object_or_404(Booking, id=booking_id, user=request.user)
-    template = 'profiles/booking_detail.html'
+    template = 'account/booking_detail.html'
     context = {
         'booking': booking,
     }

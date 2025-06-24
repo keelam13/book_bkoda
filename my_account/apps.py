@@ -1,13 +1,13 @@
 from django.apps import AppConfig
 
 
-class ProfilesConfig(AppConfig):
+class MyAccountConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'profiles'
+    name = 'my_account'
 
     def ready(self):
         """
         This method is called when the app is ready.
         It imports the signals module to ensure that the signal handlers are registered.
         """
-        import profiles.signals
+        import my_account.signals
