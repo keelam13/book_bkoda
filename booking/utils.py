@@ -44,6 +44,11 @@ def send_booking_email(booking, email_type, booking_form_data=None, **kwargs):
         html_template_name = 'emails/cancellation_unpaid_email.html'
         if 'reason' not in kwargs:
             kwargs['reason'] = 'Your booking was automatically cancelled because payment was not received within 24 hours.'
+    elif email_type == 'cancellation':
+        subject = f'Your Booking {booking.booking_reference} Has Been Cancelled'
+        html_template_name = 'emails/cancellation_email.html'
+        if 'reason' not in kwargs:
+            kwargs['reason'] = 'Your booking was cancelled as requested during the payment process.'
     else:
         print(f"Warning: Unknown email type '{email_type}' requested for booking {booking.booking_reference}")
         return

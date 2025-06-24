@@ -7,6 +7,7 @@ $(document).ready(function () {
     const cardErrors = $('#card-errors');
     const paymentIntentIdInput = $('#payment_intent_id');
     const submitButton = $('#submit-button');
+    const cancelButton = $('#cancel-button');
     const termsCheck = $('#termsCheck');
     const loadingOverlay = $('#loading-overlay');
 
@@ -213,9 +214,13 @@ $(document).ready(function () {
     // --- Form Submission Logic ---
 
     paymentForm.on('submit', async function (event) {
-        event.preventDefault();
+        const clickedButton = event.originalEvent ? event.originalEvent.submitter : null;
 
-        const paymentMethod = selectedPaymentMethodInput.val();
+        if (clickedButton && $(clickedButton).attr('name') === 'action' && $(clickedButton).val() === 'cancel_booking') {
+            return;
+        }
+
+        event.preventDefault();
 
         if (!termsCheck.prop('checked')) {
             cardErrors.html(`
@@ -225,6 +230,8 @@ $(document).ready(function () {
             return;
         }
 
+        const paymentMethod = selectedPaymentMethodInput.val();
+        
         // Show loading overlay and hide form
         paymentForm.fadeToggle(100);
         loadingOverlay.fadeToggle(100);

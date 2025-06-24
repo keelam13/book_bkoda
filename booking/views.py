@@ -281,6 +281,36 @@ def process_payment(request, booking_id):
 
     # Handle payment submission (POST request)
     if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'cancel_booking':
+            if booking.status == 'CANCELED':
+                messages.info(request, f"Booking {booking.booking_reference} is already canceled.")
+                return redirect('manage_booking:booking_detail', booking_id=booking.id)
+
+            with transaction.atomic():
+                original_status = booking.status
+                booking.status = 'CANCELED'
+                booking.payment_status = 'REFUNDED' if booking.payment_status == 'PAID' else 'NONE'
+                booking.save()
+
+                if not request.user.is_authenticated and 'anonymous_booking_id' in request.session:
+                    del request.session['anonymous_booking_id']
+                    request.session.modified = True
+
+            messages.success(request, f"Booking {booking.booking_reference} has been successfully canceled.")
+            send_booking_email(booking, email_type='cancellation')
+            return redirect('manage_booking:booking_detail', booking_id=booking.id)
+
+        elif action == 'confirm_payment':
+            if booking.payment_status == 'PAID' or booking.status == 'CONFIRMED':
+                messages.info(request, "This booking has already been paid or confirmed.")
+                return redirect('manage_booking:booking_detail', booking_id=booking.id)
+
+            if booking.status == 'CANCELED':
+                messages.error(request, "This booking has been cancelled and cannot be paid.")
+                return redirect('manage_booking:booking_detail', booking_id=booking.id)
+
         selected_payment_method = request.POST.get('selected_payment_method_hidden')
         payment_intent_id = request.POST.get('payment_intent_id')
         billing_form = BillingDetailsForm(request.POST)
@@ -355,7 +385,7 @@ def process_payment(request, booking_id):
 
         elif selected_payment_method in ['CASH', 'GCASH']:
             if payment_context['is_offline_payment_disallowed']:
-                 messages.error(request, f"Cash/GCash payments are not allowed for trips departing within {payment_context['offline_payment_cutoff_hours']} hours. Please select Card payment.")
+                messages.error(request, f"Cash/GCash payments are not allowed for trips departing within {payment_context['offline_payment_cutoff_hours']} hours. Please select Card payment.")
             else:
                 with transaction.atomic():
                     booking.status = 'PENDING_PAYMENT'

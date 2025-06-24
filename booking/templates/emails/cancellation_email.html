@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking Cancellation Confirmation - {{ booking.booking_reference }}</title>
+</head>
+<body>
+    <p>Dear {{ customer_name }},</p>
+    
+    <p>This email confirms that your booking **{{ booking.booking_reference }}** for the trip from {{ booking.trip.origin }} to {{ booking.trip.destination }} on {{ booking.trip.date|date:"F d, Y" }} at {{ booking.trip.departure_time|time:"H:i" }} has been successfully cancelled.</p>
+    
+    <p><strong>Reason for cancellation:</strong> {{ reason }}</p>
+    
+    {% if booking.payment_status == 'REFUNDED' %}
+    <p>A refund for the amount of **Php{{ booking.total_price|floatformat:2 }}** has been processed. Please allow 5-10 business days for the refund to reflect in your account, depending on your bank's processing times.</p>
+    {% endif %}
+
+    <p>If you have any questions or would like to book a new trip, please visit our website or contact our support team.</p>
+    
+    <p>Thank you for choosing [Your Company Name].</p>
+    <p>Sincerely,<br>The [Your Company Name] Team</p>
+</body>
+</html>
