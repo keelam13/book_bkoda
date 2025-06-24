@@ -7,6 +7,22 @@
 {% block staff_app_content %}
 <div class="container p-3 my-3 bg-white rounded shadow-lg">
     <h1 class="h3 text-secondary border-bottom pb-3 mb-4">Bookings List</h1>
+    <!-- Booking Overview -->
+    <div class="row align-items-center mb-4">
+        <div class="col-md-6">
+            <p class="lead mb-0">Total Bookings: <strong>{{ booking_count }}</strong></p>
+            {% if min_booking_date and max_booking_date %}
+                <p class="text-muted small mb-0">Booking Dates Covered: 
+                    <strong>{{ min_booking_date|date:"F d, Y" }}</strong>
+                    {% if min_booking_date != max_booking_date %}
+                         - <strong>{{ max_booking_date|date:"F d, Y" }}</strong>
+                    {% endif %}
+                </p>
+            {% else %}
+                <p class="text-muted small mb-0">No bookings available to show date range.</p>
+            {% endif %}
+        </div>
+    </div>
 
     <!-- Filter Form for Bookings -->
     <form method="GET" action="{% url 'staff_app:bookings_list' %}" class="mb-4 p-3 border rounded bg-light">
@@ -42,6 +58,17 @@
         </div>
     </form>
     <!-- End Filter Form -->
+
+    <div class="mb-4 d-flex justify-content-start">
+        <!-- Cancel Unpaid Bookings Button -->
+        <form action="{% url 'staff_app:cancel_unpaid_bookings' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-warning btn-sm" 
+            onclick="return confirm('Are you sure you want to cancel unpaid bookings older than 24 hours? This action cannot be undone.');">
+            Cancel Unpaid Bookings    
+            </button>
+        </form>
+    </div>
 
     {% if bookings %}
     <ul class="list-unstyled">

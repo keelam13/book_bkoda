@@ -10,7 +10,7 @@ from booking.models import Booking, BOOKING_STATUS_CHOICES, PAYMENT_STATUS_CHOIC
 from staff_app.forms import TripForm, BookingForm
 from io import StringIO
 from .management.commands.trips.generate_trips import Command as GenerateTripsCommand
-
+from .management.commands.bookings.cancel_unpaid_bookings import Command as CancelUnpaidBookingsCommand
 from datetime import datetime
 
 
@@ -193,6 +193,15 @@ def bookings_list(request):
 
     bookings_list = bookings_list.order_by('-booking_date')
 
+    booking_count = bookings_list.count()
+    min_booking_date = None
+    max_booking_date = None
+
+    if booking_count > 0:
+        date_aggregation = bookings_list.aggregate(min_date=Min('booking_date'), max_date=Max('booking_date'))
+        min_booking_date = date_aggregation['min_date']
+        max_booking_date = date_aggregation['max_date']
+
     context = {
         'page_title': 'Bookings List',
         'bookings': bookings_list,
@@ -205,6 +214,9 @@ def bookings_list(request):
         'PAYMENT_STATUS_CHOICES': PAYMENT_STATUS_CHOICES,
         'REFUND_STATUS_CHOICES': REFUND_STATUS_CHOICES,
         'PAYMENT_METHOD_CHOICES': PAYMENT_METHOD_CHOICES,
+        'booking_count': booking_count,
+        'min_booking_date': min_booking_date,
+        'max_booking_date': max_booking_date,
     }
     return render(request, 'staff_app/bookings_list.html', context)
 
@@ -234,3 +246,30 @@ def generate_trips_view(request):
         print(f"Error in generate_trips_view: {traceback.format_exc()}")
     
     return redirect('staff_app:trips_list')
+
+@login_required
+@require_POST
+def cancel_unpaid_bookings_view(request):
+    """
+    View to programmatically run the cancel_unpaid_bookings management command.
+    """
+    out = StringIO()
+    err = StringIO()
+    try:
+        command = CancelUnpaidBookingsCommand()
+        command.stdout = out
+        command.stderr = err
+        command.handle()
+        
+        error_output = err.getvalue().strip()
+        if error_output:
+            messages.error(request, f"Unpaid bookings cancellation completed with warnings/errors: {error_output}")
+        else:
+            messages.success(request, f"Unpaid bookings cancellation completed successfully: {out.getvalue().strip()}")
+            
+    except Exception as e:
+        messages.error(request, f"An error occurred during unpaid bookings cancellation: {e}")
+        import traceback
+        print(f"Error in cancel_unpaid_bookings_view: {traceback.format_exc()}")
+    
+    return redirect('staff_app:bookings_list')
