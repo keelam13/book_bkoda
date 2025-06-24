@@ -8,7 +8,7 @@ def get_field(form, field_name):
         return form[field_name]
     except KeyError:
         print(f"DEBUG: get_field filter: Field '{field_name}' not found in form.")
-        return None # This None is what causes the CrispyError
+        return None
 
 @register.filter
 def concat_strings(value1, value2):
@@ -19,3 +19,27 @@ def concat_strings(value1, value2):
 def mul(value, arg):
     "Multiplies the value by the argument"
     return value * arg
+
+@register.filter
+def get_status_badge_class(status):
+    """Returns Bootstrap badge class based on booking status."""
+    status_map = {
+        'pending_payment': 'warning',
+        'confirmed': 'success',
+        'canceled': 'danger',
+        'completed': 'primary',
+        'no_show': 'secondary',
+    }
+    return status_map.get(status.lower(), 'info')
+
+@register.filter
+def get_payment_status_badge_class(payment_status):
+    """Returns Bootstrap badge class based on payment status."""
+    status_map = {
+        'pending': 'warning',
+        'paid': 'success',
+        'failed': 'danger',
+        'refunded': 'info',
+        'none': 'secondary',
+    }
+    return status_map.get(payment_status.lower(), 'info')
