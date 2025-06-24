@@ -18,6 +18,12 @@
             <p class="card-text">Number of Passengers: {{ booking.number_of_passengers }}</p>
             <h4 class="text-success mt-4">Amount Due: Php{{ amount_due|floatformat:2 }}</h4>
 
+            <!-- Discount Explanation - KEPT -->
+            <div class="discount-explanation mb-4">
+                <p class="mb-1"><strong>Special Discounts:</strong> A 20% discount is available for Senior Citizens (60 y/o and above) and Students.</p>
+                <p class="mb-0">The **full fare is paid initially**, and the discount will be **refunded on-site** by the bus attendant upon presentation of a valid Senior Citizen ID or School ID.</p>
+            </div>
+
             <hr>
             <form action="{% url 'process_payment' booking_id=booking.id %}" method="POST" id="payment-form">
                 {% csrf_token %}
