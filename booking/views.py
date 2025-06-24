@@ -14,6 +14,78 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 import stripe
 
+# --- Helper Functions for Reusability ---
+def _get_booking_policy():
+    """Retrieves or creates the standard booking policy."""
+    try:
+        booking_policy = BookingPolicy.objects.get(name="Standard Booking Policy")
+    except BookingPolicy.DoesNotExist:
+        booking_policy = BookingPolicy.objects.first()
+        if not booking_policy:
+            booking_policy = BookingPolicy.objects.create(name="Standard Booking Policy")
+    return booking_policy
+
+def _get_payment_method_context(trip_or_booking):
+    """
+    Determines available payment methods and related cutoff information.
+    Takes either a Trip object or a Booking object.
+    """
+    booking_policy = _get_booking_policy()
+
+    if isinstance(trip_or_booking, Trip):
+        trip_date = trip_or_booking.date
+        departure_time = trip_or_booking.departure_time
+    elif isinstance(trip_or_booking, Booking):
+        trip_date = trip_or_booking.trip.date
+        departure_time = trip_or_booking.trip.departure_time
+    else:
+        raise ValueError("Invalid object type for _get_payment_method_context")
+
+    trip_datetime_naive = datetime.combine(trip_date, departure_time)
+    trip_datetime_aware = timezone.make_aware(trip_datetime_naive, timezone.get_current_timezone())
+    time_until_departure = trip_datetime_aware - timezone.now()
+
+    offline_payment_cutoff_hours = booking_policy.offline_payment_cutoff_hours_before_departure
+    offline_payment_cutoff_seconds = offline_payment_cutoff_hours * 3600
+
+    available_payment_methods = list(PAYMENT_METHOD_CHOICES)
+    is_offline_payment_disallowed = False
+
+    if time_until_departure < timedelta(hours=offline_payment_cutoff_hours):
+        available_payment_methods = [('CARD', 'Card')]
+        is_offline_payment_disallowed = True
+
+    return {
+        'available_payment_methods': available_payment_methods,
+        'offline_payment_cutoff_hours': offline_payment_cutoff_hours,
+        'offline_payment_cutoff_seconds': offline_payment_cutoff_seconds,
+        'time_until_departure': time_until_departure,
+        'is_offline_payment_disallowed': is_offline_payment_disallowed,
+    }
+
+def _get_initial_billing_details(request, booking=None):
+    """Helper to get initial data for BillingDetailsForm."""
+    if request.user.is_authenticated:
+        user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+        return {
+            'billing_name': user_profile.default_name or request.user.get_full_name() or request.user.username,
+            'billing_email': user_profile.default_email or request.user.email,
+            'billing_phone': user_profile.default_phone_number,
+            'billing_street_address1': user_profile.default_street_address1,
+            'billing_street_address2': user_profile.default_street_address2,
+            'billing_city': user_profile.default_city,
+            'billing_postcode': user_profile.default_postcode,
+            'billing_country': user_profile.default_country,
+        }
+    elif booking and booking.passengers.exists():
+        first_passenger = booking.passengers.first()
+        return {
+            'billing_name': first_passenger.name,
+            'billing_email': first_passenger.email,
+            'billing_phone': first_passenger.contact_number,
+        }
+    return {}
+
 
 def book_trip(request, trip_id, number_of_passengers):
     trip = get_object_or_404(Trip, pk=trip_id)
@@ -30,34 +102,19 @@ def book_trip(request, trip_id, number_of_passengers):
 
     total_price = trip.price * Decimal(str(num_passengers))
 
-    try:
-        booking_policy = BookingPolicy.objects.get(name="Standard Booking Policy")
-    except BookingPolicy.DoesNotExist:
-        booking_policy = BookingPolicy.objects.first()
-        if not booking_policy:
-            booking_policy = BookingPolicy.objects.create(name="Standard Booking Policy")
-
-    trip_datetime_naive = datetime.combine(trip.date, trip.departure_time)
-    trip_datetime_aware = timezone.make_aware(trip_datetime_naive, timezone.get_current_timezone())
-    time_until_departure = trip_datetime_aware - timezone.now()
-    available_payment_methods = list(PAYMENT_METHOD_CHOICES) 
-    offline_payment_cutoff_hours = booking_policy.offline_payment_cutoff_hours_before_departure
-
-    if time_until_departure < timedelta(hours=offline_payment_cutoff_hours):
-        available_payment_methods = [('CARD', 'Card')]
-        messages.warning(request, f"For bookings within {offline_payment_cutoff_hours} hours of departure, only Card payments are accepted to ensure immediate confirmation.")
+    payment_context = _get_payment_method_context(trip)
+    if payment_context['is_offline_payment_disallowed']:
+        messages.warning(request, f"For bookings within {payment_context['offline_payment_cutoff_hours']} hours of departure, only Card payments are accepted to ensure immediate confirmation.")
 
     if request.method == 'POST':
         form = BookingConfirmationForm(request.POST, trip=trip, num_passengers=num_passengers, request=request)
 
         if form.is_valid():
-            user = request.user if request.user.is_authenticated else None
-            
             selected_payment_method_on_form = request.POST.get('payment_method_type')
-            is_offline_method_selected = selected_payment_method_on_form in ['CASH', 'GCASH']
 
-            if is_offline_method_selected and time_until_departure < timedelta(hours=offline_payment_cutoff_hours):
-                messages.error(request, f"Cash/GCash payments are not allowed for trips departing within {offline_payment_cutoff_hours} hours. Please select Card payment.")
+            if selected_payment_method_on_form in ['CASH', 'GCASH'] and payment_context['is_offline_payment_disallowed']:
+                messages.error(request, f"Cash/GCash payments are not allowed for trips departing within {payment_context['offline_payment_cutoff_hours']} hours. Please select Card payment.")
+                
                 context = {
                     'form': form,
                     'trip': trip,
@@ -65,13 +122,12 @@ def book_trip(request, trip_id, number_of_passengers):
                     'passenger_range': passenger_range,
                     'total_price': total_price,
                     'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
-                    'available_payment_methods': available_payment_methods,
-                    'offline_payment_cutoff_hours': offline_payment_cutoff_hours,
-                    'time_until_departure': time_until_departure,
+                    **payment_context,
                 }
                 return render(request, 'booking/booking_form.html', context)
 
             with transaction.atomic():
+                user = request.user if request.user.is_authenticated else None
                 booking = Booking.objects.create(
                     user=user,
                     trip=trip,
@@ -104,12 +160,10 @@ def book_trip(request, trip_id, number_of_passengers):
 
                 if not request.user.is_authenticated:
                     request.session['anonymous_booking_id'] = booking.id
-                    request.session.modified = True
                     messages.success(request, f"Your guest booking {booking.booking_reference} created! Please proceed to payment.")
                 else:
                     messages.success(request, f"Booking {booking.booking_reference} created! Please proceed to payment.")
 
-                messages.success(request, f"Booking {booking.booking_reference} created! Please proceed to payment.")
                 send_booking_email(booking, email_type='pending_payment_instructions', booking_form_data=form.cleaned_data)
                 return redirect('process_payment', booking_id=booking.id)
         else:
@@ -121,15 +175,12 @@ def book_trip(request, trip_id, number_of_passengers):
                 'passenger_range': passenger_range,
                 'total_price': total_price,
                 'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
-                'available_payment_methods': available_payment_methods,
-                'offline_payment_cutoff_hours': offline_payment_cutoff_hours,
-                'time_until_departure': time_until_departure,
+                **payment_context,
             }
             return render(request, 'booking/booking_form.html', context)
 
     else:
         form = BookingConfirmationForm(trip=trip, num_passengers=num_passengers)
-
         if request.user.is_authenticated:
             user_profile = UserProfile.objects.filter(user=request.user).first()
             if user_profile:
@@ -147,16 +198,13 @@ def book_trip(request, trip_id, number_of_passengers):
             'passenger_range': passenger_range,
             'total_price': total_price,
             'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
-            'available_payment_methods': available_payment_methods,
-            'offline_payment_cutoff_hours': offline_payment_cutoff_hours,
-            'time_until_departure': time_until_departure,
+            **payment_context,
         }
         return render(request, 'booking/booking_form.html', context)
 
 
 def process_payment(request, booking_id):
     booking = None
-
     if request.user.is_authenticated:
         booking = get_object_or_404(Booking, id=booking_id, user=request.user)
     else:
@@ -166,15 +214,15 @@ def process_payment(request, booking_id):
         else:
             messages.error(request, "Access to this booking is unauthorized or your session has expired. Please start a new booking.")
             return redirect('trips')
-        
+
     if not booking:
         messages.error(request, "Booking not found or not accessible.")
         return redirect('trips')
-        
+
     if booking.payment_status == 'PAID' or booking.status == 'CONFIRMED':
         messages.info(request, "This booking has already been paid or confirmed.")
         return redirect('manage_booking:booking_detail', booking_id=booking.id)
-        
+
     if booking.status == 'CANCELED':
         messages.error(request, "This booking has been cancelled and cannot be paid.")
         return redirect('manage_booking:booking_detail', booking_id=booking.id)
@@ -183,23 +231,7 @@ def process_payment(request, booking_id):
     stripe.api_key = settings.STRIPE_SECRET_KEY
     stripe_total = round(booking.total_price * 100)
 
-    try:
-        booking_policy = BookingPolicy.objects.get(name="Standard Booking Policy")
-    except BookingPolicy.DoesNotExist:
-        booking_policy = BookingPolicy.objects.first()
-        if not booking_policy:
-            booking_policy = BookingPolicy.objects.create(name="Standard Booking Policy")
-
-    trip_datetime_naive = datetime.combine(booking.trip.date, booking.trip.departure_time)
-    trip_datetime_aware = timezone.make_aware(trip_datetime_naive, timezone.get_current_timezone())
-    time_until_departure = trip_datetime_aware - timezone.now()
-    offline_payment_cutoff_hours = booking_policy.offline_payment_cutoff_hours_before_departure
-    offline_payment_cutoff_seconds =  offline_payment_cutoff_hours * 3600
-
-    available_payment_methods = list(PAYMENT_METHOD_CHOICES)
-    if time_until_departure < timedelta(hours=offline_payment_cutoff_hours):
-        available_payment_methods = [('CARD', 'Card')]
-
+    payment_context = _get_payment_method_context(booking)
 
     first_passenger_email = ''
     first_passenger_contact_number = ''
@@ -207,7 +239,7 @@ def process_payment(request, booking_id):
         first_passenger = booking.passengers.first()
         first_passenger_email = first_passenger.email if first_passenger.email else ''
         first_passenger_contact_number = first_passenger.contact_number if first_passenger.contact_number else ''
-    
+
     intent = None
     billing_form = None
     user_profile = None
@@ -221,7 +253,7 @@ def process_payment(request, booking_id):
                         intent = None
                 except stripe.error.InvalidRequestError:
                     intent = None
-               
+
             if not intent:
                 intent = stripe.PaymentIntent.create(
                     amount=stripe_total,
@@ -243,24 +275,9 @@ def process_payment(request, booking_id):
             return redirect('manage_booking:booking_detail', booking_id=booking.id)
 
         # Initialize billing form for GET request
+        billing_form = BillingDetailsForm(initial=_get_initial_billing_details(request, booking))
         if request.user.is_authenticated:
             user_profile, created = UserProfile.objects.get_or_create(user=request.user)
-            billing_form = BillingDetailsForm(initial={
-                'billing_name': user_profile.default_name or request.user.get_full_name() or request.user.username,
-                'billing_email': user_profile.default_email or request.user.email,
-                'billing_phone': user_profile.default_phone_number,
-                'billing_street_address1': user_profile.default_street_address1,
-                'billing_street_address2': user_profile.default_street_address2,
-                'billing_city': user_profile.default_city,
-                'billing_postcode': user_profile.default_postcode,
-                'billing_country': user_profile.default_country,
-            })
-        else:
-            billing_form = BillingDetailsForm(initial={
-                'billing_name': booking.passengers.first().name if booking.passengers.exists() else '',
-                'billing_email': first_passenger_email,
-                'billing_phone': first_passenger_contact_number,
-            })
 
     # Handle payment submission (POST request)
     if request.method == 'POST':
@@ -269,13 +286,15 @@ def process_payment(request, booking_id):
         billing_form = BillingDetailsForm(request.POST)
         save_info = request.POST.get('save_info') == 'on'
 
+        billing_form_is_valid = billing_form.is_valid()
+
         if selected_payment_method == 'card':
             if not payment_intent_id:
                 messages.error(request, "Card payment selected, but Payment Intent ID was not received. Please try again.")
                 booking.payment_status = 'FAILED'
                 booking.save()
                 return redirect('process_payment', booking_id=booking.id)
-            
+
             try:
                 stripe_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
 
@@ -295,11 +314,10 @@ def process_payment(request, booking_id):
 
                         booking.save()
 
-                        # --- Update UserProfile default address if requested ---
                         if request.user.is_authenticated and save_info:
                             try:
-                                user_profile, created = UserProfile.objects.get_or_create(user=request.user) 
-                                if billing_form.is_valid():
+                                user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+                                if billing_form_is_valid:
                                     user_profile.default_name = billing_form.cleaned_data['billing_name']
                                     user_profile.default_email = billing_form.cleaned_data['billing_email']
                                     user_profile.default_phone_number = billing_form.cleaned_data['billing_phone']
@@ -312,55 +330,48 @@ def process_payment(request, booking_id):
                                     messages.info(request, 'Billing details saved to your profile.')
                                 else:
                                     messages.warning(request, "Could not save billing details to profile due to invalid data.")
-                            except UserProfile.DoesNotExist:
-                                messages.error(request, f"Error: UserProfile does not exist for authenticated user {request.user.id} during profile save.")
+                            except Exception as e:
+                                messages.error(request, f"Error saving billing details to profile: {e}")
 
                         if not request.user.is_authenticated and 'anonymous_booking_id' in request.session:
                             del request.session['anonymous_booking_id']
-                            request.session.modified = True
 
                         messages.success(request, f"Payment successful! Booking {booking.booking_reference} is now confirmed.")
+                        send_booking_email(booking, email_type='confirmed')
                         return redirect('booking_success', booking_id=booking.id)
 
                 else:
                     messages.error(request, f"Card payment status: {stripe_intent.status}. Please try again or use another method.")
                     booking.payment_status = 'FAILED'
                     booking.save()
-                    return redirect('process_payment', booking_id=booking.id)
-
             except stripe.error.StripeError as e:
                 messages.error(request, f"A Stripe error occurred: {e}. Please try again.")
                 booking.payment_status = 'FAILED'
                 booking.save()
-                return redirect('process_payment', booking_id=booking.id)
-
             except Exception as e:
                 messages.error(request, f"An unexpected error occurred: {e}. Please try again.")
                 booking.payment_status = 'FAILED'
                 booking.save()
-                return redirect('process_payment', booking_id=booking.id)
 
         elif selected_payment_method in ['CASH', 'GCASH']:
-            if time_until_departure < timedelta(hours=offline_payment_cutoff_hours):
-                 messages.error(request, f"Cash/GCash payments are not allowed for trips departing within {offline_payment_cutoff_hours} hours. Please select Card payment.")
-                 return redirect('process_payment', booking_id=booking.id)
+            if payment_context['is_offline_payment_disallowed']:
+                 messages.error(request, f"Cash/GCash payments are not allowed for trips departing within {payment_context['offline_payment_cutoff_hours']} hours. Please select Card payment.")
+            else:
+                with transaction.atomic():
+                    booking.status = 'PENDING_PAYMENT'
+                    booking.payment_status = 'PENDING'
+                    booking.payment_method_type = selected_payment_method
+                    booking.save()
 
-            with transaction.atomic():
-                booking.status = 'PENDING_PAYMENT'
-                booking.payment_status = 'PENDING'
-                booking.payment_method_type = selected_payment_method
-                booking.save()
+                if not request.user.is_authenticated and 'anonymous_booking_id' in request.session:
+                    del request.session['anonymous_booking_id']
 
-            if not request.user.is_authenticated and 'anonymous_booking_id' in request.session:
-                del request.session['anonymous_booking_id']
-                request.session.modified = True
-            
-            messages.info(request, f"Booking {booking.booking_reference} received! Please complete your {selected_payment_method} payment at designated centers within 24 hours.")
-            return redirect('booking_success', booking_id=booking.id)
-
+                messages.info(request, f"Booking {booking.booking_reference} received! Please complete your {selected_payment_method} payment at designated centers within 24 hours.")
+                send_booking_email(booking, email_type='pending_payment_instructions')
+                return redirect('booking_success', booking_id=booking.id)
         else:
             messages.error(request, "Invalid payment method selected. Please choose a valid option.")
-            return redirect('process_payment', booking_id=booking.id)
+
 
     context = {
         'booking': booking,
@@ -370,14 +381,11 @@ def process_payment(request, booking_id):
         'first_passenger_email': first_passenger_email,
         'first_passenger_contact_number': first_passenger_contact_number,
         'billing_form': billing_form,
-        'user_profile': user_profile,
-        'available_payment_methods': available_payment_methods,
-        'offline_payment_cutoff_hours': offline_payment_cutoff_hours,
-        'offline_payment_cutoff_seconds': offline_payment_cutoff_seconds,
-        'time_until_departure': time_until_departure,
+        'user_profile': user_profile if request.user.is_authenticated else None,
+        **payment_context,
     }
     return render(request, 'booking/payment_page.html', context)
-    
+
 
 def booking_success(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
