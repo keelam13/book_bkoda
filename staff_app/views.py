@@ -3,6 +3,7 @@ from django.contrib import  messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Sum, Min, Max
 from django.views.decorators.http import require_POST
+from django.utils import timezone
 
 # Import models and forms from your app
 from trips.models import Trip
@@ -11,7 +12,7 @@ from staff_app.forms import TripForm, BookingForm
 from io import StringIO
 from .management.commands.trips.generate_trips import Command as GenerateTripsCommand
 from .management.commands.bookings.cancel_unpaid_bookings import Command as CancelUnpaidBookingsCommand
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 # Helper function to check if a user is staff
@@ -32,6 +33,15 @@ def staff_dashboard(request):
 
     total_revenue_confirmed = Booking.objects.filter(payment_status='PAID').aggregate(Sum('total_price'))['total_price__sum'] or 0
 
+    # --- Calculate Expired Bookings Count for Dashboard Alert ---
+    cutoff_time_for_unpaid = timezone.now() - timedelta(hours=24)
+
+    expired_bookings_count = Booking.objects.filter(
+        status='PENDING_PAYMENT',
+        payment_status='PENDING',
+        booking_date__lt=cutoff_time_for_unpaid
+    ).count()
+
     context = {
         'total_trips': total_trips,
         'total_bookings': total_bookings,
@@ -40,6 +50,7 @@ def staff_dashboard(request):
         'total_revenue_confirmed': total_revenue_confirmed,
         'recent_bookings': Booking.objects.order_by('-booking_date')[:5],
         'upcoming_trips': Trip.objects.order_by('date')[:5],
+        'expired_bookings_count': expired_bookings_count,
     }
     return render(request, 'staff_app/dashboard.html', context)
 
@@ -190,7 +201,7 @@ def bookings_list(request):
         except Exception as e:
             messages.error(request, f"An unexpected error occurred with the 'Trip Date' filter: {e}")
 
-
+    # --- Calculate Booking Count and Date Range ---
     bookings_list = bookings_list.order_by('-booking_date')
 
     booking_count = bookings_list.count()
@@ -201,6 +212,15 @@ def bookings_list(request):
         date_aggregation = bookings_list.aggregate(min_date=Min('booking_date'), max_date=Max('booking_date'))
         min_booking_date = date_aggregation['min_date']
         max_booking_date = date_aggregation['max_date']
+
+    # --- Calculate Expired Bookings Count ---
+    cutoff_time_for_unpaid = timezone.now() - timedelta(hours=24)
+
+    expired_bookings_count = Booking.objects.filter(
+        status='PENDING_PAYMENT',
+        payment_status='PENDING',
+        booking_date__lt=cutoff_time_for_unpaid
+    ).count()
 
     context = {
         'page_title': 'Bookings List',
@@ -217,6 +237,7 @@ def bookings_list(request):
         'booking_count': booking_count,
         'min_booking_date': min_booking_date,
         'max_booking_date': max_booking_date,
+        'expired_bookings_count': expired_bookings_count,
     }
     return render(request, 'staff_app/bookings_list.html', context)
 

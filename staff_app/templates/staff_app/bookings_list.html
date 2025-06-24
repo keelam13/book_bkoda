@@ -7,6 +7,18 @@
 {% block staff_app_content %}
 <div class="container p-3 my-3 bg-white rounded shadow-lg">
     <h1 class="h3 text-secondary border-bottom pb-3 mb-4">Bookings List</h1>
+    <!-- Alert for Expired Bookings -->
+    {% if expired_bookings_count > 0 %}
+    <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+        <h4 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i> Action Required!</h4>
+        <p>There are **{{ expired_bookings_count }}** booking(s) with **PENDING PAYMENT** status that have passed their 24-hour payment window.</p>
+        <p class="mb-0">Please click the "Cancel Unpaid Bookings" button to automatically cancel these expired bookings and free up seats.</p>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endif %}
+
     <!-- Booking Overview -->
     <div class="row align-items-center mb-4">
         <div class="col-md-6">
