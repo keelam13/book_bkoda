@@ -279,3 +279,20 @@ p.instruction-group{
     width: 48px;
     height: 48px;
 }
+
+/* New style for modal policy content */
+.modal-body .policy-content h6 {
+    color: #007bff;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 8px;
+}
+    
+.modal-body .policy-content ul {
+        list-style-type: disc;
+        margin-left: 20px;
+        margin-bottom: 10px;
+}
+.modal-body .policy-content ul li {
+        margin-bottom: 5px;
+}
