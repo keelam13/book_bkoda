@@ -8,7 +8,24 @@
 <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg mt-8">
     <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-3">Trips List</h1>
 
-     <!-- Filter Form -->
+    <!-- Trip Overview -->
+    <div class="mb-4 d-flex">
+        <div>
+            <p class="lead mb-0">Total Trips: <strong>{{ trip_count }}</strong></p>
+            {% if min_date and max_date %}
+            <p class="text-muted small mb-0">Dates Covered: 
+                <strong>{{ min_date|date:"F d, Y" }}</strong>
+                {% if min_date != max_date %}
+                - <strong>{{ max_date|date:"F d, Y" }}</strong>
+                {% endif %}
+            </p>
+            {% else %}
+            <p class="text-muted small mb-0">No trips available to show date range.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Filter Form -->
     <form method="GET" action="{% url 'staff_app:trips_list' %}" class="mb-4 p-3 border rounded bg-light">
         <div class="form-row">
             <div class="form-group col-md-4">
@@ -30,11 +47,22 @@
         </div>
     </form>
     <!-- End Filter Form -->
+
+    <!-- Generate Trips Button -->
+    <div class="mb-4 d-flex justify-content-start">
+        <form action="{% url 'staff_app:generate_trips' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-info btn-sm" 
+                    onclick="return confirm('Are you sure you want to generate more trips? This will add trips for the next 5 days.');">
+                Generate More Trips
+            </button>
+        </form>
+    </div>
      
     {% if trips %}
     <ul class="list-unstyled">
         {% for trip in trips %}
-        <li class="bg-light p-3 rounded shadow-sm d-flex justify-content-between align-items-center mb-3"> {# Using Bootstrap 4 classes #}
+        <li class="bg-light p-3 rounded shadow-sm d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h2 class="h5 text-secondary">Trip {{ trip.trip_number }}: {{ trip.origin }} to {{ trip.destination }}</h2>
                 <p class="text-muted mb-1">Date: {{ trip.date|date:"F d, Y" }}</p>

@@ -1,14 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import  messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db.models import Sum
+from django.db.models import Sum, Min, Max
+from django.views.decorators.http import require_POST
 
 # Import models and forms from your app
 from trips.models import Trip
 from booking.models import Booking, BOOKING_STATUS_CHOICES, PAYMENT_STATUS_CHOICES, REFUND_STATUS_CHOICES, PAYMENT_METHOD_CHOICES
 from staff_app.forms import TripForm, BookingForm
+from io import StringIO
+from .management.commands.trips.generate_trips import Command as GenerateTripsCommand
 
 from datetime import datetime
+
 
 # Helper function to check if a user is staff
 def is_staff_user(user):
@@ -49,6 +53,7 @@ def trips_list(request):
     if request.method == 'POST':
         action = request.POST.get('action')
         trip_id = request.POST.get('trip_id')
+
         if not trip_id:
             messages.error(request, 'Invalid request: Trip ID missing.')
             return redirect('staff_app:trips_list')
@@ -73,6 +78,7 @@ def trips_list(request):
         else:
             messages.error(request, 'Invalid action for trip operation.')
         return redirect('staff_app:trips_list')
+    
     trips_list = Trip.objects.all()
 
     filter_date = request.GET.get('date')
@@ -94,12 +100,25 @@ def trips_list(request):
 
     trips_list = trips_list.order_by('date', 'departure_time')
 
+    trip_count = trips_list.count()
+    min_date = None
+    max_date = None
+
+    if trip_count > 0:
+        date_aggregation = trips_list.aggregate(min_date=Min('date'), max_date=Max('date'))
+        min_date = date_aggregation['min_date']
+        max_date = date_aggregation['max_date']
+
     context = {
         'page_title': 'Trips List',
         'trips': trips_list,
         'filter_date': filter_date,
         'filter_destination': filter_destination,
         'filter_origin': filter_origin,
+        'now': datetime.now(),
+        'trip_count': trip_count,
+        'min_date': min_date,
+        'max_date': max_date,
     }
     return render(request, 'staff_app/trips_list.html', context)
 
@@ -188,3 +207,30 @@ def bookings_list(request):
         'PAYMENT_METHOD_CHOICES': PAYMENT_METHOD_CHOICES,
     }
     return render(request, 'staff_app/bookings_list.html', context)
+
+@login_required
+@require_POST
+def generate_trips_view(request):
+    """
+    View to programmatically run the generate_trips management command.
+    """
+    out = StringIO()
+    err = StringIO()
+    try:
+        command = GenerateTripsCommand()
+        command.stdout = out
+        command.stderr = err
+        command.handle()
+
+        error_output = err.getvalue().strip()
+        if error_output:
+            messages.error(request, f"Trip generation completed with warnings/errors: {error_output}")
+        else:
+            messages.success(request, f"Trip generation completed successfully: {out.getvalue().strip()}")
+            
+    except Exception as e:
+        messages.error(request, f"An error occurred during trip generation: {e}")
+        import traceback
+        print(f"Error in generate_trips_view: {traceback.format_exc()}")
+    
+    return redirect('staff_app:trips_list')
