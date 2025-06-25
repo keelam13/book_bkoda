@@ -1,0 +1,43 @@
+{% extends 'manage_booking/manage_booking_base.html' %}
+{% load static %}
+{% load booking_filters %}
+
+{% block manage_booking_content %}
+<h3 class="profile-section-title">Cancelled Bookings</h3>
+
+<div class="mb-5">
+    {% if all_bookings %}
+    <p class="mb-4">You made {{ num_all_bookings }} total bookings!</p>
+    <ul class="list-unstyled">
+        {% for booking in all_bookings %}
+        <li class="bg-light p-3 rounded shadow-sm d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="h5 text-secondary"><strong>Booking Reference:</strong> {{ booking.booking_reference }}</h2>
+                <p class="text-muted mb-1"><strong>Trip Details:</strong> {{ booking.trip.origin }} &rarr; {{ booking.trip.destination }}</p>
+                <p class="text-muted mb-1"><strong>Date & Time:</strong> {{ booking.trip.date|date:"F d, Y" }} at {{ booking.trip.departure_time|time:"H:i" }}</p>
+                <p class="text-muted mb-1"><strong>No. of Passengers:</strong> {{ booking.number_of_passengers }}</p>
+                <p class="text-muted mb-1"><strong>Total Price:</strong> Php{{ booking.total_price|floatformat:2 }}</p>
+            </div>
+            <div class="mt-4">
+                <a href="{% url 'manage_booking:booking_detail' booking.id %}" class="btn btn-primary">View Details</a>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        You have no booking at the moment.
+        <div class="mt-4">
+            <a href="{% url 'home' %}" class="btn btn-primary">Book a Trip Now!</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Back to Top Button -->
+<div class="btt-button">
+    <a id="back-to-top" class="btn btn-primary rounded-circle shadow d-flex justify-content-center align-items-center">
+        <i class="fas fa-arrow-up text-white mx-auto my-auto"></i>
+    </a>
+</div>
+{% endblock %}

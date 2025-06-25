@@ -69,6 +69,22 @@ def _calculate_reschedule_financials(original_booking, new_trip, policy):
     }
 
 @login_required
+def all_bookings_list(request):
+    """
+    Displays a list of all bookings for the currently logged-in user.
+    """
+    all_bookings = Booking.objects.filter(user=request.user).order_by('-trip__date', '-trip__departure_time')
+
+    num_all_bookings = all_bookings.count()
+
+    template = 'manage_booking/all_bookings_list.html'
+    context = {
+        'all_bookings': all_bookings,
+        'num_all_bookings': num_all_bookings,
+    }
+    return render(request, template, context)
+
+@login_required
 def confirmed_bookings_list(request):
     """
     Displays a list of all confirmed bookings for the currently logged-in user.

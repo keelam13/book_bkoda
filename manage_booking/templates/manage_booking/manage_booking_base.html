@@ -109,9 +109,9 @@
                         class="nav-link {% if request.resolver_match.url_name == 'cancelled_bookings' %}active{% endif %}">
                         <i class="fa-solid fa-rectangle-xmark"></i> Cancelled Bookings
                     </a>
-                    <a href=""
-                        class="nav-link {% if request.resolver_match.url_name == 'other_bookings' %}active{% endif %}">
-                        <i class="bi bi-calendar-check-fill mr-2"></i> Past Trips
+                    <a href="{% url 'manage_booking:all_bookings' %}"
+                        class="nav-link {% if request.resolver_match.url_name == 'all_bookings' %}active{% endif %}">
+                        <i class="fa-solid fa-list-ul"></i> All Bookings
                     </a>
                     <a href="{% url 'account_logout' %}" class="nav-link text-danger mt-3">
                         <i class="bi bi-box-arrow-right"></i> Log Out
