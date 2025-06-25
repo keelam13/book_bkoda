@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .profile-container {
+        margin-top: 3rem;
+        margin-bottom: 3rem;
+    }
+
+    .sidebar {
+        background-color: #ffffff;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        padding: 1.5rem;
+    }
+
+    .sidebar .nav-link {
+        color: #495057;
+        padding: 0.75rem 1rem;
+        border-radius: 0.3rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .sidebar .nav-link:hover {
+        background-color: #e9ecef;
+        color: #007bff;
+    }
+
+    .sidebar .nav-link.active {
+        background-color: #007bff;
+        color: #ffffff;
+        font-weight: bold;
+    }
+
+    .sidebar .nav-link.active i {
+        color: #ffffff;
+    }
+
+    .sidebar .nav-link i {
+        margin-right: 0.75rem;
+        color: #6c757d;
+        transition: color 0.2s ease-in-out;
+    }
+
+    .main-content {
+        background-color: #ffffff;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        padding: 2rem;
+    }
+
+    .card-header.profile-header {
+        background-color: #007bff;
+        color: white;
+        border-top-left-radius: 0.5rem;
+        border-top-right-radius: 0.5rem;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-header.profile-header h2 {
+        margin-bottom: 0;
+        font-size: 1.75rem;
+    }
+
+    .profile-section-title {
+        color: #007bff;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .table-responsive.table-group {
+        margin-top: 1.5rem;
+    }
+
+    .table-responsive.table-group table {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container profile-container">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="sidebar">
+                <h2 class="text-center mb-4">Manage Bookings</h2>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'manage_booking:confirmed_bookings' %}"
+                        class="nav-link {% if request.resolver_match.url_name == 'confirmed_bookings' %}active{% endif %}">
+                        <i class="bi bi-person-badge-fill"></i> Confirmed Bookings
+                    </a>
+                    <a href="{% url 'manage_booking:pending_payment' %}"
+                        class="nav-link {% if request.resolver_match.url_name == 'pending_payment' %}active{% endif %}">
+                        <i class="bi bi-person-lines-fill"></i> Pending Payment
+                    </a>
+                    <a href=""
+                        class="nav-link {% if request.resolver_match.url_name == 'refunded_bookings' %}active{% endif %}">
+                        <i class="bi bi-calendar-check-fill mr-2"></i> Refunded Booking
+                    </a>
+                    <a href=""
+                        class="nav-link {% if request.resolver_match.url_name == 'pending_refund' %}active{% endif %}">
+                        <i class="bi bi-calendar-check-fill mr-2"></i> Pending Refund
+                    </a>
+                    <a href=""
+                        class="nav-link {% if request.resolver_match.url_name == 'cancelled_bookings' %}active{% endif %}">
+                        <i class="bi bi-calendar-check-fill mr-2"></i> Cancelled Bookings
+                    </a>
+                    <a href=""
+                        class="nav-link {% if request.resolver_match.url_name == 'other_bookings' %}active{% endif %}">
+                        <i class="bi bi-calendar-check-fill mr-2"></i> Past Trips
+                    </a>
+                    <a href="{% url 'account_logout' %}" class="nav-link text-danger mt-3">
+                        <i class="bi bi-box-arrow-right"></i> Log Out
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="main-content">
+                {% block manage_booking_content %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

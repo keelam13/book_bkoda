@@ -68,24 +68,65 @@ def _calculate_reschedule_financials(original_booking, new_trip, policy):
         'num_passengers': num_passengers
     }
 
+@login_required
+def confirmed_bookings_list(request):
+    """
+    Displays a list of all confirmed bookings for the currently logged-in user.
+    """
+    confirmed_bookings = Booking.objects.filter(
+        user=request.user,
+        status='CONFIRMED',
+        payment_status='PAID'
+    ).order_by('-trip__date', '-trip__departure_time')
+
+    num_confirmed_bookings = confirmed_bookings.count()
+
+    template = 'manage_booking/confirmed_bookings.html'
+    context = {
+        'confirmed_bookings': confirmed_bookings,
+        'num_confirmed_bookings': num_confirmed_bookings,
+    }
+    return render(request, template, context)
 
 @login_required
-def booking_list(request):
+def pending_payment_list(request):
     """
-    Displays a list of all bookings for the currently logged-in user.
+    Displays a list of all pending payment bookings for the currently logged-in user.
     """
-    user_bookings = Booking.objects.filter(
-        user=request.user
-    ).prefetch_related(
-        'passengers'
-    ).order_by('-booking_date')
+    pending_payment_bookings = Booking.objects.filter(
+        user=request.user,
+        status='PENDING_PAYMENT',
+        payment_status='PENDING'
+    ).order_by('-trip__date', '-trip__departure_time')
 
+    num_pending_payment = pending_payment_bookings.count()
+
+    template = 'manage_booking/pending_payment.html'
     context = {
-        'bookings': user_bookings,
-        'title': 'My Bookings'
+        'pending_payment_bookings': pending_payment_bookings,
+        'num_pending_payment': num_pending_payment,
     }
-    return render(request, 'manage_booking/booking_list.html', context)
+    return render(request, template, context)
 
+@login_required
+def pending_or_refunded_bookings_list(request):
+    """
+    Displays a list of pending refund or refunded bookings for the currently logged-in user.
+    """
+    pending_refund_bookings = Booking.objects.filter(
+        user=request.user,
+        status='CONFIRMED',
+        refund_status='PAID'
+    ).order_by('booking_date')
+
+    num_pending_refund_bookings = pending_refund_bookings.count()
+
+    template = 'manage_booking/confirmed_bookings.html'
+    context = {
+        'pending_refund_bookings': pending_refund_bookings,
+        'num_pending_refund_bookings': num_pending_refund_bookings,
+    }
+    return render(request, template, context)
 
 @login_required
 def booking_detail(request, booking_id):

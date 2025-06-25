@@ -1,71 +1,76 @@
-{% extends "base.html" %}
+{% extends 'manage_booking/manage_booking_base.html' %}
 {% load static %}
 {% load humanize %}
 
 
-{% block content %}
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Booking Details</h2>
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Booking Reference: {{ booking.booking_reference }}</h4>
+{% block manage_booking_content %}
+<h3 class="text-center mb-4">Booking Details</h3>
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Booking Reference: {{ booking.booking_reference }}</h4>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <h5>Trip Details</h5>
+                <p><strong>Trip Number:</strong> {{ booking.trip.trip_number }}</p>
+                <p><strong>Origin:</strong> {{ booking.trip.origin }}</p>
+                <p><strong>Destination:</strong> {{ booking.trip.destination }}</p>
+                <p><strong>Date:</strong> {{ booking.trip.date|date:"F d, Y" }}</p>
+                <p><strong>Departure Time:</strong> {{ booking.trip.departure_time|time:"H:i" }}</p>
+                <p><strong>Arrival Time:</strong> {{ booking.trip.arrival_time|time:"H:i" }}</p>
+                <p><strong>Price per Person:</strong> Php{{ booking.trip.price }}</p>
+            </div>
+            <div class="col-md-6">
+                <h5>Booking Overview</h5>
+                <p><strong>Booked By:</strong> {{ booking.user.get_full_name|default:booking.user.username }}</p>
+                <p><strong>Booking Date:</strong> {{ booking.booking_date|date:"F d, Y H:i" }}</p>
+                <p><strong>Number of Passengers:</strong> {{ booking.number_of_passengers }}</p>
+                <p><strong>Total Price:</strong> Php{{ booking.total_price }}</p>
+                <p><strong>Booking Status:</strong>
+                    <span class="badge {% if booking.status == 'CONFIRMED' %}bg-success{% elif booking.status == 'PENDING' %}bg-warning text-dark{% elif booking.status == 'CANCELED' %}bg-danger{% else %}bg-secondary{% endif %}">{{ booking.status }}</span></p>
+                <p><strong>Payment Status:</strong>
+                    <span class="badge {% if booking.payment_status == 'PAID' %}bg-success{% elif booking.payment_status == 'PENDING' %}bg-warning text-dark{% elif booking.payment_status == 'FAILED' %}bg-danger{% else %}bg-info{% endif %}">{{ booking.payment_status }}</span></p>
+                {% if booking.refund_status != 'NONE' %}
+                <p><strong>Refund Status:</strong> {{ booking.refund_status }}</p>
+                <p><strong>Refund Amount:</strong> Php {{ booking.refund_amount }}</p>
+                {% if booking.refund_status == 'PENDING' %}
+                <div class="alert alert-info mt-2">
+                    Your refund is currently pending. Please allow time for processing.
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
         </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <h5>Trip Details</h5>
-                    <p><strong>Trip Number:</strong> {{ booking.trip.trip_number }}</p>
-                    <p><strong>Origin:</strong> {{ booking.trip.origin }}</p>
-                    <p><strong>Destination:</strong> {{ booking.trip.destination }}</p>
-                    <p><strong>Date:</strong> {{ booking.trip.date|date:"F d, Y" }}</p>
-                    <p><strong>Departure Time:</strong> {{ booking.trip.departure_time|time:"H:i" }}</p>
-                    <p><strong>Arrival Time:</strong> {{ booking.trip.arrival_time|time:"H:i" }}</p>
-                    <p><strong>Price per Person:</strong> Php{{ booking.trip.price }}</p>
-                </div>
-                <div class="col-md-6">
-                    <h5>Booking Overview</h5>
-                    <p><strong>Booked By:</strong> {{ booking.user.get_full_name|default:booking.user.username }}</p>
-                    <p><strong>Booking Date:</strong> {{ booking.booking_date|date:"F d, Y H:i" }}</p>
-                    <p><strong>Number of Passengers:</strong> {{ booking.number_of_passengers }}</p>
-                    <p><strong>Total Price:</strong> Php{{ booking.total_price }}</p>
-                    <p><strong>Booking Status:</strong> <span class="badge {% if booking.status == 'CONFIRMED' %}bg-success{% elif booking.status == 'PENDING' %}bg-warning text-dark{% elif booking.status == 'CANCELED' %}bg-danger{% else %}bg-secondary{% endif %}">{{ booking.status }}</span></p>
-                    <p><strong>Payment Status:</strong> <span class="badge {% if booking.payment_status == 'PAID' %}bg-success{% elif booking.payment_status == 'PENDING' %}bg-warning text-dark{% elif booking.payment_status == 'FAILED' %}bg-danger{% else %}bg-info{% endif %}">{{ booking.payment_status }}</span></p>
-                    {% if booking.refund_status != 'NONE' %}
-                        <p><strong>Refund Status:</strong> {{ booking.refund_status }}</p>
-                        <p><strong>Refund Amount:</strong> Php {{ booking.refund_amount }}</p>
-                        {% if booking.refund_status == 'PENDING' %}
-                            <div class="alert alert-info mt-2">
-                                Your refund is currently pending. Please allow time for processing.
-                            </div>
-                        {% endif %}
-                    {% endif %}
-                </div>
-            </div>
 
-            <h5>Passenger Details:</h5>
-            <ul class="list-group list-group-flush mb-3">
-                {% for passenger in booking.passengers.all %}
-                <li class="list-group-item">
-                    <strong>{{ forloop.counter }}. Name:</strong> {{ passenger.name }}
-                    {% if passenger.age %}(Age: {{ passenger.age }}){% endif %}
-                    {% if passenger.contact_number %}<br><strong>Contact:</strong> {{ passenger.contact_number }}{% endif %}
-                    {% if passenger.email %}<br><strong>Email:</strong> {{ passenger.email }}{% endif %}
-                </li>
-                {% empty %}
-                <li class="list-group-item text-muted">No passenger details found.</li>
-                {% endfor %}
-            </ul>
+        <h5>Passenger Details:</h5>
+        <ul class="list-group list-group-flush mb-3">
+            {% for passenger in booking.passengers.all %}
+            <li class="list-group-item">
+                <strong>{{ forloop.counter }}. Name:</strong> {{ passenger.name }}
+                {% if passenger.age %}(Age: {{ passenger.age }}){% endif %}
+                {% if passenger.contact_number %}<br><strong>Contact:</strong> {{ passenger.contact_number }}{% endif %}
+                {% if passenger.email %}<br><strong>Email:</strong> {{ passenger.email }}{% endif %}
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted">No passenger details found.</li>
+            {% endfor %}
+        </ul>
 
-            <div class="mt-4 text-center">
-                {% if can_reschedule %}
-                <a href="{% url 'manage_booking:booking_reschedule_select_trip' booking.id %}" class="btn btn-warning me-2">Reschedule Booking</a>
-                {% endif %}
-                {% if can_cancel %}
-                <a href="{% url 'manage_booking:booking_cancel' booking.id %}" class="btn btn-danger">Cancel Booking</a>
-                {% endif %}
-                <a href="{% url 'manage_booking:booking_list' %}" class="btn btn-secondary ms-2">Back to My Bookings</a>
-            </div>
+        <div class="mt-4 text-center">
+            {% if booking.payment_status == 'PENDING' %}
+                <a href="{% url 'process_payment' booking_id=booking.id %}" class="btn btn-success me-2">Pay Now</a>
+            {% endif %}
+            
+            {% if can_reschedule %}
+            <a href="{% url 'manage_booking:booking_reschedule_select_trip' booking.id %}"
+                class="btn btn-warning me-2">Reschedule Booking</a>
+            {% endif %}
+            {% if can_cancel %}
+            <a href="{% url 'manage_booking:booking_cancel' booking.id %}" class="btn btn-danger">Cancel Booking</a>
+            {% endif %}
+            <a href="{% url 'manage_booking:confirmed_bookings' %}" class="btn btn-secondary ms-2">Back</a>
         </div>
     </div>
 </div>
-{% endblock content %}
+{% endblock %}
