@@ -7,6 +7,7 @@ from datetime import datetime
 from .forms import ProfileForm
 from booking.models import Booking
 from .models import UserProfile
+from manage_booking.utils import paginate_queryset
 
 @login_required
 def account_details(request):
@@ -66,19 +67,19 @@ def my_bookings(request):
         if booking.status == 'CONFIRMED' and trip_datetime_aware > now:
             upcoming_confirmed_bookings.append(booking)
         else:
-            other_bookings.append(booking)
+            pass
 
     upcoming_confirmed_bookings.sort(key=lambda b: datetime.combine(b.trip.date, b.trip.departure_time))
     num_upcoming_trips = len(upcoming_confirmed_bookings)
 
+    upcoming_confirmed_bookings_page = paginate_queryset(request, upcoming_confirmed_bookings, items_per_page=3)
+
     template = 'account/my_bookings.html'
     context = {
-        'upcoming_confirmed_bookings': upcoming_confirmed_bookings,
+        'upcoming_confirmed_bookings_page': upcoming_confirmed_bookings_page,
         'num_upcoming_trips': num_upcoming_trips,
-        'other_bookings': other_bookings,
         'pending_payment_bookings': pending_payment_bookings,
         'num_pending_payment': num_pending_payment,
-        'has_pending_payments': pending_payment_bookings.exists(),
     }
     return render(request, template, context)
 
