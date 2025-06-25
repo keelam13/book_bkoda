@@ -6,10 +6,14 @@
 <h3 class="profile-section-title">Payment Refunds</h3>
 
 <div class="mb-5">
-    {% if pending_refund_bookings %}
-    <p class="mb-4">You have {{ num_pending_refund_bookings }} pending booking payment(s) refunds!</p>
+    {% if pending_refund_bookings_page %}
+    <p class="mb-4">
+        Showing <strong>{{ pending_refund_bookings_page.start_index }}</strong> -
+        <strong>{{ pending_refund_bookings_page.end_index }}</strong> of
+        <strong>{{ pending_refund_bookings_page.paginator.count }}</strong> pending refunds.
+    </p>
     <ul class="list-unstyled">
-        {% for booking in pending_refund_bookings %}
+        {% for booking in pending_refund_bookings_page %}
         <li class="bg-light p-3 rounded shadow-sm d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h2 class="h5 text-secondary"><strong>Booking Reference:</strong> {{ booking.booking_reference }}</h2>
@@ -24,6 +28,33 @@
         </li>
         {% endfor %}
     </ul>
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center mt-4">
+            {% if pending_refund_bookings_page.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ pending_refund_bookings_page.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span> Previous
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link" aria-hidden="true">&laquo; Previous</span>
+            </li>
+            {% endif %}
+
+            {% if pending_refund_bookings_page.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ pending_refund_bookings_page.next_page_number }}" aria-label="Next">
+                    Next <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link" aria-hidden="true">Next &raquo;</span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
     {% else %}
     <div class="alert alert-info alert-modal-info" role="alert">
         You have no pending booking payment refund at the moment.
@@ -32,10 +63,14 @@
 
     <hr>
 
-    {% if refunded_bookings %}
-    <p class="mb-4">You have {{ num_refunded_bookings }} refunded booking payment(s)!</p>
+    {% if refunded_bookings_page %}
+    <p class="mb-4">
+        Showing <strong>{{ refunded_bookings_page.start_index }}</strong> -
+        <strong>{{ refunded_bookings_page.end_index }}</strong> of
+        <strong>{{ refunded_bookings_page.paginator.count }}</strong> refunded payments.
+    </p>
     <ul class="list-unstyled">
-        {% for booking in refunded_bookings %}
+        {% for booking in refunded_bookings_page %}
         <li class="bg-light p-3 rounded shadow-sm d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h2 class="h5 text-secondary"><strong>Booking Reference:</strong> {{ booking.booking_reference }}</h2>
@@ -50,6 +85,33 @@
         </li>
         {% endfor %}
     </ul>
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center mt-4">
+            {% if refunded_bookings_page.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ refunded_bookings_page.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span> Previous
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link" aria-hidden="true">&laquo; Previous</span>
+            </li>
+            {% endif %}
+
+            {% if refunded_bookings_page.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ refunded_bookings_page.next_page_number }}" aria-label="Next">
+                    Next <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link" aria-hidden="true">Next &raquo;</span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
     {% else %}
     <div class="alert alert-info alert-modal-info" role="alert">
         You have not requested for a booking payment refund yet.

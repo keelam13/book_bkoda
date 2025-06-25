@@ -69,7 +69,7 @@
         font-size: 1.75rem;
     }
 
-    .profile-section-title {
+    .section-title {
         color: #007bff;
         margin-bottom: 1.5rem;
         padding-bottom: 0.5rem;
@@ -105,9 +105,9 @@
                         class="nav-link {% if request.resolver_match.url_name == 'payment_refund' %}active{% endif %}">
                         <i class="fa-solid fa-money-check-dollar"></i> Payment Refund
                     </a>
-                    <a href="{% url 'manage_booking:cancelled_bookings' %}"
-                        class="nav-link {% if request.resolver_match.url_name == 'cancelled_bookings' %}active{% endif %}">
-                        <i class="fa-solid fa-rectangle-xmark"></i> Cancelled Bookings
+                    <a href="{% url 'manage_booking:canceled_bookings' %}"
+                        class="nav-link {% if request.resolver_match.url_name == 'canceled_bookings' %}active{% endif %}">
+                        <i class="fa-solid fa-rectangle-xmark"></i> Canceled Bookings
                     </a>
                     <a href="{% url 'manage_booking:all_bookings' %}"
                         class="nav-link {% if request.resolver_match.url_name == 'all_bookings' %}active{% endif %}">

@@ -11,9 +11,9 @@ from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime, timedelta
 from decimal import Decimal
+from .utils import paginate_queryset
 
 import stripe
-
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -75,12 +75,12 @@ def all_bookings_list(request):
     """
     all_bookings = Booking.objects.filter(user=request.user).order_by('-trip__date', '-trip__departure_time')
 
-    num_all_bookings = all_bookings.count()
+    all_bookings_page = paginate_queryset(request, all_bookings, items_per_page=3)
 
     template = 'manage_booking/all_bookings_list.html'
     context = {
-        'all_bookings': all_bookings,
-        'num_all_bookings': num_all_bookings,
+        'all_bookings_page': all_bookings_page,
+        'num_all_bookings': all_bookings.count(),
     }
     return render(request, template, context)
 
@@ -95,12 +95,12 @@ def confirmed_bookings_list(request):
         payment_status='PAID'
     ).order_by('-trip__date', '-trip__departure_time')
 
-    num_confirmed_bookings = confirmed_bookings.count()
+    confirmed_bookings_page = paginate_queryset(request, confirmed_bookings, items_per_page=3)
 
     template = 'manage_booking/confirmed_bookings.html'
     context = {
-        'confirmed_bookings': confirmed_bookings,
-        'num_confirmed_bookings': num_confirmed_bookings,
+        'confirmed_bookings_page': confirmed_bookings_page,
+        'num_confirmed_bookings': confirmed_bookings.count(),
     }
     return render(request, template, context)
 
@@ -115,12 +115,12 @@ def pending_payment_list(request):
         payment_status='PENDING'
     ).order_by('-trip__date', '-trip__departure_time')
 
-    num_pending_payment = pending_payment_bookings.count()
+    pending_payment_bookings_page = paginate_queryset(request, pending_payment_bookings, items_per_page=3)
 
     template = 'manage_booking/pending_payment.html'
     context = {
-        'pending_payment_bookings': pending_payment_bookings,
-        'num_pending_payment': num_pending_payment,
+        'pending_payment_bookings_page': pending_payment_bookings_page,
+        'num_pending_payment_bookings': pending_payment_bookings.count(),
     }
     return render(request, template, context)
 
@@ -139,35 +139,34 @@ def pending_or_refunded_bookings_list(request):
         refund_status='COMPLETED'
     ).order_by('-trip__date', '-trip__departure_time')
 
-    num_pending_refund_bookings = pending_refund_bookings.count()
-    num_refunded_bookings = refunded_bookings.count()
-
+    pending_refund_bookings_page = paginate_queryset(request, pending_refund_bookings, items_per_page=3)
+    refunded_bookings_page = paginate_queryset(request, refunded_bookings, items_per_page=3)
 
     template = 'manage_booking/pending_or_refunded_bookings.html'
     context = {
-        'pending_refund_bookings': pending_refund_bookings,
-        'num_pending_refund_bookings': num_pending_refund_bookings,
-        'refunded_bookings': refunded_bookings,
-        'num_refunded_bookings': num_refunded_bookings,
+        'pending_refund_bookings_page': pending_refund_bookings_page,
+        'num_pending_refund_bookings': pending_refund_bookings.count(),
+        'refunded_bookings_page': refunded_bookings_page,
+        'num_refunded_bookings': refunded_bookings.count(),
     }
     return render(request, template, context)
 
 @login_required
-def cancelled_bookings_list(request):
+def canceled_bookings_list(request):
     """
-    Displays a list of all confirmed bookings for the currently logged-in user.
+    Displays a list of all canceled bookings for the currently logged-in user.
     """
-    cancelled_bookings = Booking.objects.filter(
+    canceled_bookings = Booking.objects.filter(
         user=request.user,
         status='CANCELED',
     ).order_by('-trip__date', '-trip__departure_time')
 
-    num_cancelled_bookings = cancelled_bookings.count()
+    canceled_bookings_page = paginate_queryset(request, canceled_bookings, items_per_page=3)
 
-    template = 'manage_booking/cancelled_bookings_list.html'
+    template = 'manage_booking/canceled_bookings_list.html'
     context = {
-        'cancelled_bookings': cancelled_bookings,
-        'num_cancelled_bookings': num_cancelled_bookings,
+        'canceled_bookings_page': canceled_bookings_page,
+        'num_canceled_bookings': canceled_bookings.count(),
     }
     return render(request, template, context)
 
