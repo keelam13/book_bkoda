@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.alert:not(.alert-modal-info)').forEach(function (alert) {
             alert.remove();
         });
-    }, 5000);
+    }, 15000);
 
     /** Back to Top Button Logic **/
     const backToTopButton = document.getElementById('back-to-top');

@@ -286,7 +286,7 @@ def process_payment(request, booking_id):
         if action == 'cancel_booking':
             if booking.status == 'CANCELED':
                 messages.info(request, f"Booking {booking.booking_reference} is already canceled.")
-                return redirect('manage_booking:booking_detail', booking_id=booking.id)
+                return redirect('home')
 
             with transaction.atomic():
                 original_status = booking.status
@@ -300,7 +300,7 @@ def process_payment(request, booking_id):
 
             messages.success(request, f"Booking {booking.booking_reference} has been successfully canceled.")
             send_booking_email(booking, email_type='cancellation')
-            return redirect('manage_booking:booking_detail', booking_id=booking.id)
+            return redirect('home')
 
         elif action == 'confirm_payment':
             if booking.payment_status == 'PAID' or booking.status == 'CONFIRMED':
