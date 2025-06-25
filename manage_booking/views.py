@@ -115,16 +115,24 @@ def pending_or_refunded_bookings_list(request):
     """
     pending_refund_bookings = Booking.objects.filter(
         user=request.user,
-        status='CONFIRMED',
-        refund_status='PAID'
-    ).order_by('booking_date')
+        refund_status='PENDING'
+    ).order_by('-trip__date', '-trip__departure_time')
+
+    refunded_bookings = Booking.objects.filter(
+        user=request.user,
+        refund_status='COMPLETED'
+    ).order_by('-trip__date', '-trip__departure_time')
 
     num_pending_refund_bookings = pending_refund_bookings.count()
+    num_refunded_bookings = refunded_bookings.count()
 
-    template = 'manage_booking/confirmed_bookings.html'
+
+    template = 'manage_booking/pending_or_refunded_bookings.html'
     context = {
         'pending_refund_bookings': pending_refund_bookings,
         'num_pending_refund_bookings': num_pending_refund_bookings,
+        'refunded_bookings': refunded_bookings,
+        'num_refunded_bookings': num_refunded_bookings,
     }
     return render(request, template, context)
 

@@ -101,13 +101,9 @@
                         class="nav-link {% if request.resolver_match.url_name == 'pending_payment' %}active{% endif %}">
                         <i class="bi bi-person-lines-fill"></i> Pending Payment
                     </a>
-                    <a href=""
+                    <a href="{% url 'manage_booking:payment_refund' %}"
                         class="nav-link {% if request.resolver_match.url_name == 'refunded_bookings' %}active{% endif %}">
-                        <i class="bi bi-calendar-check-fill mr-2"></i> Refunded Booking
-                    </a>
-                    <a href=""
-                        class="nav-link {% if request.resolver_match.url_name == 'pending_refund' %}active{% endif %}">
-                        <i class="bi bi-calendar-check-fill mr-2"></i> Pending Refund
+                        <i class="fa-solid fa-money-check-dollar"></i> Payment Refund
                     </a>
                     <a href=""
                         class="nav-link {% if request.resolver_match.url_name == 'cancelled_bookings' %}active{% endif %}">
