@@ -102,11 +102,7 @@
                     </a>
                     <a href="{% url 'account:my_bookings' %}"
                         class="nav-link {% if request.resolver_match.url_name == 'my_bookings' %}active{% endif %}">
-                        <i class="bi bi-calendar-check-fill mr-2"></i> Upcoming Trips
-                    </a>
-                    <a href="{% url 'manage_booking:booking_list' %}"
-                        class="nav-link {% if request.resolver_match.url_name == 'manage_booking' %}active{% endif %}">
-                        <i class="bi bi-journal-check"></i> Manage Bookings
+                        <i class="bi bi-calendar-check-fill mr-2"></i> My Bookings
                     </a>
                     <a href="{% url 'account_logout' %}" class="nav-link text-danger mt-3">
                         <i class="bi bi-box-arrow-right"></i> Log Out

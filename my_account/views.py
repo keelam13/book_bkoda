@@ -51,6 +51,14 @@ def my_bookings(request):
     upcoming_confirmed_bookings = []
     other_bookings = []
 
+    pending_payment_bookings = Booking.objects.filter(
+        user=request.user,
+        status='PENDING_PAYMENT',
+        payment_status='PENDING'
+    ).order_by('booking_date')
+
+    num_pending_payment = pending_payment_bookings.count()
+
     for booking in all_bookings:
         trip_datetime_naive = datetime.combine(booking.trip.date, booking.trip.departure_time)
         trip_datetime_aware = timezone.make_aware(trip_datetime_naive, timezone.get_current_timezone())
@@ -61,11 +69,16 @@ def my_bookings(request):
             other_bookings.append(booking)
 
     upcoming_confirmed_bookings.sort(key=lambda b: datetime.combine(b.trip.date, b.trip.departure_time))
+    num_upcoming_trips = len(upcoming_confirmed_bookings)
 
     template = 'account/my_bookings.html'
     context = {
         'upcoming_confirmed_bookings': upcoming_confirmed_bookings,
+        'num_upcoming_trips': num_upcoming_trips,
         'other_bookings': other_bookings,
+        'pending_payment_bookings': pending_payment_bookings,
+        'num_pending_payment': num_pending_payment,
+        'has_pending_payments': pending_payment_bookings.exists(),
     }
     return render(request, template, context)
 
