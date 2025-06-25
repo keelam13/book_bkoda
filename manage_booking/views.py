@@ -137,6 +137,25 @@ def pending_or_refunded_bookings_list(request):
     return render(request, template, context)
 
 @login_required
+def cancelled_bookings_list(request):
+    """
+    Displays a list of all confirmed bookings for the currently logged-in user.
+    """
+    cancelled_bookings = Booking.objects.filter(
+        user=request.user,
+        status='CANCELED',
+    ).order_by('-trip__date', '-trip__departure_time')
+
+    num_cancelled_bookings = cancelled_bookings.count()
+
+    template = 'manage_booking/cancelled_bookings_list.html'
+    context = {
+        'cancelled_bookings': cancelled_bookings,
+        'num_cancelled_bookings': num_cancelled_bookings,
+    }
+    return render(request, template, context)
+
+@login_required
 def booking_detail(request, booking_id):
     """
     Displays detailed information for a specific booking.
