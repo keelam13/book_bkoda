@@ -114,6 +114,11 @@ article.trips-display{
     border-radius: 0.5rem;
 }
 
+.trip-result-card.no-trips {
+    color: #842029;
+    background-color: #f8d7da !important;
+    border-color: #f5c2c7;
+}
 
 /* Forms */
 .form-group {

@@ -98,9 +98,18 @@
                 </div>
             {% endfor %}
         {% else %}
-            <p class="alert alert-info text-center">No trips found matching your criteria for the selected date.</p>
+            <div class="trip-result-card no-trips d-flex flex-column bg-white mb-3 p-3">
+                <div class="d-flex justify-content-center mb-2">
+                {% if no_trips_message_type == 'no_trips_today' %}
+                    <p class="text-center text-danger"><strong>** Sorry, there are no more trips for today. **</strong></p>
+                {% elif no_trips_message_type == 'no_trips_future' %}
+                    <p class="text-center text-danger"><strong>** Sorry, there are no trips available yet. **</p>
+                {% else %}
+                    <p class="text-center text-danger"><strong>** Selected date is in the past. **</p>
+                {% endif %}
+                </div>
+            </div>
         {% endif %}
     </div>
 </article>
-
 {% endblock %}

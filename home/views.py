@@ -11,6 +11,8 @@ def index(request):
         'destination': 'Baguio City',
     }
 
+    form = TripSearchForm()
+    
     if request.method == 'GET' and request.GET:
         form = TripSearchForm(request.GET)
     else:

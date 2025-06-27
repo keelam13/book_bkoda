@@ -10,16 +10,6 @@ from .forms import TripSearchForm
 from booking.models import Booking
 
 
-def index(request):
-    # This view renders the home page with the initial search form
-    form = TripSearchForm() # An empty form for the initial GET request to '/'
-    context = {
-        'form': form,
-        'search_error': messages.get_messages(request), # To display messages on home page if redirected here
-    }
-    return render(request, 'home/index.html', context)
-
-
 def find_trip(request):
     reschedule_booking_id = request.GET.get('reschedule_booking_id')
     original_booking = None
@@ -46,6 +36,13 @@ def find_trip(request):
         'fixed_num_travelers': fixed_num_travelers
     }
 
+    form = TripSearchForm(request.GET, **form_kwargs)
+
+    requested_date = None
+    requested_origin = None
+    requested_destination = None
+    number_of_passengers_for_query = 1
+
     if is_rescheduling_mode and not request.GET:
         initial_data = {
             'origin': original_booking.trip.origin,
@@ -56,8 +53,40 @@ def find_trip(request):
         form = TripSearchForm(initial=initial_data, **form_kwargs)
     else:
         form = TripSearchForm(request.GET, **form_kwargs)
+    
+    if form.is_valid():
+        requested_origin = form.cleaned_data.get('origin')
+        requested_destination = form.cleaned_data.get('destination')
+        if form.cleaned_data.get('departure_date'):
+            requested_date = form.cleaned_data.get('departure_date')
+        number_of_passengers_for_query = fixed_num_travelers if is_rescheduling_mode else form.cleaned_data.get('num_travelers')
+    else:
+        try:
+            requested_date_str = request.GET.get('departure_date')
+            if requested_date_str:
+                requested_date = datetime.strptime(requested_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass
 
-    context = {'form': form} 
+        requested_origin = request.GET.get('origin')
+        requested_destination = request.GET.get('destination')
+        try:
+            get_num_travelers = request.GET.get('num_travelers')
+            if get_num_travelers:
+                number_of_passengers_for_query = int(get_num_travelers)
+        except (ValueError, TypeError):
+            pass
+
+    context = {
+        'form': form,
+        'origin': requested_origin,
+        'destination': requested_destination,
+        'current_day': requested_date,
+        'previous_day': requested_date - timedelta(days=1),
+        'next_day': requested_date + timedelta(days=1),
+        'number_of_passengers': int(number_of_passengers_for_query),
+        'no_trips_message_type': None,
+    } 
 
     if is_rescheduling_mode:
         context['is_rescheduling_mode'] = True
@@ -73,14 +102,6 @@ def find_trip(request):
         number_of_passengers_for_query = fixed_num_travelers if is_rescheduling_mode else form.cleaned_data.get('num_travelers')
         now_aware = timezone.now()
 
-        # Debugging: Print requested parameters
-        print(f"--- Trip Search Debug ---")
-        print(f"Requested Origin: {requested_origin}")
-        print(f"Requested Destination: {requested_destination}")
-        print(f"Requested Date: {requested_date}")
-        print(f"Requested Passengers: {number_of_passengers_for_query}")
-        print(f"Current Date/Time: {now_aware}")
-
         if requested_date and requested_origin and requested_destination:
             try:
                 trip_list_queryset = Trip.objects.filter(
@@ -90,19 +111,10 @@ def find_trip(request):
                     available_seats__gte=number_of_passengers_for_query
                 )
 
-                print(f"Initial queryset count (before time filter): {trip_list_queryset.count()}")
-                if not trip_list_queryset.exists():
-                    print("No trips found in initial queryset for the given origin, destination, and date.")
-
                 for trip in trip_list_queryset:
                     trip_datetime_naive = datetime.combine(trip.date, trip.departure_time)
                     trip_datetime_aware = timezone.make_aware(trip_datetime_naive)
 
-                    if is_rescheduling_mode and original_booking and trip.trip_id == original_booking.trip.trip_id:
-                        print(f"Excluding original trip {trip.trip_number} from reschedule options.")
-                        continue
-
-                    print(f"Checking trip {trip.trip_number} ({trip.origin} to {trip.destination}) on {trip_datetime_aware}")
                     if trip_datetime_aware >= now_aware:
                         calculated_total_price = trip.price * Decimal(number_of_passengers_for_query)
                         calculated_total_price = calculated_total_price.quantize(Decimal('0.01'))
@@ -112,11 +124,9 @@ def find_trip(request):
 
                         trip_list.append(trip)
                     else:
-                        print(f"Trip {trip.trip_number} is in the past, filtering out.")
+                        pass
 
                 final_trip_list = sorted(trip_list, key=lambda trip: trip.departure_time)
-
-                print(f"Final trip list count (after time filter and sorting): {len(final_trip_list)}")
 
                 if len(final_trip_list) > 0:
                     context.update({
@@ -131,16 +141,15 @@ def find_trip(request):
                     return render(request, 'trips/trips.html', context)
 
                 elif requested_date < now_aware.date():
-                    messages.error(
-                        request, "Sorry, the date you requested is in the past."
-                    )
+                    context['no_trips_message_type'] = 'date_in_the_past'
+                    messages.error(request, "Sorry, the date you requested is in the past.")
+                elif requested_date == now_aware.date():
+                    context['no_trips_message_type'] = 'no_trips_today'
                 else:
-                    messages.error(
-                        request, "Sorry, there are no trips available yet."
-                    )
+                    context['no_trips_message_type'] = 'no_trips_future'
+
             except Exception as e:
                 messages.error(request, f"An unexpected error occurred during trip search: {e}")
-                print(f"General error in find_trip: {e}")
         else:
             messages.error(request, "Please fill in all search fields (Origin, Destination, Date).")
     else:
@@ -148,5 +157,7 @@ def find_trip(request):
             for error in errors:
                 messages.error(request, f"Error in '{field}': {error}")
 
-    context['trip_list'] = trip_list
-    return render(request, 'home/index.html', context)
+    if 'trip_list' not in context:
+        context['trip_list'] = []
+
+    return render(request, 'trips/trips.html', context)
