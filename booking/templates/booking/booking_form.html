@@ -1,126 +1,78 @@
-{% extends 'base.html' %}
-{% load static %}
-{% load humanize %}
-{% load crispy_forms_tags %}
+{% extends 'booking/booking_form_base.html' %}
 {% load booking_filters %}
 
-{% block extra_css %}
-    <link rel="stylesheet" href="{% static 'booking/css/booking_form.css' %}">
-{% endblock %}
-
-{% block content %}
-<div class="container my-5 booking-page-container">
-    <div class="row">
-        <div class="col-12 mb-3">
-            <a href="javascript:history.back()" class="back-link">
-                <i class="fas fa-arrow-left me-2"></i> Back</a>
-        </div>
-        <div class="col-md-8">
-            <div class="card booking-section-card mb-4">
-                <div class="card-body">
-                    <form method="post" id="booking-form" action="{% url 'book_trip' trip_id=trip.trip_id number_of_passengers=num_passengers %}">
-                        {% csrf_token %}
-                        <h4 class="section-title mt-5 mb-4"><i class="bi bi-1-circle-fill"></i> Passengers</h4>
-                        <div id="passenger-names-container">
-                            {% for passenger_num in passenger_range %}
-                            <h5 class="mt-4">{{ passenger_num }}. Passenger</h5>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    {% with name_field_name="passenger_name"|concat_strings:passenger_num %}
-                                        {{ form|get_field:name_field_name|as_crispy_field }}
-                                    {% endwith %}
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    {% with age_field_name="passenger_age"|concat_strings:passenger_num %}
-                                        {{ form|get_field:age_field_name|as_crispy_field }}
-                                    {% endwith %}
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    {% with contact_number_field_name="passenger_contact_number"|concat_strings:passenger_num %}
-                                        {{ form|get_field:contact_number_field_name|as_crispy_field }}
-                                    {% endwith %}
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    {% with email_field_name="passenger_email"|concat_strings:passenger_num %}
-                                        {{ form|get_field:email_field_name|as_crispy_field }}
-                                    {% endwith %}
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-
-                        {% if form.save_info %}
-                        <div class="form-check mt-4 mb-4">
-                            {{ form.save_info }}
-                            <label class="form-check-label" for="{{ form.save_info.id_for_label }}">
-                                {{ form.save_info.label }}
-                            </label>
-                            <small class="form-text text-muted">
-                                Tick this box to save the first passenger's contact details to your profile for future bookings.
-                            </small>
-                        </div>
-                        {% else %}
-                        <div class="form-check mt-4">
-                            <label class="form-check-label" for="id-save-info">
-                                <a class="text-info" href="{% url 'account_signup' %}">Create an account</a> or
-                                <a class="text-info" href="{% url 'account_login' %}">login</a> to save this information
-                            </label>
-                        </div>
-                        {% endif %}
-
-                        <h4 class="section-title mt-5 mb-4"><i class="bi bi-2-circle-fill"></i> Seat Reservation</h4>
-                        <div class="card booking-section-card mb-4">
-                            <div class="card-body p-0">
-                                <p>Number of Seats: {{ num_passengers}}</p>
-                            </div>
-                        </div>
-                        <div class="d-grid mt-4">
-                            <button type="submit" id="submit-booking-btn"
-                                class="btn btn-success btn-lg submit-button">Proceed to Payment</button>
-                        </div>
-                    </form>
+{% block booking_form_content %}
+<h3 class="section-title">Booking Confirmation</h3>
+<form method="post" id="booking-form"
+    action="{% url 'book_trip' trip_id=trip.trip_id number_of_passengers=num_passengers %}">
+    {% csrf_token %}
+    <h4 class="section-title mt-5 mb-4"><i class="bi bi-1-circle-fill"></i> Passengers</h4>
+    <div class="card booking-section-card mb-4">
+        <div id="card-body">
+            <div id="card-body passenger-names-container">
+                {% for passenger_num in passenger_range %}
+                <h5 class="mt-4">{{ passenger_num }}. Passenger</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {% with name_field_name="passenger_name"|concat_strings:passenger_num %}
+                        {{ form|get_field:name_field_name|as_crispy_field }}
+                        {% endwith %}
+                    </div>
                 </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {% with age_field_name="passenger_age"|concat_strings:passenger_num %}
+                        {{ form|get_field:age_field_name|as_crispy_field }}
+                        {% endwith %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {% with contact_number_field_name="passenger_contact_number"|concat_strings:passenger_num %}
+                        {{ form|get_field:contact_number_field_name|as_crispy_field }}
+                        {% endwith %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {% with email_field_name="passenger_email"|concat_strings:passenger_num %}
+                        {{ form|get_field:email_field_name|as_crispy_field }}
+                        {% endwith %}
+                    </div>
+                </div>
+                {% endfor %}
             </div>
-        </div>
 
-        <div class="col-md-4">
-            <div class="card booking-summary-card shadow-sm sticky-top">
-                <div class="card-header d-flex justify-content-between align-items-center bg-transparent border-bottom">
-                    <h5 class="mb-0">Your Booking</h5>
-                </div>
-                <div class="card-body">
-                    <p class="mb-2 text-muted"><strong>{{ trip.date|date:"D, d M" }}</strong></p>
-
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="fas fa-dot-circle me-2 text-muted"></i>
-                        <div>
-                            <p class="mb-0 fw-bold">{{ trip.origin }}</p>
-                            <p class="mb-0 text-muted small">{{ trip.departure_time|time:"H:i" }}</p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="fas fa-dot-circle me-2 text-muted"></i>
-                        <div>
-                            <p class="mb-0 fw-bold">{{ trip.destination }}</p>
-                            <p class="mb-0 text-muted small">{{ trip.arrival_time|time:"H:i" }}</p>
-                        </div>
-                    </div>
-
-                    <hr>
-
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-bold">Total (incl. VAT)</span>
-                        <span class="fw-bold fs-5">Php{{ total_price|floatformat:2|intcomma }}</span>
-                    </div>
-                </div>
+            {% if form.save_info %}
+            <div class="form-check mt-4 mb-4">
+                {{ form.save_info }}
+                <label class="form-check-label" for="{{ form.save_info.id_for_label }}">
+                    {{ form.save_info.label }}
+                </label>
+                <small class="form-text text-muted">
+                    Tick this box to save the first passenger's contact details to your profile for future bookings.
+                </small>
             </div>
+            {% else %}
+            <div class="form-check mt-4">
+                <label class="form-check-label" for="id-save-info">
+                    <a class="text-info" href="{% url 'account_signup' %}">Create an account</a> or
+                    <a class="text-info" href="{% url 'account_login' %}">login</a> to save this information
+                </label>
+            </div>
+            {% endif %}
         </div>
     </div>
-</div>
+
+    <h4 class="section-title mt-5 mb-4"><i class="bi bi-2-circle-fill"></i> Seat Reservation</h4>
+    <div class="card booking-section-card mb-4">
+        <div class="card-body p-0">
+            <p>Number of Seats: {{ num_passengers}}</p>
+        </div>
+    </div>
+    <div class="d-grid mt-4">
+        <button type="submit" id="submit-booking-btn" class="btn btn-success btn-lg submit-button">Proceed to
+            Payment</button>
+    </div>
+</form>
 {% endblock %}

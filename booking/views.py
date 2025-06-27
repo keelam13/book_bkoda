@@ -191,6 +191,7 @@ def book_trip(request, trip_id, number_of_passengers):
                 }
                 form = BookingConfirmationForm(initial=initial_data, trip=trip, num_passengers=num_passengers, request=request)
 
+        template = 'booking/booking_form.html'
         context = {
             'form': form,
             'trip': trip,
@@ -200,7 +201,7 @@ def book_trip(request, trip_id, number_of_passengers):
             'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
             **payment_context,
         }
-        return render(request, 'booking/booking_form.html', context)
+        return render(request, template, context)
 
 
 def process_payment(request, booking_id):
@@ -402,10 +403,11 @@ def process_payment(request, booking_id):
         else:
             messages.error(request, "Invalid payment method selected. Please choose a valid option.")
 
-
+    template = 'booking/payment_page.html'
     context = {
         'booking': booking,
-        'amount_due': booking.total_price,
+        'trip': booking.trip,
+        'total_price': booking.total_price,
         'stripe_public_key': stripe_public_key,
         'client_secret': intent.client_secret if intent else None,
         'first_passenger_email': first_passenger_email,
@@ -414,7 +416,7 @@ def process_payment(request, booking_id):
         'user_profile': user_profile if request.user.is_authenticated else None,
         **payment_context,
     }
-    return render(request, 'booking/payment_page.html', context)
+    return render(request, template, context)
 
 
 def booking_success(request, booking_id):

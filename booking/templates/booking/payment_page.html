@@ -1,25 +1,14 @@
-{% extends 'base.html' %}
+{% extends 'booking/booking_form_base.html' %}
 {% load static %}
 {% load humanize %}
-{% load crispy_forms_tags %}
 
-{% block extra_css %}
-    <link rel="stylesheet" href="{% static 'booking/css/booking_form.css' %}">
-{% endblock %}
-
-{% block content %}
-<div class="container my-5 booking-page-container">
-    <div class="row">
-        <div class="col-12 mb-3">
-            <a href="javascript:history.back()" class="back-link">
-                <i class="fas fa-arrow-left me-2"></i> Back</a>
-        </div>
-        <div class="col-md-8">
-            <div class="card booking-section-card mb-4">
-                <div class="card-body">
+{% block booking_form_content %}
+                    <h3 class="section-title">Booking Confirmation</h3>
                     <div class="discount-explanation mb-4">
-                        <p class="mb-1"><strong>Special Discounts:</strong> A 20% discount is available for Senior Citizens (60 y/o and above) and Students.</p>
-                        <p class="mb-0">The **full fare is paid initially**, and the discount will be **refunded on-site** by the bus attendant upon presentation of a valid Senior Citizen ID or School ID.</p>
+                        <p class="mb-1"><strong>Special Discounts:</strong> A 20% discount is available for Senior Citizens (60 y/o and
+                            above) and Students.</p>
+                        <p class="mb-0">The **full fare is paid initially**, and the discount will be **refunded on-site** by the bus
+                            attendant upon presentation of a valid Senior Citizen ID or School ID.</p>
                     </div>
                     <hr>
                     <form action="{% url 'process_payment' booking_id=booking.id %}" method="POST" id="payment-form">
@@ -28,8 +17,7 @@
                         <div class="card booking-section-card mb-4">
                             <div class="card-body">
                                 <div class="form-check mb-3">
-                                    <input class="form-check-input" type="radio" name="payment_method" id="creditCard"
-                                        value="CARD">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="creditCard" value="CARD">
                                     <label class="form-check-label" for="creditCard">
                                         Debit/Credit Card
                                     </label>
@@ -54,40 +42,42 @@
                                                     {{ billing_form.billing_country | as_crispy_field }}
                                                 </fieldset>
                                                 {% if billing_form.save_info %}
-                                                    <div class="form-check mt-4 mb-4">
-                                                        {{ billing_form.save_info }}
-                                                        <label class="form-check-label" for="{{ billing_form.save_info.id_for_label }}">
-                                                            {{ billing_form.save_info.label }}
-                                                        </label>
-                                                        <small class="form-text text-muted">
-                                                            Tick this box to save the first passenger's contact details to your profile for future bookings.
-                                                        </small>
-                                                    </div>
+                                                <div class="form-check mt-4 mb-4">
+                                                    {{ billing_form.save_info }}
+                                                    <label class="form-check-label" for="{{ billing_form.save_info.id_for_label }}">
+                                                        {{ billing_form.save_info.label }}
+                                                    </label>
+                                                    <small class="form-text text-muted">
+                                                        Tick this box to save the first passenger's contact details to your profile for
+                                                        future bookings.
+                                                    </small>
+                                                </div>
                                                 {% endif %}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
+                    
                                 {% if time_until_departure.total_seconds > 0 and time_until_departure.total_seconds < offline_payment_cutoff_seconds %}
                                 <div class="text-danger d-block mt-1" role="alert">
                                     <p class="mb-1">Offline payment is not available for trips departing within **{{ offline_payment_cutoff_hours }} hours**.</p>
                                     <p class="mb-1">Please select **Card** to complete your booking online now.</p>
-                                    <p class="mb-0 small text-muted">Alternatively, you may proceed directly to the bus terminal to secure your seat(s) or inquire as a chance passenger.</p>
+                                    <p class="mb-0 small text-muted">Alternatively, you may proceed directly to the bus terminal to secure
+                                        your seat(s) or inquire as a chance passenger.</p>
                                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
                                 </div>
                                 {% else %}
                                 <div class="form-check mb-3">
-                                    <input class="form-check-input" type="radio" name="payment_method" id="cashPayment"
-                                        value="CASH"> <label class="form-check-label" for="cashPayment">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="cashPayment" value="CASH"> <label
+                                        class="form-check-label" for="cashPayment">
                                         Cash (Payment Centers)
                                     </label>
                                 </div>
                                 <div class="form-check mb-3">
-                                    <input class="form-check-input" type="radio" name="payment_method" id="gcashPayment"
-                                        value="GCASH"> <label class="form-check-label" for="gcashPayment">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="gcashPayment" value="GCASH"> <label
+                                        class="form-check-label" for="gcashPayment">
                                         Money Wallet (GCash)
                                     </label>
                                 </div>
@@ -104,74 +94,33 @@
                                     </p>
                                 </div>
                                 {% endif %}
-
+                    
                                 <div class="form-check mt-4">
                                     <input class="form-check-input" type="checkbox" id="termsCheck" required>
                                     <label class="form-check-label" for="termsCheck">
-                                        I declare to have read and agree to the <a href="#" data-toggle="modal" data-target="#privacyPolicyModal">Privacy Policy</a> and <a
-                                            href="#" data-toggle="modal" data-target="#bookingTermsModal">T&C of Booking</a> and <a href="#" data-toggle="modal" data-target="#carriageTermsModal">T&C of Carriage</a>.
+                                        I declare to have read and agree to the <a href="#" data-toggle="modal"
+                                            data-target="#privacyPolicyModal">Privacy Policy</a> and <a href="#" data-toggle="modal"
+                                            data-target="#bookingTermsModal">T&C of Booking</a> and <a href="#" data-toggle="modal"
+                                            data-target="#carriageTermsModal">T&C of Carriage</a>.
                                     </label>
                                 </div>
                             </div>
                         </div>
-
+                        
                         <!-- Hidden inputs for Stripe Payment -->
-                        <input type="hidden" name="selected_payment_method_hidden" id="selected-payment-method-hidden" value="card"> 
+                        <input type="hidden" name="selected_payment_method_hidden" id="selected-payment-method-hidden" value="card">
                         <input type="hidden" id="firstPassengerEmail" value="{{ first_passenger_email }}">
                         <input type="hidden" id="firstPassengerContactNumber" value="{{ first_passenger_contact_number }}">
                         <input type="hidden" name="payment_intent_id" id="payment_intent_id">
                         
-                        <button type="submit" id="submit-button" name="action" value="confirm_payment" class="btn btn-success btn-lg mt-3">Confirm Payment</button>
-                        <button type="submit" id="cancel-button" name="action" value="cancel_booking" class="btn btn-secondary btn-lg mt-3" 
-                                formnovalidate
-                                onclick="return confirm('Are you sure you want to cancel this booking? This action cannot be undone.');">
+                        <button type="submit" id="submit-button" name="action" value="confirm_payment"
+                                class="btn btn-success btn-lg mt-3">Confirm Payment</button>
+                        <button type="submit" id="cancel-button" name="action" value="cancel_booking" class="btn btn-secondary btn-lg mt-3"
+                            formnovalidate
+                            onclick="return confirm('Are you sure you want to cancel this booking? This action cannot be undone.');">
                             Cancel Booking
                         </button>
                     </form>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card booking-summary-card shadow-sm sticky-top">
-                <div class="card-header d-flex justify-content-between align-items-center bg-transparent border-bottom">
-                    <h5 class="mb-0">Your Booking</h5>
-                </div>
-                <div class="card-body">
-                    <p class="mb-2 text-muted"><strong>{{ booking.trip.date|date:"D, d M" }}</strong></p>
-
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="fa-solid fa-location-dot me-2 text-muted"></i>
-                        <div>
-                            <p class="mb-0 fw-bold">{{ booking.trip.origin }}</p>
-                            <p class="mb-0 text-muted small">{{ booking.trip.departure_time|time:"H:i" }}</p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="fa-solid fa-flag-checkered me-2 text-muted"></i>
-                        <div>
-                            <p class="mb-0 fw-bold">{{ booking.trip.destination }}</p>
-                            <p class="mb-0 text-muted small">{{ booking.trip.arrival_time|time:"H:i" }}</p>
-                        </div>
-                    </div>
-
-                    <hr>
-
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-bold">Total (incl. VAT)</span>
-                        <span class="fw-bold fs-5">Php{{ amount_due|floatformat:2|intcomma }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<div id="loading-overlay">
-    <h1 class="text-light logo-font loading-spinner">
-        <span class="icon">
-            <i class="fas fa-3x fa-sync-alt fa-spin"></i>
-        </span>
-    </h1>
-</div>
 
 <!-- Booking Policy Modal -->
 <div class="modal fade" id="bookingTermsModal" tabindex="-1" role="dialog" aria-labelledby="bookingTermsModalLabel" aria-hidden="true">
