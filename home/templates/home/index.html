@@ -1,17 +1,44 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block page_header %}
-<div class="container header-container">
-    <div class="row">
-        <div class="col"></div>
-    </div>
-</div>
-{% endblock %}
+{% block extra_title %} Home {% endblock %}
 
 {% block content %}
 <article class="container text-white mt-3">
         {% include 'trips/trips_search_form.html' %}
+</article>
+<!-- About content -->
+<article class="container mt-4 mb-5">
+    <div class="card shadow-sm mb-4 rounded-3">
+        <div class="card-body p-4">
+            <h2 class="card-title text-center text-primary mb-3 fw-bold">BKODA Seat Reservation</h2>
+            <p class="card-text lead">Welcome to BKODA Seat Reservation, your easy-to-use online platform for booking trips between Kabayan, Benguet, and Baguio City! Developed specifically for the BKODA (Benguet-Kabayan Operators and Drivers Association), our goal is to simplify your travel plans by allowing you to conveniently reserve seats from anywhere.</p>
+            <p class="card-text">Whether you're a regular commuter or planning a one-time trip, our application is designed to provide a seamless experience. You can quickly search for available routes and schedules, view real-time seat availability, and secure your booking with just a few clicks. For registered users, managing your existing reservations, including modifications, is straightforward and hassle-free.</p>
+        </div>
+    </div>
+    <div class="card shadow-sm mb-4 rounded-3">
+        <div class="card-body p-4">
+            <h3 class="card-title text-center text-primary mb-3 fw-bold">Why Choose BKODA Seat Reservation?</h3>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item border-0 px-0 py-2"><strong><i class="fas fa-check-circle text-success me-2"></i> Effortless Booking:</strong> Find and reserve seats for your desired trips with ease.</li>
+                <li class="list-group-item border-0 px-0 py-2"><strong><i class="fas fa-check-circle text-success me-2"></i> Convenience:</strong> Book anytime, anywhere, without needing to visit a physical terminal.</li>
+                <li class="list-group-item border-0 px-0 py-2"><strong><i class="fas fa-check-circle text-success me-2"></i> Trip Management:</strong> Registered users can view and manage their reservations directly through the app.</li>
+                <li class="list-group-item border-0 px-0 py-2"><strong><i class="fas fa-check-circle text-success me-2"></i> Local Focus:</strong> Tailored to the travel needs of the Kabayan, Benguet, and Baguio City routes, understanding the community's specific requirements.</li>
+            </ul>
+        </div>
+    </div>
+    <div class="card shadow-sm mb-4 rounded-3">
+        <div class="card-body p-4">
+            <h3 class="card-title text-center text-primary mb-3 fw-bold">Our Vision</h3>
+            <p class="card-text">We understand that for many in our community, cash payments are the norm. While our current focus is on providing a robust and reliable reservation system, we are actively exploring future enhancements, including diverse payment options, to further improve your experience.</p>
+        </div>
+    </div>
+    <div class="card shadow-sm mb-4 rounded-3">
+        <div class="card-body text-center p-4">
+            <p class="card-text lead mb-3">Feel free to explore the app and make your next trip reservation today!</p>
+            <a href="{% url 'trips' %}?origin=Kabayan&destination=Baguio&departure_date={{ current_date|date:'Y-m-d' }}&num_travelers=1" class="btn btn-primary btn-lg rounded-pill px-4">Browse Trips Now</a>
+        </div>
+    </div>
 </article>
 {% endblock %}
 
