@@ -77,6 +77,46 @@ def find_trip(request):
         except (ValueError, TypeError):
             pass
 
+    today_date = timezone.localdate()
+    disable_previous_day = (requested_date <= today_date)
+
+    available_dates = []
+    if requested_origin and requested_destination and number_of_passengers_for_query:
+        now_aware = timezone.now()
+        today_trips_dates = Trip.objects.filter(
+            origin__icontains=requested_origin,
+            destination__icontains=requested_destination,
+            date=today_date,
+            available_seats__gte=number_of_passengers_for_query
+        )
+        today_available_trips = [
+            trip for trip in today_trips_dates
+            if timezone.make_aware(datetime.combine(trip.date, trip.departure_time)) >= now_aware
+        ]
+        if today_available_trips:
+            available_dates.append(today_date)
+
+        future_trips_dates_queryset = Trip.objects.filter(
+            origin__icontains=requested_origin,
+            destination__icontains=requested_destination,
+            date__gt=today_date,
+            available_seats__gte=number_of_passengers_for_query
+        ).values_list('date', flat=True).distinct().order_by('date')
+
+        for d in future_trips_dates_queryset:
+            available_dates.append(d)
+
+    available_dates_str = [d.strftime('%Y-%m-%d') for d in sorted(list(set(available_dates)))]
+
+    last_available_date = None
+    if available_dates:
+        last_available_date = max(available_dates)
+
+    disable_next_day = False
+    next_day_date = requested_date + timedelta(days=1)
+    if next_day_date not in available_dates:
+        disable_next_day = True
+
     context = {
         'form': form,
         'origin': requested_origin,
@@ -86,7 +126,11 @@ def find_trip(request):
         'next_day': requested_date + timedelta(days=1),
         'number_of_passengers': int(number_of_passengers_for_query),
         'no_trips_message_type': None,
-    } 
+        'disable_previous_day': disable_previous_day,
+        'disable_next_day': disable_next_day,
+        'available_dates': available_dates_str,
+        'last_available_date': last_available_date.strftime('%Y-%m-%d') if last_available_date else None,
+    }
 
     if is_rescheduling_mode:
         context['is_rescheduling_mode'] = True
@@ -129,15 +173,7 @@ def find_trip(request):
                 final_trip_list = sorted(trip_list, key=lambda trip: trip.departure_time)
 
                 if len(final_trip_list) > 0:
-                    context.update({
-                        'trip_list': final_trip_list,
-                        'origin': requested_origin,
-                        'destination': requested_destination,
-                        'current_day': requested_date,
-                        'previous_day': requested_date - timedelta(days=1),
-                        'next_day': requested_date + timedelta(days=1),
-                        'number_of_passengers': int(number_of_passengers_for_query)
-                    })
+                    context['trip_list'] = final_trip_list
                     return render(request, 'trips/trips.html', context)
 
                 elif requested_date < now_aware.date():

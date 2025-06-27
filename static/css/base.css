@@ -26,6 +26,16 @@ html, body {
 	z-index: 0;
 }
 
+/* Button */
+.btn.disabled,
+.btn:disabled {
+    background-color: #a0c4ff !important;
+    border-color: #a0c4ff !important;
+    color: #ffffff !important;
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
 .btn-outline-white {
     background: transparent;
     color: white !important;

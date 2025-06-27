@@ -25,16 +25,16 @@
     {% endif %}
     <div class="mb-3 d-flex flex-column flex-sm-row justify-content-sm-around">
         <div class="col-md-4 mb-2 mb-sm-0 text-center">
-            <a href="{% url 'trips' %}?departure_date={{ previous_day|date:'Y-m-d' }}&origin={{ origin }}&destination={{ destination }}&num_travelers={{ number_of_passengers }}{% if is_rescheduling_mode %}&reschedule_booking_id={{ original_booking_id }}{% endif %}"
-                class="btn btn-sm btn-primary w-100 d-flex align-items-center justify-content-center py-2"
+            <a href="{% if disable_previous_day %}#{% else %}{% url 'trips' %}?departure_date={{ previous_day|date:'Y-m-d' }}&origin={{ origin }}&destination={{ destination }}&num_travelers={{ number_of_passengers }}{% if is_rescheduling_mode %}&reschedule_booking_id={{ original_booking_id }}{% endif %}{% endif %}"
+                class="btn btn-sm btn-primary w-100 d-flex align-items-center justify-content-center py-2 {% if disable_previous_day %}disabled{% endif %}"
                 aria-label="Previous Day" title="Previous Day">Previous Day</a>
         </div>
         <div class="col-md-4 mb-2 mb-sm-0 text-center">
             <span class="btn btn-sm btn-light w-100 d-flex align-items-center justify-content-center py-2">{{ current_day|date:"F d, Y" }}</span>
         </div>
         <div class="col-md-4 mb-2 mb-sm-0 text-center">
-            <a href="{% url 'trips' %}?departure_date={{ next_day|date:'Y-m-d' }}&origin={{ origin }}&destination={{ destination }}&num_travelers={{ number_of_passengers }}{% if is_rescheduling_mode %}&reschedule_booking_id={{ original_booking_id }}{% endif %}"
-                class="btn btn-sm btn-primary w-100 d-flex align-items-center justify-content-center py-2"
+            <a href="{% if disable_next_day %}#{% else %}{% url 'trips' %}?departure_date={{ next_day|date:'Y-m-d' }}&origin={{ origin }}&destination={{ destination }}&num_travelers={{ number_of_passengers }}{% if is_rescheduling_mode %}&reschedule_booking_id={{ original_booking_id }}{% endif %}{% endif %}"
+                class="btn btn-sm btn-primary w-100 d-flex align-items-center justify-content-center py-2 {% if disable_next_day %}disabled{% endif %}"
                 aria-label="Next Day" title="Next Day">Next Day</a>
         </div>
     </div>
@@ -99,11 +99,17 @@
             {% endfor %}
         {% else %}
             <div class="trip-result-card no-trips d-flex flex-column bg-white mb-3 p-3">
-                <div class="d-flex justify-content-center mb-2">
+                <div class="mb-2">
                 {% if no_trips_message_type == 'no_trips_today' %}
                     <p class="text-center text-danger"><strong>** Sorry, there are no more trips for today. **</strong></p>
                 {% elif no_trips_message_type == 'no_trips_future' %}
                     <p class="text-center text-danger"><strong>** Sorry, there are no trips available yet. **</p>
+                    <p class="text-center">** As of this time, there are trips from {{ origin }} to {{ destination }}
+                        only until {{ last_available_date }} **
+                    </p>
+                    <p class="text-center">** For assisstance please email us at <a href="bkodatravels@gmail.com">bkodatravels@gmail.com</a>
+                        or call us at <a href="tel:+639161234567">+63916 123 4567</a>.
+                    </p>
                 {% else %}
                     <p class="text-center text-danger"><strong>** Selected date is in the past. **</p>
                 {% endif %}
