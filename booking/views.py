@@ -318,7 +318,7 @@ def process_payment(request, booking_id):
 
         billing_form_is_valid = billing_form.is_valid()
 
-        if selected_payment_method == 'card':
+        if selected_payment_method == 'CARD':
             if not payment_intent_id:
                 messages.error(request, "Card payment selected, but Payment Intent ID was not received. Please try again.")
                 booking.payment_status = 'FAILED'
@@ -337,7 +337,7 @@ def process_payment(request, booking_id):
 
                         if stripe_intent.payment_method:
                             pm = stripe.PaymentMethod.retrieve(stripe_intent.payment_method)
-                            if pm.type == 'card':
+                            if pm.type == 'CARD':
                                 booking.card_brand = pm.card.brand
                                 booking.card_last4 = pm.card.last4
                             booking.stripe_payment_method_id = pm.id
