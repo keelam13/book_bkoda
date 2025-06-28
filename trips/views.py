@@ -178,7 +178,6 @@ def find_trip(request):
 
                 elif requested_date < now_aware.date():
                     context['no_trips_message_type'] = 'date_in_the_past'
-                    messages.error(request, "Sorry, the date you requested is in the past.")
                 elif requested_date == now_aware.date():
                     context['no_trips_message_type'] = 'no_trips_today'
                 else:

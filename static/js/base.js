@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     /**
      * Hides all alert messages on the page after a 5 second delay.
      */
@@ -8,10 +8,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }, 15000);
 
-    /** Back to Top Button Logic **/
+    /** Back to Top Button Logic */
     const backToTopButton = document.getElementById('back-to-top');
     if (backToTopButton) {
-        backToTopButton.addEventListener('click', function(e) {
+        backToTopButton.addEventListener('click', function (e) {
             e.preventDefault();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });

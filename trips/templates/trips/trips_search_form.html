@@ -1,5 +1,3 @@
-{% load static %}
-
 <section class="container text-white form-group search-form-section">
     <h1 class="cta">Book your trip now!</h1>
     <div class="col d-flex justify-content-center">
@@ -72,39 +70,35 @@
 </section>
 
 <script>
-    document.addEventListener('DOMContentLoaded', (event) => {
-        const dateInputId = "{{ form.departure_date.id_for_label }}";
-        const dateInput = document.getElementById(dateInputId);
+    $(document).ready(function () {
+        const dateInput = $('#' + "{{ form.departure_date.id_for_label }}");
 
-        if (dateInput) {
+        // --- Date Input Defaulting Logic ---
+        if (dateInput.length) {
             const today = new Date();
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
             const formattedDate = `${year}-${month}-${day}`;
 
-            // Only set if the input is empty or the value is not a valid date
-            if (!dateInput.value || isNaN(new Date(dateInput.value))) {
-                 dateInput.value = formattedDate;
+            if (!dateInput.val() || isNaN(new Date(dateInput.val()))) {
+                dateInput.val(formattedDate);
             }
-        } else {
-            console.error("Date input element not found with ID:", dateInputId);
-        }
+        };
 
-        const swapBtn = document.getElementById('swapLocationsBtn');
-        const originInput = document.getElementById("{{ form.origin.id_for_label }}");
-        const destinationInput = document.getElementById("{{ form.destination.id_for_label }}");
+        // --- Swap Locations Button Logic ---
+        const swapBtn = $('#swapLocationsBtn');
+        const originInput = $('#' + "{{ form.origin.id_for_label }}");
+        const destinationInput = $('#' + "{{ form.destination.id_for_label }}");
 
-        if (swapBtn && originInput && destinationInput) {
-            swapBtn.addEventListener('click', () => {
-                const currentOrigin = originInput.value;
-                const currentDestination = destinationInput.value;
+        if (swapBtn.length && originInput.length && destinationInput.length) {
+            swapBtn.on('click', () => {
+                const currentOrigin = originInput.val();
+                const currentDestination = destinationInput.val();
 
-                originInput.value = currentDestination;
-                destinationInput.value = currentOrigin;
+                originInput.val(currentDestination);
+                destinationInput.val(currentOrigin);
             });
-        } else {
-            console.error("One or more elements for swap functionality not found.");
         }
     });
 </script>
