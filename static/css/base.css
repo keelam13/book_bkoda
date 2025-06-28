@@ -356,6 +356,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     font-size: 1.75rem;
 }
 
+.manage-section-title,
 .profile-section-title {
     color: #007bff;
     margin-bottom: 1.5rem;
