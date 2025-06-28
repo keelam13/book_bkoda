@@ -434,11 +434,14 @@ def booking_success(request, booking_id):
     if booking.booking_date:
         booking_expiry_date = booking.booking_date + timedelta(hours=24)
 
+    user_is_authenticated = request.user.is_authenticated
+
     context = {
         'booking': booking,
         'trip': booking.trip,
         'passengers': passengers,
         'booking_expiry_date': booking_expiry_date,
+        'user_is_authenticated': user_is_authenticated,
     }
 
     if booking.payment_status == 'PAID' and booking.status == 'CONFIRMED':
