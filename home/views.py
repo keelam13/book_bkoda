@@ -54,5 +54,6 @@ def index(request):
         'selected_origin': selected_origin,
         'selected_destination': selected_destination,
         'selected_travelers': selected_travelers,
+        'is_home_page': True,
     }
     return render(request, 'home/index.html', context)

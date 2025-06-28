@@ -58,7 +58,13 @@
 
             <div class="row mt-3 justify-content-center">
                 <div class="col-auto">
-                    <button type="submit" class="btn btn-primary">Let's Go!</button>
+                    <button type="submit" class="btn btn-primary">
+                        {% if is_trips_page %}
+                            Update Search
+                        {% else %}
+                            Let's Go!
+                        {% endif %}
+                    </button>
                 </div>
             </div>
             

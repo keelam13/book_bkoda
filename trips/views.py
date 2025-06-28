@@ -130,6 +130,7 @@ def find_trip(request):
         'disable_next_day': disable_next_day,
         'available_dates': available_dates_str,
         'last_available_date': last_available_date.strftime('%Y-%m-%d') if last_available_date else None,
+        'is_trips_page': True,
     }
 
     if is_rescheduling_mode:
