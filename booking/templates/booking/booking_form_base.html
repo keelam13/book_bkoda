@@ -11,14 +11,14 @@
 <div class="container my-0 booking-page-container">
     <div class="row">
         <div class="col-12 mb-3">
-            <a href="javascript:history.back()" class="back-link">
-                <i class="fa-solid fa-angle-left m-0 align-middle"></i>
-                <span class="align-middle text-white">Back</span>
+            <a href="javascript:history.back()">
+                <i class="fa-solid fa-angle-left m-0 align-middle btn-back-angle">Back</i>
             </a>
         </div>
         <div class="col-md-8">
             <div class="card booking-section-card mb-4">
                 <div class="card-body">
+                    <h3 class="booking-section-title">Booking Confirmation</h3>
                     {% block booking_form_content %}
                     {% endblock %}
                </div>

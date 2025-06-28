@@ -3,127 +3,119 @@
 {% load humanize %}
 
 {% block booking_form_content %}
-                    <h3 class="section-title">Booking Confirmation</h3>
-                    <div class="discount-explanation mb-4">
-                        <p class="mb-1"><strong>Special Discounts:</strong> A 20% discount is available for Senior Citizens (60 y/o and
-                            above) and Students.</p>
-                        <p class="mb-0">The **full fare is paid initially**, and the discount will be **refunded on-site** by the bus
-                            attendant upon presentation of a valid Senior Citizen ID or School ID.</p>
-                    </div>
-                    <hr>
-                    <form action="{% url 'process_payment' booking_id=booking.id %}" method="POST" id="payment-form">
-                        {% csrf_token %}
-                        <h4 class="section-title mt-5 mb-4"><i class="bi bi-3-circle-fill"></i> Payment</h4>
-                        <div class="card booking-section-card mb-4">
-                            <div class="card-body">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="radio" name="payment_method" id="creditCard" value="CARD">
-                                    <label class="form-check-label" for="creditCard">
-                                        Debit/Credit Card
-                                    </label>
-                                </div>
-                                <div id="cardPaymentDetails" class="payment-details-section card p-3 mb-3 border-info">
-                                    <h6 class="mb-3">Enter Card Details</h6>
-                                    <div class="mb-3" id="card-element"></div>
-                                    <div class="mb-3 text-danger" id="card-errors" role="alert"></div>
-                                    <h4 class="section-title mt-5 mb-4"><i class="bi bi-person-fill"></i> Billing Details</h4>
-                                    <div class="card booking-section-card mb-4">
-                                        <div class="card-body">
-                                            <div id="manual-billing-address-fields">
-                                                <p class="text-muted small">Please enter the billing address associated with your card.</p>
-                                                <fieldset class="rounded px-3 mb-2">
-                                                    {{ billing_form.billing_name | as_crispy_field }}
-                                                    {{ billing_form.billing_phone | as_crispy_field }}
-                                                    {{ billing_form.billing_email | as_crispy_field }}
-                                                    {{ billing_form.billing_street_address1 | as_crispy_field }}
-                                                    {{ billing_form.billing_street_address2 | as_crispy_field }}
-                                                    {{ billing_form.billing_city | as_crispy_field }}
-                                                    {{ billing_form.billing_postcode | as_crispy_field }}
-                                                    {{ billing_form.billing_country | as_crispy_field }}
-                                                </fieldset>
-                                                {% if billing_form.save_info %}
-                                                <div class="form-check mt-4 mb-4">
-                                                    {{ billing_form.save_info }}
-                                                    <label class="form-check-label" for="{{ billing_form.save_info.id_for_label }}">
-                                                        {{ billing_form.save_info.label }}
-                                                    </label>
-                                                </div>
-                                                {% else %}
-                                                <div class="form-check mt-2 p-0">
-                                                    <label class="form-check-label" for="id-save-info">
-                                                        <a class="text-info" href="{% url 'account_signup' %}">Create an account</a> or
-                                                        <a class="text-info" href="{% url 'account_login' %}">login</a> to save this information
-                                                    </label>
-                                                </div>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                    
-                                {% if time_until_departure.total_seconds > 0 and time_until_departure.total_seconds < offline_payment_cutoff_seconds %}
-                                <div class="text-danger d-block mt-1" role="alert">
-                                    <p class="mb-1">Offline payment is not available for trips departing within **{{ offline_payment_cutoff_hours }} hours**.</p>
-                                    <p class="mb-1">Please select **Card** to complete your booking online now.</p>
-                                    <p class="mb-0 small text-muted">Alternatively, you may proceed directly to the bus terminal to secure
-                                        your seat(s) or inquire as a chance passenger.</p>
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                {% else %}
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="radio" name="payment_method" id="cashPayment" value="CASH"> <label
-                                        class="form-check-label" for="cashPayment">
-                                        Cash (Payment Centers)
-                                    </label>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="radio" name="payment_method" id="gcashPayment" value="GCASH"> <label
-                                        class="form-check-label" for="gcashPayment">
-                                        Money Wallet (GCash)
-                                    </label>
-                                </div>
-                                <div id="otherPaymentDetails" class="payment-details-section card p-3 mb-3 border-info">
-                                    <h6 class="mb-3">Payment Instructions:</h6>
-                                    <p class="small text-muted">
-                                        If you select this option, your booking will be held for **24 hours**. You must complete
-                                        your payment within this period via our designated payment centers or GCash to confirm
-                                        your seats. Details will be provided upon successful booking submission.
-                                    </p>
-                                    <p class="small text-danger">
-                                        **Your booking will be automatically cancelled if payment is not received within 24
-                                        hours.**
-                                    </p>
-                                </div>
-                                {% endif %}
-                    
-                                <div class="form-check mt-4">
-                                    <input class="form-check-input" type="checkbox" id="termsCheck" required>
-                                    <label class="form-check-label" for="termsCheck">
-                                        I declare to have read and agree to the <a href="#" data-toggle="modal"
-                                            data-target="#privacyPolicyModal">Privacy Policy</a> and <a href="#" data-toggle="modal"
-                                            data-target="#bookingTermsModal">T&C of Booking</a> and <a href="#" data-toggle="modal"
-                                            data-target="#carriageTermsModal">T&C of Carriage</a>.
-                                    </label>
-                                </div>
+<div class="alert alert-info alert-fix-display discount-explanation mb-4">
+    <p class="mb-1"><strong>Special Discounts:</strong> A 20% discount is available for Senior Citizens (60 y/o and above) and Students.</p>
+    <p class="mb-0">The **full fare is paid initially**, and the discount will be **refunded on-site** by the bus attendant upon presentation of a valid Senior Citizen ID or School ID.</p>
+</div>
+<hr>
+<form action="{% url 'process_payment' booking_id=booking.id %}" method="POST" id="payment-form">
+    {% csrf_token %}
+    <h4 class="section-title mb-4"><i class="bi bi-3-circle-fill"></i> Payment</h4>
+    <div class="card booking-section-card mb-4">
+        <div class="card-body">
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="radio" name="payment_method" id="creditCard" value="CARD">
+                <label class="form-check-label" for="creditCard">Debit/Credit Card</label>
+            </div>
+            <div id="cardPaymentDetails" class="payment-details-section card p-3 mb-3 border-info">
+                <h6 class="mb-3">Enter Card Details</h6>
+                <div class="mb-3" id="card-element"></div>
+                <div class="mb-3 text-danger" id="card-errors" role="alert"></div>
+                <h4 class="section-title mt-5 mb-4"><i class="bi bi-person-fill"></i> Billing Details</h4>
+                <div class="card booking-section-card mb-4">
+                    <div class="card-body">
+                        <div id="manual-billing-address-fields">
+                            <p class="text-muted small">Please enter the billing address associated with your card.</p>
+                            <fieldset class="rounded px-3 mb-2">
+                                {{ billing_form.billing_name | as_crispy_field }}
+                                {{ billing_form.billing_phone | as_crispy_field }}
+                                {{ billing_form.billing_email | as_crispy_field }}
+                                {{ billing_form.billing_street_address1 | as_crispy_field }}
+                                {{ billing_form.billing_street_address2 | as_crispy_field }}
+                                {{ billing_form.billing_city | as_crispy_field }}
+                                {{ billing_form.billing_postcode | as_crispy_field }}
+                                {{ billing_form.billing_country | as_crispy_field }}
+                            </fieldset>
+                            {% if billing_form.save_info %}
+                            <div class="form-check mt-4 mb-4">
+                                {{ billing_form.save_info }}
+                                <label class="form-check-label" for="{{ billing_form.save_info.id_for_label }}">
+                                    {{ billing_form.save_info.label }}
+                                </label>
                             </div>
+                            {% else %}
+                            <div class="form-check mt-2 p-0">
+                                <label class="form-check-label" for="id-save-info">
+                                    <a class="text-info" href="{% url 'account_signup' %}">Create an account</a> or
+                                    <a class="text-info" href="{% url 'account_login' %}">login</a> to save this information.
+                                </label>
+                            </div>
+                            {% endif %}
                         </div>
-                        
-                        <!-- Hidden inputs for Stripe Payment -->
-                        <input type="hidden" name="selected_payment_method_hidden" id="selected-payment-method-hidden" value="card">
-                        <input type="hidden" id="firstPassengerEmail" value="{{ first_passenger_email }}">
-                        <input type="hidden" id="firstPassengerContactNumber" value="{{ first_passenger_contact_number }}">
-                        <input type="hidden" name="payment_intent_id" id="payment_intent_id">
-                        
-                        <button type="submit" id="submit-button" name="action" value="confirm_payment"
-                                class="btn btn-success btn-lg mt-3">Confirm Payment</button>
-                        <button type="submit" id="cancel-button" name="action" value="cancel_booking" class="btn btn-secondary btn-lg mt-3"
-                            formnovalidate
-                            onclick="return confirm('Are you sure you want to cancel this booking? This action cannot be undone.');">
-                            Cancel Booking
-                        </button>
-                    </form>
+                    </div>
+                </div>
+            </div>
+            {% if time_until_departure.total_seconds > 0 and time_until_departure.total_seconds < offline_payment_cutoff_seconds %}
+            <div class="text-danger d-block mt-1" role="alert">
+                <p class="mb-1">Offline payment is not available for trips departing within **{{ offline_payment_cutoff_hours }} hours**.</p>
+                <p class="mb-1">Please select **Card** to complete your booking online now.</p>
+                <p class="mb-0 small text-muted">Alternatively, you may proceed directly to the bus terminal to secure your seat(s) or inquire as a chance passenger.</p>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% else %}
+            <div class="form-check mb-3">
+            <input class="form-check-input" type="radio" name="payment_method" id="cashPayment" value="CASH">
+            <label class="form-check-label" for="cashPayment">
+                Cash (Payment Centers)
+            </label>
+            </div>
+            <div class="form-check mb-3">
+            <input class="form-check-input" type="radio" name="payment_method" id="gcashPayment" value="GCASH">
+            <label class="form-check-label" for="gcashPayment">
+                Money Wallet (GCash)
+            </label>
+            </div>
+            <div id="otherPaymentDetails" class="payment-details-section card p-3 mb-3 border-info">
+            <h6 class="mb-3">Payment Instructions:</h6>
+            <p class="small text-muted">
+                If you select this option, your booking will be held for **24 hours**. You must complete
+                your payment within this period via our designated payment centers or GCash to confirm
+                your seats. Details will be provided upon successful booking submission.
+            </p>
+            <p class="small text-danger">
+                **Your booking will be automatically cancelled if payment is not received within 24
+                hours.**
+            </p>
+            </div>
+            {% endif %}
+            <div class="form-check mt-4">
+            <input class="form-check-input" type="checkbox" id="termsCheck" required>
+            <label class="form-check-label" for="termsCheck">
+                I declare to have read and agree to the <a href="#" data-toggle="modal"
+                    data-target="#privacyPolicyModal">Privacy Policy</a> and <a href="#" data-toggle="modal"
+                    data-target="#bookingTermsModal">T&C of Booking</a> and <a href="#" data-toggle="modal"
+                    data-target="#carriageTermsModal">T&C of Carriage</a>.
+            </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden inputs for Stripe Payment -->
+    <input type="hidden" name="selected_payment_method_hidden" id="selected-payment-method-hidden" value="card">
+    <input type="hidden" id="firstPassengerEmail" value="{{ first_passenger_email }}">
+    <input type="hidden" id="firstPassengerContactNumber" value="{{ first_passenger_contact_number }}">
+    <input type="hidden" name="payment_intent_id" id="payment_intent_id">
+
+    <button type="submit" id="submit-button" name="action" value="confirm_payment"
+        class="btn btn-success btn-lg mt-3">Confirm Payment</button>
+    <button type="submit" id="cancel-button" name="action" value="cancel_booking" class="btn btn-secondary btn-lg mt-3"
+        formnovalidate
+        onclick="return confirm('Are you sure you want to cancel this booking? This action cannot be undone.');">
+        Cancel Booking
+    </button>
+</form>
 
 <!-- Booking Policy Modal -->
 <div class="modal fade" id="bookingTermsModal" tabindex="-1" role="dialog" aria-labelledby="bookingTermsModalLabel" aria-hidden="true">

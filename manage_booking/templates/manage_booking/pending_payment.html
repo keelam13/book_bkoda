@@ -24,7 +24,7 @@
                 <p class="text-muted mb-1"><strong>Total Price:</strong> Php{{ booking.total_price|floatformat:2 }}</p>
             </div>
             <div class="mt-4">
-                <a href="{% url 'manage_booking:booking_detail' booking.id %}" class="btn btn-primary">Manage Booking</a>
+                <a href="{% url 'manage_booking:booking_detail' booking.id %}?next={{ request.path|urlencode }}" class="btn btn-primary">Manage Booking</a>
             </div>
         </li>
         {% endfor %} 

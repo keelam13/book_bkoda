@@ -18,7 +18,7 @@
 
 <article class="container trips-display mt-4">
      {% if is_rescheduling_mode %}
-        <div class="alert alert-info text-center" role="alert">
+        <div class="alert alert-info alert-fix-display text-center" role="alert">
             Rescheduling Booking: <strong>{{ original_booking.booking_reference }}</strong> (Original Trip: {{ original_booking.trip.origin }} to {{ original_booking.trip.destination }} on {{ original_booking.trip.date|date:"F d, Y" }})
             <br>Select a new trip below.
         </div>

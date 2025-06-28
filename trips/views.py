@@ -21,7 +21,6 @@ def find_trip(request):
             original_booking = Booking.objects.get(pk=reschedule_booking_id, user=request.user)
             is_rescheduling_mode = True
             fixed_num_travelers = original_booking.number_of_passengers
-            messages.info(request, f"You are rescheduling booking {original_booking.booking_reference}. Please select a new trip.")
         except Booking.DoesNotExist:
             messages.error(request, "Invalid booking ID for rescheduling.")
             reschedule_booking_id = None

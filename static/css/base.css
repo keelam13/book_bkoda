@@ -293,9 +293,33 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     right: 1.5rem;
     z-index: 1050;
 }
+
 #back-to-top {
     width: 48px;
     height: 48px;
+}
+
+.btn-close {
+    position: absolute;
+    color: #fff;
+    top: -15px;
+    right: -15px;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    margin-left: 2rem;
+}
+
+.btn-close:hover {
+    color: #007bff;
+}
+
+.btn-back-angle {
+    font-size: medium;
+}
+
+.btn-back-angle:hover {
+    color: #007bff !important;
 }
 
 /* Account */
@@ -356,6 +380,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     font-size: 1.75rem;
 }
 
+.booking-section-title,
 .manage-section-title,
 .profile-section-title {
     color: #007bff;

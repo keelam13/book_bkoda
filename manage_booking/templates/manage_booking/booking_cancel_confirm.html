@@ -3,8 +3,8 @@
 {% load booking_filters %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Confirm Cancellation</h2>
+<div class="container cancel-confirm">
+    <h2 class="text-center d-none">Confirm Cancellation</h2>
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-danger text-white">
             <h4 class="mb-0">Cancelling Booking Reference: {{ booking.booking_reference }}</h4>
@@ -12,12 +12,12 @@
         <div class="card-body">
             <p>You are about to cancel your booking for the trip to <strong>{{ booking.trip.destination }}</strong> on <strong>{{ booking.trip.date|date:"F d, Y" }}</strong> at <strong>{{ booking.trip.departure_time|time:"H:i" }}</strong>.</p>
              {% if refund_amount > 0 %}
-                <div class="alert alert-success">
+                <div class="alert alert-success alert-fix-display">
                     <p>Upon cancellation, a refund of <strong>Php {{ refund_amount }}</strong> will be processed.</p>
                     <p>This is a <strong>{{ refund_type_message }}</strong> refund based on our policy.</p>
                 </div>
             {% else %}
-                <div class="alert alert-warning">
+                <div class="alert alert-warning alert-fix-display">
                     <p>Upon cancellation, <strong>no refund will be issued</strong> as per our policy due to the proximity to departure time.</p>
                     <p>This is a <strong>{{ refund_type_message }}</strong> refund scenario.</p>
                 </div>
@@ -25,7 +25,7 @@
             <p>Number of Passengers: <strong>{{ booking.number_of_passengers }}</strong></p>
             <p>Total Price Paid: <strong>Php{{ booking.total_price }}</strong></p>
             {% if booking.refund_status != 'NONE' and booking.refund_status != 'COMPLETED' %}
-                <div class="alert alert-info">
+                <div class="alert alert-info alert-fix-display">
                     <p><strong>Note:</strong> This booking currently has a pending refund status of {{ booking.refund_status }}.</p>
                 </div>
             {% endif %}
@@ -55,7 +55,7 @@
                     <a href="{% url 'manage_booking:booking_detail' booking.id %}" class="btn btn-secondary btn-lg">Go Back</a>
                 </form>
             {% else %}
-                <div class="alert alert-info text-center" role="alert">
+                <div class="alert alert-info alert-fix-display text-center" role="alert">
                     This booking cannot be cancelled at this time based on its current status or payment status.
                 </div>
                 <div class="text-center">

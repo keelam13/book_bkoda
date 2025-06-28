@@ -183,6 +183,9 @@ def booking_detail(request, booking_id):
         user=request.user
     )
 
+    default_next_url = reverse('manage_booking:confirmed_bookings')
+    return_url = request.GET.get('next', default_next_url)
+
     policy = BookingPolicy.objects.first()
     if not policy:
             messages.error(request, "No booking policy found. Please configure a policy in the admin.")
@@ -258,6 +261,7 @@ def booking_detail(request, booking_id):
         'rescheduling_charge_applied': rescheduling_charge_applied,
         'time_until_departure_hours': time_until_departure_hours,
         'policy': policy,
+        'return_url': return_url,
     }
     return render(request, 'manage_booking/booking_detail.html', context)
 
@@ -500,7 +504,7 @@ def booking_reschedule_select_trip(request, booking_id):
                                       f'&departure_date={original_booking.trip.date.strftime("%Y-%m-%d")}' \
                                       f'&num_travelers={original_booking.number_of_passengers}'
 
-    messages.info(request, "Please select a new trip from the list below.")
+    # messages.info(request, "Please select a new trip from the list below.")
     return redirect(redirect_url)
 
 
@@ -583,7 +587,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
             'rescheduling_charge': financials['rescheduling_charge'],
             'amount_to_pay': amount_to_pay,
             'amount_to_refund': amount_to_refund,
-            # 'number_of_passengers': num_passengers,
+            'number_of_passengers': num_passengers,
             'client_secret': client_secret,
             'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
         }

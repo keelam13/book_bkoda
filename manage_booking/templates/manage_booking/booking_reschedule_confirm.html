@@ -10,18 +10,14 @@
 {% endblock %}
 
 {% block content %}
-<div class="container my-5 booking-page-container">
+<div class="container booking-page-container">
     <div class="row">
-        <div class="col-12 mb-3">
-            <a href="javascript:history.back()" class="back-link">
-                <i class="fas fa-arrow-left me-2"></i> Back</a>
-        </div>
         <div class="col-md-8">
             <div class="card booking-section-card mb-4">
                 <div class="card-body">
                     <form method="post" id="booking-form" action="{% url 'manage_booking:booking_reschedule_confirm' booking_id=original_booking.id new_trip_id=new_trip.trip_id %}">
                         {% csrf_token %}
-                        <h4 class="section-title mt-5 mb-4"><i class="bi bi-arrow-repeat"></i> Confirm Reschedule</h4>
+                        <h4 class="section-title mb-4"><i class="bi bi-arrow-repeat"></i> Confirm Reschedule</h4>
 
                         <p class="lead text-center mb-4">Please review the changes and confirm your reschedule.</p>
 
@@ -95,7 +91,7 @@
                         <hr>
 
                         {% if amount_to_pay > 0 %}
-                            <div class="alert alert-warning text-center">
+                            <div class="alert alert-warning alert-fix-display text-center">
                                 An additional payment of <strong>Php{{ amount_to_pay|floatformat:2 }}</strong> is required to complete this reschedule.
                             </div>
                             <h4 class="section-title mt-5 mb-4"><i class="bi bi-3-circle-fill"></i> Payment</h4>
@@ -137,12 +133,12 @@
                                 </div>
                             </div>
                         {% elif amount_to_refund > 0 %}
-                            <div class="alert alert-success text-center">
+                            <div class="alert alert-success alert-fix-display text-center">
                                 You will receive a refund of <strong>Php{{ amount_to_refund|floatformat:2 }}</strong> for this reschedule.
                                 <p class="mt-2"><em>(Stripe refund processing will occur upon confirmation)</em></p>
                             </div>
                         {% else %}
-                            <div class="alert alert-info text-center">
+                            <div class="alert alert-info alert-fix-display text-center">
                                 No additional payment or refund is required for this reschedule.
                             </div>
                         {% endif %}
@@ -164,7 +160,7 @@
                                     Confirm Reschedule
                                 </button>
                             {% endif %}
-                            <a href="{% url 'manage_booking:booking_detail' original_booking.id %}" class="btn btn-secondary btn-lg mt-2">Cancel & Go Back</a>
+                            <a href="{% url 'manage_booking:booking_detail' original_booking.id %}" class="btn btn-secondary btn-lg">Cancel & Go Back</a>
                         </div>
                     </form>
                 </div>
