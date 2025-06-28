@@ -71,7 +71,7 @@ class BookingConfirmationForm(forms.ModelForm):
                 field_obj.widget.attrs['class'] = 'form-check-input'
                 continue
 
-            field_obj.widget.attrs['class'] = 'stripe-style-input'
+            field_obj.widget.attrs['class'] = 'passenger-details-form'
             field_obj.label = ''
 
             if field_name.startswith('passenger'):
@@ -162,6 +162,7 @@ class BillingDetailsForm(forms.Form):
     billing_country = CountryField().formfield(
         label="Country",
         required=True,
+        initial='PH',
         widget=CountrySelectWidget(attrs={'autocomplete': 'country'})
     )
 

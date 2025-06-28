@@ -1,4 +1,4 @@
-<section class="container text-white form-group search-form-section">
+<section class="container text-white form-group search-form">
     <h1 class="cta">Book your trip now!</h1>
     <div class="col d-flex justify-content-center">
         <form action="{% url 'trips' %}" method="GET" class="w-100">
@@ -56,7 +56,7 @@
                 </div>
             </div>
 
-            <div class="row mt-3 justify-content-center">
+            <div class="row my-3 justify-content-center">
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary">
                         {% if is_trips_page %}

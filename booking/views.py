@@ -65,6 +65,8 @@ def _get_payment_method_context(trip_or_booking):
 
 def _get_initial_billing_details(request, booking=None):
     """Helper to get initial data for BillingDetailsForm."""
+    initial_data = {}
+
     if request.user.is_authenticated:
         user_profile, created = UserProfile.objects.get_or_create(user=request.user)
         return {
@@ -84,6 +86,9 @@ def _get_initial_billing_details(request, booking=None):
             'billing_email': first_passenger.email,
             'billing_phone': first_passenger.contact_number,
         }
+    if 'billing_country' not in initial_data or not initial_data['billing_country']:
+        initial_data['billing_country'] = 'PH'
+
     return {}
 
 

@@ -103,12 +103,8 @@ a i {
     padding-top: .5rem;
 }
 
-.instructions-box {
- padding: 1rem;
-}
-
-.instructions-box,
-.form-group {
+.welcome-section,
+.search-form {
     background: rgba(0, 0, 0, 0.5);
     border-radius: 10px;
 }
@@ -133,7 +129,6 @@ article.trips-display{
 /* Forms */
 .form-group {
     z-index: 1;
-    padding: 1.5rem;
 }
 
 .username-request {
@@ -264,13 +259,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 }
 
-/* Tables */
-.table-group {
-    background: #fff;
-    color: black;
-    border-radius: 10px;
-}
-
 /* Alert */
 .alert-error {
     color: #842029;
@@ -278,12 +266,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     border-color: #f5c2c7;
 }
 
-/* Instructions */
-p.instruction-group{
-    font-style: italic;
-}
-
-
+/* Buttons */
 .btt-button {
     position: fixed;
     bottom: 1.5rem;
