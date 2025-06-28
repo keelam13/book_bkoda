@@ -31,7 +31,7 @@
                                         <div class="card-body">
                                             <div id="manual-billing-address-fields">
                                                 <p class="text-muted small">Please enter the billing address associated with your card.</p>
-                                                <fieldset class="rounded px-3 mb-5">
+                                                <fieldset class="rounded px-3 mb-2">
                                                     {{ billing_form.billing_name | as_crispy_field }}
                                                     {{ billing_form.billing_phone | as_crispy_field }}
                                                     {{ billing_form.billing_email | as_crispy_field }}
@@ -47,10 +47,13 @@
                                                     <label class="form-check-label" for="{{ billing_form.save_info.id_for_label }}">
                                                         {{ billing_form.save_info.label }}
                                                     </label>
-                                                    <small class="form-text text-muted">
-                                                        Tick this box to save the first passenger's contact details to your profile for
-                                                        future bookings.
-                                                    </small>
+                                                </div>
+                                                {% else %}
+                                                <div class="form-check mt-2 p-0">
+                                                    <label class="form-check-label" for="id-save-info">
+                                                        <a class="text-info" href="{% url 'account_signup' %}">Create an account</a> or
+                                                        <a class="text-info" href="{% url 'account_login' %}">login</a> to save this information
+                                                    </label>
                                                 </div>
                                                 {% endif %}
                                             </div>

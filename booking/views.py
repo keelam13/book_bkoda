@@ -276,7 +276,9 @@ def process_payment(request, booking_id):
             return redirect('manage_booking:booking_detail', booking_id=booking.id)
 
         # Initialize billing form for GET request
-        billing_form = BillingDetailsForm(initial=_get_initial_billing_details(request, booking))
+        billing_form = BillingDetailsForm(
+            initial=_get_initial_billing_details(request, booking),
+            request=request)
         if request.user.is_authenticated:
             user_profile, created = UserProfile.objects.get_or_create(user=request.user)
 
@@ -314,7 +316,7 @@ def process_payment(request, booking_id):
 
         selected_payment_method = request.POST.get('selected_payment_method_hidden')
         payment_intent_id = request.POST.get('payment_intent_id')
-        billing_form = BillingDetailsForm(request.POST)
+        billing_form = BillingDetailsForm(request.POST, request=request)
         save_info = request.POST.get('save_info') == 'on'
 
         billing_form_is_valid = billing_form.is_valid()

@@ -169,6 +169,10 @@ class BillingDetailsForm(forms.Form):
         self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
 
+        if not self.request or not self.request.user.is_authenticated:
+            if 'save_info' in self.fields:
+                del self.fields['save_info']
+
         for field_name, field in self.fields.items():
             if field_name == 'save_info':
                 field.widget.attrs['class'] = 'form-check-input'
