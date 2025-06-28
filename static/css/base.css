@@ -104,7 +104,8 @@ a i {
 }
 
 .welcome-section,
-.search-form {
+.search-form,
+.allauth-form-group {
     background: rgba(0, 0, 0, 0.5);
     border-radius: 10px;
 }
@@ -129,6 +130,10 @@ article.trips-display{
 /* Forms */
 .form-group {
     z-index: 1;
+}
+
+.allauth-form-group {
+    padding: 15px;
 }
 
 .username-request {
@@ -181,9 +186,24 @@ label.form-label.visually-hidden{
     padding-right: 35px;
 }
 
+.payment-form-input,
+.passenger-details-form,
+#card-element,
+.profile-form-input {
+    border: 1px solid #000;
+}
+
+.form-control:focus {
+   box-shadow: 3px 3px #007bff !important;
+}
+
 .form-control::placeholder {
     color: #6c757d;
     opacity: 1;
+}
+
+textarea.form-control {
+    height: 60px !important;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {

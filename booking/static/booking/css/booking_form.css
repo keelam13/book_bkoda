@@ -11,17 +11,10 @@
   transition: box-shadow 150ms ease;
 }
 
-.StripeElement--focus,
-.stripe-style-input:focus,
-.stripe-style-input:active {
+.StripeElement--focus {
   color: #495057;
   background-color: #fff;
   border-color: #80bdff !important;
-  box-shadow: 3px 3px #007bff !important;
-}
-
-.passenger-details-form:focus,
-.passenger-details-form:active {
   box-shadow: 3px 3px #007bff !important;
 }
 
@@ -36,12 +29,6 @@
 .fieldset-label {
     position: relative;
     right: .5rem;
-}
-
-#payment-form .form-control,
-.passenger-details-form,
-#card-element {
-    border: 1px solid #000;
 }
 
 #loading-overlay {

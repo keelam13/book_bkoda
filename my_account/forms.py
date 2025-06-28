@@ -23,7 +23,7 @@ class ProfileForm(forms.ModelForm):
             'default_country': 'Country',
         }
 
-        self.fields['default_phone_number'].widget.attrs['autofocus'] = True
+        self.fields['default_name'].widget.attrs['autofocus'] = True
         for field in self.fields:
             if field != 'default_country':
                 if self.fields[field].required:
@@ -32,5 +32,5 @@ class ProfileForm(forms.ModelForm):
                     placeholder = placeholders[field]
                 self.fields[field].widget.attrs['placeholder'] = placeholder
             self.fields[field].widget.attrs['class'] = \
-                'border-black rounded-0 profile-form-input'
+                'form-control profile-form-input'
             self.fields[field].label = False

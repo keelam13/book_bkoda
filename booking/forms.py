@@ -186,7 +186,7 @@ class BillingDetailsForm(forms.Form):
             if field.required:
                 field.label += '*'
 
-            field.widget.attrs['class'] = 'stripe-style-input'
+            field.widget.attrs['class'] = 'payment-form-input'
             field.label = ''
 
     def clean(self):

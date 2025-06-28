@@ -74,11 +74,11 @@
                                 <a class="nav-link {% if request.path == home_url %}active{% endif %}" aria-current="page"
                                     href="{% url 'home' %}">Home</a>
                             </li>
+                            {% if user.is_authenticated %}
                             <li class="nav-item">
                                 <a class="nav-link {% if request.path == profiles_url %}active{% endif %}"
                                     aria-current="page" href="{% url 'account:account_details' %}">My Account</a>
                             </li>
-                            {% if user.is_authenticated %}
                             <li class="nav-item">
                                 <a class="nav-link {% if request.path == account_logout_url %}active{% endif %}"
                                     aria-current="page" href="{% url 'account_logout' %}">Logout</a>
