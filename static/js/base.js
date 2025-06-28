@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
      * Hides all alert messages on the page after a 5 second delay.
      */
     setTimeout(function () {
-        document.querySelectorAll('.alert:not(.alert-modal-info)').forEach(function (alert) {
+        document.querySelectorAll('.alert:not(.alert-fix-display)').forEach(function (alert) {
             alert.remove();
         });
     }, 15000);

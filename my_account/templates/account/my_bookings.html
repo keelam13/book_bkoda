@@ -7,11 +7,14 @@
 
 <div class="mb-5">
     <!-- Pending Payment Alerts Section -->
-    {% if pending_payment_bookings %}
     <h4 class="text-xl font-semibold mb-3">Pending Payments <i class="fas fa-exclamation-triangle pending-icon mb-3"></i></h4>
-    
-    <p class="mb-4">You have {{ num_pending_payment }} bookings awaiting payment. Please complete the payment to confirm your trip(s).</p>
-    <a href="{% url 'manage_booking:pending_payment' %}" class="btn btn-info mr-auto">Manage Bookings</a>
+    {% if pending_payment_bookings %}
+    <div class="alert alert-warning alert-fix-display" role="alert">
+        You have {{ num_pending_payment }} bookings awaiting payment. Please complete the payment to confirm your trip(s).
+        <div class="mt-4">
+            <a href="{% url 'manage_booking:pending_payment' %}" class="btn btn-info mr-auto">Manage Bookings</a>
+        </div>
+    </div>
     {% else %}
     <p class="mb-4">Great! You have **NO** bookings awaiting payment.</p>
     {% endif %}
@@ -19,8 +22,8 @@
     <hr>
 
     <!-- Upcoming Confirmed Trips Section -->
-    {% if upcoming_confirmed_bookings_page %}
     <h4 class="text-xl font-semibold mb-3">Upcoming Confirmed Trips</h4>
+    {% if upcoming_confirmed_bookings_page %}
     <p class="mb-4 text-center">
     Showing <strong>{{ upcoming_confirmed_bookings_page.start_index }}</strong> -
     <strong>{{ upcoming_confirmed_bookings_page.end_index }}</strong> of
@@ -128,7 +131,7 @@
         </ul>
     </nav>
     {% else %}
-    <div class="alert alert-info" role="alert">
+    <div class="alert alert-info alert-fix-display" role="alert">
         You have no upcoming confirmed trips at the moment.
         <div class="mt-4">
             <a href="{% url 'home' %}" class="btn btn-primary">Book a Trip Now!</a>
