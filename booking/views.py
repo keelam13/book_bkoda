@@ -416,6 +416,7 @@ def process_payment(request, booking_id):
         'total_price': booking.total_price,
         'stripe_public_key': stripe_public_key,
         'client_secret': intent.client_secret if intent else None,
+        'num_passsengers': booking.number_of_passengers,
         'first_passenger_email': first_passenger_email,
         'first_passenger_contact_number': first_passenger_contact_number,
         'billing_form': billing_form,
