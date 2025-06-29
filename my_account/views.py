@@ -55,7 +55,8 @@ def my_bookings(request):
     pending_payment_bookings = Booking.objects.filter(
         user=request.user,
         status='PENDING_PAYMENT',
-        payment_status='PENDING'
+        payment_status='PENDING',
+        payment_method_type__isnull=False
     ).order_by('booking_date')
 
     num_pending_payment = pending_payment_bookings.count()

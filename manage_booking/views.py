@@ -73,7 +73,10 @@ def all_bookings_list(request):
     """
     Displays a list of all bookings for the currently logged-in user.
     """
-    all_bookings = Booking.objects.filter(user=request.user).order_by('-trip__date', '-trip__departure_time')
+    all_bookings = Booking.objects.filter(
+        user=request.user,
+        payment_method_type__isnull=False
+    ).order_by('-trip__date', '-trip__departure_time')
 
     all_bookings_page = paginate_queryset(request, all_bookings, items_per_page=3)
 
@@ -112,7 +115,8 @@ def pending_payment_list(request):
     pending_payment_bookings = Booking.objects.filter(
         user=request.user,
         status='PENDING_PAYMENT',
-        payment_status='PENDING'
+        payment_status='PENDING',
+        payment_method_type__isnull=False
     ).order_by('-trip__date', '-trip__departure_time')
 
     pending_payment_bookings_page = paginate_queryset(request, pending_payment_bookings, items_per_page=3)
@@ -159,6 +163,7 @@ def canceled_bookings_list(request):
     canceled_bookings = Booking.objects.filter(
         user=request.user,
         status='CANCELED',
+        payment_method_type__isnull=False
     ).order_by('-trip__date', '-trip__departure_time')
 
     canceled_bookings_page = paginate_queryset(request, canceled_bookings, items_per_page=3)
