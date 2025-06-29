@@ -6,7 +6,7 @@
 {% load booking_filters %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'booking/css/booking_form.css' %}">
+    <link rel="stylesheet" href="{% static 'booking/css/booking_form.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -15,19 +15,17 @@
         <div class="col-md-8">
             <div class="card booking-section-card mb-4">
                 <div class="card-body">
-                    <form method="post" id="booking-form" action="{% url 'manage_booking:booking_reschedule_confirm' booking_id=original_booking.id new_trip_id=new_trip.trip_id %}">
+                    <form method="post" id="payment-form" action="{% url 'manage_booking:booking_reschedule_confirm' booking_id=original_booking.id new_trip_id=new_trip.trip_id %}">
                         {% csrf_token %}
                         <h4 class="section-title mb-4"><i class="bi bi-arrow-repeat"></i> Confirm Reschedule</h4>
-
                         <p class="lead text-center mb-4">Please review the changes and confirm your reschedule.</p>
-
                         <div class="row mb-4">
                             <div class="col-md-6 mb-3">
                                 <h5>Original Trip Details</h5>
                                 <p><strong>Route:</strong> {{ original_booking.trip.origin }} to {{ original_booking.trip.destination }}</p>
                                 <p><strong>Date:</strong> {{ original_booking.trip.date|date:"F d, Y" }}</p>
                                 <p><strong>Departure:</strong> {{ original_booking.trip.departure_time|time:"h:i A" }}</p>
-                                <p><strong>Passengers:</strong> {{ original_booking.number_of_passengers }}</p>
+                                <p><strong>Passengers:</strong> {{ num_passengers }}</p>
                                 <p><strong>Original Total Price:</strong> <span class="text-muted">Php{{ original_total_price|floatformat:2 }}</span></p>
                             </div>
                             <div class="col-md-6 mb-3">
@@ -35,7 +33,7 @@
                                 <p><strong>Route:</strong> {{ new_trip.origin }} to {{ new_trip.destination }}</p>
                                 <p><strong>Date:</strong> {{ new_trip.date|date:"F d, Y" }}</p>
                                 <p><strong>Departure:</strong> {{ new_trip.departure_time|time:"h:i A" }}</p>
-                                <p><strong>Passengers:</strong> {{ original_booking.number_of_passengers }}</p>
+                                <p><strong>Passengers:</strong> {{ num_passengers }}</p>
                                 <p><strong>New Trip Base Price:</strong> Php{{ new_total_price_base|floatformat:2 }}</p>
                             </div>
                         </div>
@@ -98,8 +96,7 @@
                             <div class="card booking-section-card mb-4">
                                 <div class="card-body">
                                     <div class="form-check mb-3">
-                                        <input class="form-check-input" type="radio" name="payment_method" id="creditCard"
-                                            value="card" checked>
+                                        <input class="form-check-input" type="radio" name="payment_method" id="creditCard" value="CARD">
                                         <label class="form-check-label" for="creditCard">
                                             Debit/Credit Card
                                         </label>
@@ -108,26 +105,85 @@
                                         <h6 class="mb-3">Enter Card Details</h6>
                                         <div class="mb-3" id="card-element"></div>
                                         <div class="mb-3 text-danger" id="card-errors" role="alert"></div>
+                                        <h4 class="section-title mt-5 mb-4"><i class="bi bi-person-fill"></i> Billing Details</h4>
+                                        <div class="card booking-section-card mb-4">
+                                            <div class="card-body">
+                                                <div id="manual-billing-address-fields">
+                                                    <p class="text-muted small">Please enter the billing address associated with your card.</p>
+                                                    <fieldset class="rounded px-3 mb-2">
+                                                        {{ billing_form.billing_name | as_crispy_field }}
+                                                        {{ billing_form.billing_phone | as_crispy_field }}
+                                                        {{ billing_form.billing_email | as_crispy_field }}
+                                                        {{ billing_form.billing_street_address1 | as_crispy_field }}
+                                                        {{ billing_form.billing_street_address2 | as_crispy_field }}
+                                                        {{ billing_form.billing_city | as_crispy_field }}
+                                                        {{ billing_form.billing_postcode | as_crispy_field }}
+                                                        {{ billing_form.billing_country | as_crispy_field }}
+                                                    </fieldset>
+                                                    {% if billing_form.save_info %}
+                                                    <div class="form-check mt-4 mb-4">
+                                                        {{ billing_form.save_info }}
+                                                        <label class="form-check-label" for="{{ billing_form.save_info.id_for_label }}">
+                                                            {{ billing_form.save_info.label }}
+                                                        </label>
+                                                    </div>
+                                                    {% else %}
+                                                    <div class="form-check mt-2 p-0">
+                                                        <label class="form-check-label" for="id-save-info">
+                                                            <a class="text-info" href="{% url 'account_signup' %}">Create an account</a> or
+                                                            <a class="text-info" href="{% url 'account_login' %}">login</a> to save this information.
+                                                        </label>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
+                                    {% if time_until_departure.total_seconds >= offline_payment_cutoff_seconds %}
                                     <div class="form-check mb-3">
-                                        <input class="form-check-input" type="radio" name="payment_method" id="otherPayment"
-                                            value="other">
-                                        <label class="form-check-label" for="otherPayment">
-                                            Cash (Payment Centers) / Money Wallet (GCash)
+                                        <input class="form-check-input" type="radio" name="payment_method" id="cashPayment" value="CASH">
+                                        <label class="form-check-label" for="cashPayment">
+                                            Cash (Payment Centers)
                                         </label>
                                     </div>
-                                    <div id="otherPaymentDetails" class="payment-details-section card p-3 mb-3 border-info" style="display: none;">
-                                        <h6 class="mb-3">Payment Instructions:</h6>
-                                        <p class="small text-muted">If you select this option, your booking will be held for **24 hours**. You must complete
-                                        your payment within this period via our designated payment centers or GCash to confirm
-                                        your seats. Details will be provided upon successful booking submission.</p>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="gcashPayment" value="GCASH">
+                                        <label class="form-check-label" for="gcashPayment">
+                                            Money Wallet (GCash)
+                                        </label>
                                     </div>
+                                     <div id="otherPaymentDetails" class="payment-details-section card p-3 mb-3 border-info">
+                                        <h6 class="mb-3">Payment Instructions:</h6>
+                                        <p class="small text-muted">
+                                             If you select this option, your booking will be held for **24 hours**. You must complete
+                                            your payment within this period via our designated payment centers or GCash to confirm
+                                            your seats. Details will be provided upon successful booking submission.
+                                        </p>
+                                        <p class="small text-danger">
+                                            **Your booking will be automatically cancelled if payment is not received within 24
+                                            hours.**
+                                         </p>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-danger d-block mt-1" role="alert">
+                                        <p class="mb-1">Offline payment is not available for trips departing within **{{ offline_payment_cutoff_hours }}
+                                            hours**.</p>
+                                        <p class="mb-1">Please select **Card** to complete your booking online now.</p>
+                                        <p class="mb-0 small text-muted">Alternatively, you may proceed directly to the bus terminal to secure your seat(s)
+                                            or inquire as a chance passenger.</p>
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    {% endif %}
 
                                     <div class="form-check mt-4">
                                         <input class="form-check-input" type="checkbox" id="termsCheck" required>
                                         <label class="form-check-label" for="termsCheck">
-                                            I declare to have read and agree to the <a href="#">Privacy Policy</a> and <a
-                                                href="#">T&C of Booking</a> and <a href="#">T&C of Carriage</a>.
+                                            I declare to have read and agree to the <a href="#" data-toggle="modal"
+                                                data-target="#privacyPolicyModal">Privacy Policy</a> and <a href="#" data-toggle="modal"
+                                                data-target="#bookingTermsModal">T&C of Booking</a> and <a href="#" data-toggle="modal"
+                                                data-target="#carriageTermsModal">T&C of Carriage</a>.
                                         </label>
                                     </div>
                                 </div>
@@ -143,20 +199,21 @@
                             </div>
                         {% endif %}
 
-                        <input type="hidden" name="payment_method" id="selected-payment-method" value="card">
-                        <input type="hidden" name="payment_intent_id" id="payment-intent-id">
-                        <input type="hidden" id="passenger_name1" value="{{ request.user.get_full_name|default:request.user.username }}">
-                        <input type="hidden" id="passenger_email1" value="{{ request.user.email }}">
-                        <input type="hidden" id="passenger_contact_number1" value="{{ request.user.profile.contact_number|default:'' }}">
-
-
+                        <input type="hidden" name="selected_payment_method_hidden" id="selected-payment-method-hidden" value="card">
+                        <input type="hidden" id="firstPassengerEmail" value="{{ first_passenger_email }}">
+                        <input type="hidden" id="firstPassengerContactNumber" value="{{ first_passenger_contact_number }}">
+                        <input type="hidden" name="payment_intent_id" id="payment_intent_id">
+                        <!-- <input type="hidden" id="passenger_name1" value="{{ request.user.get_full_name|default:request.user.username }}"> -->
+                        
                         <div class="d-grid mt-4">
                             {% if amount_to_pay > 0 %}
-                                <button type="submit" id="submit-booking-btn" class="btn btn-warning btn-lg submit-button">
+                                <button type="submit" id="submit-button" name="action" value="confirm_payment"
+                                    class="btn btn-warning btn-lg submit-button">
                                     Pay Php{{ amount_to_pay|floatformat:2 }} & Confirm Reschedule
                                 </button>
                             {% else %}
-                                <button type="submit" id="submit-booking-btn" class="btn btn-warning btn-lg submit-button">
+                                <button type="submit" id="submit-button" name="action" value="confirm_payment"
+                                    class="btn btn-warning btn-lg submit-button">
                                     Confirm Reschedule
                                 </button>
                             {% endif %}
@@ -166,7 +223,6 @@
                 </div>
             </div>
         </div>
-
         <div class="col-md-4">
             <div class="card booking-summary-card shadow-sm sticky-top">
                 <div class="card-header d-flex justify-content-between align-items-center bg-transparent border-bottom">
@@ -192,16 +248,17 @@
 
                     <hr>
 
-                    <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
                         <span class="fw-bold">Total Amount Due</span>
                         <span class="fw-bold fs-5">Php{{ amount_to_pay|floatformat:2|intcomma }}</span>
                     </div>
                     {% if amount_to_refund > 0 %}
-                    <div class="d-flex justify-content-between align-items-center mb-2 text-danger">
+                    <div class="d-flex justify-content-between align-items-center text-danger">
                         <span class="fw-bold">Total Amount to Refund</span>
                         <span class="fw-bold fs-5">Php{{ amount_to_refund|floatformat:2|intcomma }}</span>
                     </div>
                     {% endif %}
+                    <span class="fw-bold fs-5 d-flex justify-content-end">for {{ num_passengers }} Passengers</span>
                 </div>
             </div>
         </div>
@@ -214,11 +271,262 @@
         </span>
     </h1>
 </div>
+
+<!-- Booking Policy Modal -->
+<div class="modal fade" id="bookingTermsModal" tabindex="-1" role="dialog" aria-labelledby="bookingTermsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bookingTermsModalLabel">BKODA Transport - Booking Policy</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="policy-content">
+                    <p>This policy outlines the terms and conditions for booking seats through the BKODA application for trips from Kabayan, Benguet to Baguio City and vice versa. By booking a seat, you agree to abide by the terms set forth below.</p>
+                    
+                    <h6>1. Booking and Seat Reservation</h6>
+                    <ul>
+                        <li><strong>Availability:</strong> Seat availability is on a first-come, first-served basis.</li>
+                        <li><strong>Fare:</strong> The standard fare for a one-way trip from Kabayan, Benguet to Baguio City or vice versa is PHP 250.00. Please note that fares are subject to change without prior notice. The final fare will be displayed at the time of booking confirmation.</li>
+                        <li><strong>Booking Confirmation:</strong> Your booking is considered confirmed only upon successful receipt of the full payment.</li>
+                    </ul>
+
+                    <h6>2. Payment Options and Confirmation</h6>
+                    <p>We offer the following convenient payment methods:</p>
+                    <ul>
+                        <li><strong>Credit/Debit Card:</strong>
+                            <ul>
+                                <li>Payments made via credit or debit card are processed immediately.</li>
+                                <li>Upon successful card payment, your booking will be instantly confirmed. You will receive an immediate confirmation of your reservation.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Payment Centers (Cash) / Money Wallet (e.g., GCash):</strong>
+                            <ul>
+                                <li>If you choose to pay via a designated payment center (cash) or money wallet (e.g., GCash), your seat reservation will be held for a limited time.</li>
+                                <li><strong>Payment Deadline:</strong> The full amount must be paid and verified by the <i>earlier</i> of these two conditions:
+                                    <ul>
+                                        <li><strong>a.</strong> Twenty-four (24) hours from the time of booking, OR</li>
+                                        <li><strong>b.</strong> Three (3) hours before the scheduled departure time of your trip.</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Failure to Pay:</strong> If full payment is not received and verified by this deadline, your reservation will be automatically cancelled, and the seats will be released for other passengers to book.</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <h6>3. Discounts</h6>
+                    <ul>
+                        <li><strong>Eligible Passengers:</strong> A 20% discount is available for:
+                            <ul>
+                                <li><strong>Senior Citizens:</strong> Individuals aged 60 years old and above.</li>
+                                <li><strong>Students.</strong></li>
+                            </ul>
+                        </li>
+                        <li><strong>Discount Application:</strong> The full standard fare is paid at the time of booking. The 20% discount will be processed as a refund.</li>
+                        <li><strong>On-site Verification & Refund:</strong> To avail of the discount, eligible passengers <strong>must present a valid Senior Citizen ID or a valid School ID</strong> to the bus attendant <i>on-site</i> before boarding. Upon successful verification, the 20% discount amount will be refunded directly by the bus attendant.</li>
+                    </ul>
+
+                    <h6>4. Cancellation Policy</h6>
+                    <ul>
+                        <li><strong>Free Cancellation:</strong> If cancelling more than 24 hours before departure.
+                            <ul>
+                                <li><strong>Action:</strong> Full refund.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Late Cancellation (50% fee):</strong> If cancelling between 24 hours and 3 hours (inclusive) before departure.
+                            <ul>
+                                <li><strong>Action:</strong> 50% refund, 50% fee deducted.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Cancellation (No Refund):</strong> If cancelling less than or exactly 3 hours before departure.
+                            <ul>
+                                <li><strong>Action:</strong> Booking status changes to CANCELED. No refund issued.</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <h6>5. Rescheduling Policy</h6>
+                    <ul>
+                        <li><strong>Free Rescheduling:</strong> If rescheduling more than 24 hours before original departure.
+                            <ul>
+                                <li><strong>Action:</strong> No charge. Subject to seat availability.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Late Rescheduling (15% fee):</strong> If rescheduling between 24 hours and 3 hours (inclusive) before original departure.
+                            <ul>
+                                <li><strong>Action:</strong> 15% rescheduling charge applied. Subject to seat availability.</li>
+                            </ul>
+                        </li>
+                        <li><strong>No Rescheduling Allowed:</strong> If rescheduling less than 3 hours before original departure.</li>
+                    </ul>
+
+                    <h6>6. Refunds</h6>
+                    <ul>
+                        <li>Refunds for eligible cancellations will be processed according to the original payment method. Please allow 2-3 business days for the refund to reflect in your account.</li>
+                        <li>For cash payments via payment centers, refunds will be processed either via GCash, bank transfer, or pickup at the office (all terminals).</li>
+                    </ul>
+
+                    <h6>7. Changes to Schedules and Services</h6>
+                    <ul>
+                        <li>While we strive to maintain our published schedules, BKODA Transport reserves the right to modify, delay, or cancel trips due to unforeseen circumstances such as weather conditions, road closures, mechanical issues, or other operational necessities.</li>
+                        <li>In the event of a cancellation by BKODA Transport, affected passengers will be offered a full refund or the option to rebook for an alternative date/time, subject to availability.</li>
+                    </ul>
+
+                    <h6>8. Passenger Responsibilities</h6>
+                    <ul>
+                        <li>It is the passenger's responsibility to ensure that all booking details (date, time, passenger names) are accurate at the time of booking.</li>
+                        <li>Passengers are advised to arrive at the designated pick-up point at least 30 minutes before the scheduled departure time.</li>
+                        <li>Passengers must present their confirmed booking reference or ticket (digital or printed) to the bus attendant before boarding.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Policy Modal -->
+<div class="modal fade" id="privacyPolicyModal" tabindex="-1" role="dialog" aria-labelledby="privacyPolicyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="privacyPolicyModalLabel">BKODA Transport - Privacy Policy</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="policy-content">
+                    <p>Your privacy is very important to us. This Privacy Policy explains how BKODA Transport collects, uses, and protects your information.</p>
+
+                    <h6>1. Information We Collect</h6>
+                    <ul>
+                        <li><strong>Personal Information:</strong> When you book a trip, we collect personal details such as your name, age, contact number, and email. If you create an account, we also store your login credentials.</li>
+                        <li><strong>Payment Information:</strong> For online payments, we process payment details through secure third-party payment gateways (like Stripe). We do not store full credit card numbers on our servers.</li>
+                        <li><strong>Usage Data:</strong> We may collect information about how you access and use our application, such as trip searches, booking history, and device information.</li>
+                    </ul>
+
+                    <h6>2. How We Use Your Information</h6>
+                    <ul>
+                        <li>To process your bookings and provide transportation services.</li>
+                        <li>To send you booking confirmations, updates, and important announcements.</li>
+                        <li>To manage your account (if applicable) and personalize your experience.</li>
+                        <li>To improve our services, including the application functionality and trip offerings.</li>
+                        <li>For security and fraud prevention.</li>
+                        <li>To comply with legal obligations.</li>
+                    </ul>
+
+                    <h6>3. How We Share Your Information</h6>
+                    <ul>
+                        <li>With our bus operators to facilitate your travel.</li>
+                        <li>With payment processors to complete transactions securely.</li>
+                        <li>With legal or regulatory authorities if required by law.</li>
+                        <li>With third-party service providers who assist us in operating our business (e.g., email service providers), under strict confidentiality agreements.</li>
+                    </ul>
+
+                    <h6>4. Data Security</h6>
+                    <p>We implement various security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction. However, no method of transmission over the Internet or electronic storage is 100% secure.</p>
+
+                    <h6>5. Your Rights</h6>
+                    <ul>
+                        <li>You have the right to access, update, or delete your personal information.</li>
+                        <li>You can opt-out of receiving promotional communications from us.</li>
+                        <li>For any requests regarding your data, please contact us.</li>
+                    </ul>
+
+                    <h6>6. Changes to This Policy</h6>
+                    <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page.</p>
+
+                    <p><strong>Contact Us:</strong> If you have any questions about this Privacy Policy, please contact us through our website or customer service channels.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- T&C of Carriage Modal -->
+<div class="modal fade" id="carriageTermsModal" tabindex="-1" role="dialog" aria-labelledby="carriageTermsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="carriageTermsModalLabel">BKODA Transport - Terms & Conditions of Carriage</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="policy-content">
+                    <p>These Terms & Conditions of Carriage ("Terms") govern the relationship between you ("Passenger") and BKODA Transport ("Carrier") regarding the transportation of Passengers and their luggage.</p>
+
+                    <h6>1. Ticket and Boarding</h6>
+                    <ul>
+                        <li>A valid booking reference or ticket must be presented to the bus attendant before boarding.</li>
+                        <li>Passengers must board the correct bus at the designated departure point and time.</li>
+                        <li>Seats are allocated on a first-come, first-served basis unless specific seat assignments are indicated on your ticket.</li>
+                    </ul>
+
+                    <h6>2. Luggage Policy</h6>
+                    <ul>
+                        <li>Passengers are allowed to carry one (1) hand-carry bag and one (1) check-in luggage.</li>
+                        <li>Dimensions and weight limits for luggage may apply and will be communicated at the time of booking or upon inquiry.</li>
+                        <li>Fragile, valuable, or hazardous items should not be placed in checked luggage. The Carrier is not responsible for loss or damage to such items.</li>
+                        <li>The Carrier's liability for lost or damaged luggage is limited as per local regulations.</li>
+                    </ul>
+
+                    <h6>3. Passenger Conduct</h6>
+                    <ul>
+                        <li>Passengers are expected to behave in a respectful manner towards other passengers, the driver, and staff.</li>
+                        <li>Disruptive, abusive, or dangerous behavior is strictly prohibited and may result in refusal of carriage without refund.</li>
+                        <li>Smoking, vaping, and consumption of alcoholic beverages are not allowed inside the bus.</li>
+                    </ul>
+
+                    <h6>4. Safety and Security</h6>
+                    <ul>
+                        <li>Passengers must adhere to all safety instructions given by the bus attendant or driver.</li>
+                        <li>For your safety, remain seated while the bus is in motion.</li>
+                        <li>The Carrier reserves the right to conduct security checks on passengers and luggage.</li>
+                    </ul>
+
+                    <h6>5. Delays and Cancellations by Carrier</h6>
+                    <ul>
+                        <li>While every effort is made to operate services as scheduled, the Carrier is not liable for delays, diversions, or cancellations due to unforeseen circumstances (e.g., adverse weather, road conditions, mechanical breakdown, force majeure).</li>
+                        <li>In such events, the Carrier will endeavor to provide alternative transportation or a refund as per the Booking Policy.</li>
+                    </ul>
+
+                    <h6>6. Lost and Found</h6>
+                    <ul>
+                        <li>The Carrier is not responsible for items left on the bus.</li>
+                        <li>Passengers who find lost items should immediately turn them over to the bus attendant or terminal staff.</li>
+                        <li>Lost items, if recovered, can be claimed at the terminal office during operating hours.</li>
+                    </ul>
+
+                    <h6>7. Health and Medical Conditions</h6>
+                    <ul>
+                        <li>Passengers with medical conditions that may affect their travel should inform the Carrier at the time of booking.</li>
+                        <li>The Carrier reserves the right to refuse carriage to passengers whose health condition may pose a risk to themselves or others.</li>
+                    </ul>
+
+                    <p><strong>By purchasing a ticket and boarding the bus, the Passenger agrees to these Terms & Conditions of Carriage.</strong></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block postload_js %}
 {{ block.super }}
 {{ stripe_public_key|json_script:"id_stripe_public_key" }}
 {{ client_secret|json_script:"id_client_secret" }}
-<script src="{% static 'booking/js/booking_form.js' %}"></script>
+    <script src="{% static 'booking/js/payment_page.js' %}"></script>
 {% endblock %}

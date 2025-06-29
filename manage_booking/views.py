@@ -5,7 +5,10 @@ from django.conf import settings
 from django.db import transaction
 from django.urls import reverse
 from booking.models import Booking, BookingPolicy
+from booking.forms import BillingDetailsForm
+from my_account.models import UserProfile
 from trips.models import Trip
+from booking.views import _get_payment_method_context
 from django.db.models import Prefetch
 from django.db.models import Q
 from django.utils import timezone
@@ -22,13 +25,19 @@ def _calculate_reschedule_financials(original_booking, new_trip, policy):
     Calculates the financial implications of a reschedule.
     Assumes the number of passengers remains the same as the original booking.
     """
+    policy = BookingPolicy.objects.first()
     num_passengers = original_booking.number_of_passengers
 
-    original_total_price = original_booking.total_price
+    original_total_price = original_booking.trip.price
+    print('Original total price:', original_total_price)
     new_total_price_base = new_trip.price * num_passengers
+    print('new_total_price_base:', new_total_price_base)
     new_total_price_base = new_total_price_base.quantize(Decimal('0.01'))
+    print('new_total_price_base', new_total_price_base)
     fare_difference = new_total_price_base - original_total_price
+    print('fare_difference', fare_difference)
     rescheduling_charge = Decimal('0.00')
+    print('rescheduling_charge', rescheduling_charge)
     reschedule_type_message = ""
 
     # Re-evaluate rescheduling charge based on time until original departure
@@ -43,13 +52,16 @@ def _calculate_reschedule_financials(original_booking, new_trip, policy):
         reschedule_type_message = "Late Reschedule"
         rescheduling_charge = original_total_price * policy.late_rescheduling_charge_percentage
         rescheduling_charge = rescheduling_charge.quantize(Decimal('0.01'))
+        print('rescheduling_charge', rescheduling_charge)
     else:
         reschedule_type_message = "Not Allowed (too close to departure)"
 
     total_due_or_refund = fare_difference + rescheduling_charge
+    print('total_due_or_refund', total_due_or_refund)
 
     amount_to_pay = Decimal('0.00')
     amount_to_refund = Decimal('0.00')
+    print('amount_to_pay', amount_to_pay)
 
     if total_due_or_refund > 0:
         amount_to_pay = total_due_or_refund
@@ -524,6 +536,11 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
     if not policy:
         messages.error(request, "No booking policy found. Please configure a policy in the admin.")
         return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
+    
+    payment_context = _get_payment_method_context(new_trip)
+    if payment_context['is_offline_payment_disallowed']:
+        messages.warning(request, f"For bookings within {payment_context['offline_payment_cutoff_hours']} hours of departure, only Card payments are accepted to ensure immediate confirmation.")
+
 
     # --- Rescheduling Eligibility Check ---
     if not (original_booking.status == 'CONFIRMED' and original_booking.payment_status == 'PAID'):
@@ -555,15 +572,41 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
     amount_to_pay = financials['amount_to_pay']
     amount_to_refund = financials['amount_to_refund']
     reschedule_type_message = financials['reschedule_type_message']
-    time_until_departure_hours = financials['time_until_departure_hours']
+    print('Amount to pay:', amount_to_pay)
+    time_until_new_departure = payment_context['time_until_departure']
+
+    first_passenger_email = ''
+    first_passenger_contact_number = ''
+    if original_booking.passengers.exists():
+        first_passenger = original_booking.passengers.first()
+        first_passenger_email = first_passenger.email if first_passenger.email else ''
+        first_passenger_contact_number = first_passenger.contact_number if first_passenger.contact_number else ''
 
     if reschedule_type_message == "Not Allowed (too close to departure)":
         messages.error(request, f"Rescheduling is no longer allowed (less than {policy.late_rescheduling_cutoff_hours} hours before original departure).")
         return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
+    print('Rescheduling cutoff time', policy.late_rescheduling_cutoff_hours)
+
 
     # --- GET Request (Display Confirmation Page) ---
     if request.method == 'GET':
-        client_secret = None
+
+        if request.user.is_authenticated:
+            # Pre-fill form if user has a default billing address
+            user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+            billing_form = BillingDetailsForm(initial={
+            'billing_name': user_profile.default_name or request.user.get_full_name() or request.user.username,
+            'billing_email': user_profile.default_email or request.user.email,
+            'billing_phone': user_profile.default_phone_number,
+            'billing_street_address1': user_profile.default_street_address1,
+            'billing_street_address2': user_profile.default_street_address2,
+            'billing_city': user_profile.default_city,
+            'billing_postcode': user_profile.default_postcode,
+            'billing_country': user_profile.default_country,
+            })
+        else:
+            billing_form = BillingDetailsForm()
+
         if amount_to_pay > 0:
             try:
                 stripe_amount = int(amount_to_pay * 100)
@@ -576,11 +619,18 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                         'action': 'reschedule_payment',
                     },
                 )
-                client_secret = payment_intent.client_secret
+                original_booking.payment_intent_id = payment_intent.id
+                original_booking.save()
+
+                print('Saved orgiginal booking payment intent:', original_booking.payment_intent_id)
+
             except stripe.error.StripeError as e:
                 messages.error(request, f"Error initializing payment: {e}")
                 return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
-
+            
+        print(f"DEBUG (GET): payment_intent_id={payment_intent.id}")
+        print('Time Until departure:', time_until_new_departure )
+        print('Offline Payment cutoff', payment_context['offline_payment_cutoff_seconds'])
         context = {
             'original_booking': original_booking,
             'new_trip': new_trip,
@@ -592,9 +642,13 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
             'rescheduling_charge': financials['rescheduling_charge'],
             'amount_to_pay': amount_to_pay,
             'amount_to_refund': amount_to_refund,
-            'number_of_passengers': num_passengers,
-            'client_secret': client_secret,
+            'num_passengers': num_passengers,
+            'first_passenger_email': first_passenger_email,
+            'first_passenger_contact_number': first_passenger_contact_number,
+            'client_secret': payment_intent.client_secret,
             'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+            'billing_form': billing_form,
+            **payment_context
         }
         return render(request, 'manage_booking/booking_reschedule_confirm.html', context)
 
@@ -602,6 +656,8 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
     elif request.method == 'POST':
         selected_payment_method = request.POST.get('payment_method')
         payment_intent_id = request.POST.get('payment_intent_id')
+        print(f"DEBUG (POST): selected_payment_method={selected_payment_method}, payment_intent_id={payment_intent_id}")
+        billing_form = BillingDetailsForm(request.POST)
 
         financials_post = _calculate_reschedule_financials(original_booking, new_trip, policy)
         amount_to_pay_post = financials_post['amount_to_pay']
@@ -610,9 +666,30 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
         rescheduling_charge_post = financials_post['rescheduling_charge']
 
         if amount_to_pay_post > 0:
-            if selected_payment_method == 'card':
+            if selected_payment_method == 'CARD':
+                if not billing_form.is_valid():
+                    messages.error(request, "Please correct the billing address errors.")
+                    context = { # Re-populate context for error display
+                        'original_booking': original_booking,
+                        'new_trip': new_trip,
+                        'policy': policy,
+                        'reschedule_type_message': reschedule_type_message,
+                        'original_total_price': financials['original_total_price'],
+                        'new_total_price_base': financials['new_total_price_base'],
+                        'fare_difference': financials['fare_difference'],
+                        'rescheduling_charge': financials['rescheduling_charge'],
+                        'amount_to_pay': amount_to_pay,
+                        'amount_to_refund': amount_to_refund,
+                        'num_passengers': num_passengers,
+                        'client_secret': None, # No new intent for a failed form re-render
+                        'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+                        'billing_form': billing_form, # Pass the invalid form back
+                    }
+                    return render(request, 'manage_booking/booking_reschedule_confirm.html', context)
+
                 if payment_intent_id:
                     try:
+                        stripe.api_key = settings.STRIPE_SECRET_KEY
                         payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
 
                         if payment_intent.status == 'succeeded':
@@ -634,7 +711,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                                 original_booking.total_price = new_total_price_base_post + rescheduling_charge_post
                                 original_booking.status = 'CONFIRMED'
                                 original_booking.payment_status = 'PAID'
-                                original_booking.stripe_payment_intent_id = payment_intent_id
+                                # original_booking.stripe_payment_intent_id = payment_intent_id
                                 original_booking.save()
                                 messages.success(request, f"Booking {original_booking.booking_reference} successfully rescheduled!")
                                 return redirect(reverse('manage_booking:booking_detail', args=[original_booking.id]))
@@ -655,7 +732,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                 else:
                     messages.error(request, "Payment needs to be completed via the payment form.")
                     return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
-            elif selected_payment_method == 'other':
+            elif selected_payment_method in ['CASH', 'GCASH']:
                 try:
                     with transaction.atomic():
                         # Update Seat Availability

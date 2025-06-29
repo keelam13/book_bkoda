@@ -117,19 +117,19 @@ def book_trip(request, trip_id, number_of_passengers):
         if form.is_valid():
             selected_payment_method_on_form = request.POST.get('payment_method_type')
 
-            if selected_payment_method_on_form in ['CASH', 'GCASH'] and payment_context['is_offline_payment_disallowed']:
-                messages.error(request, f"Cash/GCash payments are not allowed for trips departing within {payment_context['offline_payment_cutoff_hours']} hours. Please select Card payment.")
+            # if selected_payment_method_on_form in ['CASH', 'GCASH'] and payment_context['is_offline_payment_disallowed']:
+            #     messages.error(request, f"Cash/GCash payments are not allowed for trips departing within {payment_context['offline_payment_cutoff_hours']} hours. Please select Card payment.")
                 
-                context = {
-                    'form': form,
-                    'trip': trip,
-                    'num_passengers': num_passengers,
-                    'passenger_range': passenger_range,
-                    'total_price': total_price,
-                    'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
-                    **payment_context,
-                }
-                return render(request, 'booking/booking_form.html', context)
+            #     context = {
+            #         'form': form,
+            #         'trip': trip,
+            #         'num_passengers': num_passengers,
+            #         'passenger_range': passenger_range,
+            #         'total_price': total_price,
+            #         'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+            #         **payment_context,
+            #     }
+            #     return render(request, 'booking/booking_form.html', context)
 
             with transaction.atomic():
                 user = request.user if request.user.is_authenticated else None

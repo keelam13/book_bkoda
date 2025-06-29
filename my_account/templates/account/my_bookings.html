@@ -93,9 +93,8 @@
                             {% endfor %}
                         </ul>
                     </div>
-
                     <div class="modal-footer">
-                        <a href="{% url 'manage_booking:confirmed_bookings' %}" class="btn btn-info mr-auto">Manage Bookings</a>
+                        <a href="{% url 'manage_booking:booking_detail' booking.id %}" class="btn btn-info mr-auto">Manage Bookings</a>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     </div>
                 </div>
