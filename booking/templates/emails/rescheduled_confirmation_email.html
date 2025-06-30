@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rescheduled Booking Confirmed - {{ booking.booking_reference }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        h2, h3 {
+            color: #007bff;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        ul li {
+            margin-bottom: 8px;
+        }
+        strong {
+            color: #555;
+        }
+        .success-message {
+            background-color: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .info-message {
+            background-color: #d1ecf1;
+            border-left: 5px solid #17a2b8;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .warning-message {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #777;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p>Dear {{ customer_name }},</p>
+
+        <div class="success-message">
+            <h2>Your Booking for Reference {{ booking.booking_reference }} Has Been Rescheduled!</h2>
+            <p>Your trip has been successfully rescheduled and is now fully confirmed.</p>
+        </div>
+
+        <h3>Original Booking Details</h3>
+        <div class="info-message">
+            <ul>
+                <li><strong>Original Route:</strong> {{ original_trip.origin }} to {{ original_trip.destination }}</li>
+                <li><strong>Original Date:</strong> {{ original_trip.date|date:"F d, Y" }}</li>
+                <li><strong>Original Departure Time:</strong> {{ original_trip.departure_time|time:"h:i A" }}</li>
+            </ul>
+        </div>
+
+        <h3>New Booking Details</h3>
+        <ul>
+            <li><strong>Booking Reference:</strong> {{ booking.booking_reference }}</li>
+            <li><strong>Route:</strong> {{ trip.origin }} to {{ trip.destination }}</li>
+            <li><strong>Date:</strong> {{ trip.date|date:"F d, Y" }}</li>
+            <li><strong>Departure Time:</strong> {{ trip.departure_time|time:"h:i A" }}</li>
+            <li><strong>Arrival Time:</strong> {{ trip.arrival_time|time:"h:i A" }}</li>
+            <li><strong>Number of Passengers:</strong> {{ booking.number_of_passengers }}</li>
+            <li><strong>Total Price:</strong> Php{{ booking.total_price|floatformat:2 }}</li>
+            <li><strong>Booking Status:</strong> <strong style="color: #28a745;">{{ booking_status }}</strong></li>
+        </ul>
+
+        {% if fare_difference_display %}
+            <div class="info-message">
+                <p><strong>Fare Difference:</strong> {{ fare_difference_display }}</p>
+            </div>
+        {% endif %}
+
+        {% if rescheduling_charge_display %}
+            <div class="warning-message">
+                <p><strong>Rescheduling Charge:</strong> {{ rescheduling_charge_display }}</p>
+            </div>
+        {% endif %}
+
+        {% if amount_to_pay > 0 %}
+            <div class="success-message">
+                <p>An additional payment of <strong>Php{{ amount_to_pay|floatformat:2 }}</strong> was successfully processed.</p>
+            </div>
+        {% elif amount_to_refund > 0 %}
+            <div class="info-message">
+                <p>A refund of <strong>Php{{ amount_to_refund|floatformat:2 }}</strong> is being processed to your original payment method. Please allow 5-10 business days for it to reflect.</p>
+            </div>
+        {% else %}
+            <div class="info-message">
+                <p>No additional payment or refund was required for this reschedule.</p>
+            </div>
+        {% endif %}
+
+        {% if passengers %}
+        <h3>Passenger Information</h3>
+        <ul>
+            {% for passenger in passengers %}
+            <li>{{ forloop.counter }}. {{ passenger.name }} ({{ passenger.age }} years old)</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <h3 style="color: #28a745;">Important Discount Information:</h3>
+        <p>A 20% discount is available for Senior Citizens (60 y/o and above) and Students. To avail of this, eligible passengers **must present a valid Senior Citizen ID or a valid School ID** to the **bus attendant on-site** before boarding. The attendant will process the refund directly.</p>
+
+        <p>We look forward to seeing you on your new trip date!</p>
+        <p>Best regards,<br>The BKODA Transport Team</p>
+
+        <div class="footer">
+            <p>This is an automated email. Please keep this email for your records.</p>
+            <p>&copy; {{ "now"|date:"Y" }} BKODA Transport.</p>
+        </div>
+    </div>
+</body>
+</html>

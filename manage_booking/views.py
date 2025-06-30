@@ -15,6 +15,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from decimal import Decimal
 from .utils import paginate_queryset
+from booking.utils import send_booking_email
 
 import stripe
 
@@ -396,9 +397,10 @@ def booking_cancel(request, booking_id):
                 if recalc_refund_amount > 0:
                     if booking.stripe_payment_intent_id:
                         if settings.STRIPE_MOCK_REFUNDS:
-                            messages.success(request, f"MOCKED REFUND of Php{recalc_refund_amount} processed successfully (Stripe API call skipped).")
+                            messages.success(request, f'REFUND of Php{recalc_refund_amount} is being processed. An email is sent to for more details.')
                             booking.refund_status = 'COMPLETED'
                             booking.refund_amount = recalc_refund_amount
+                            send_booking_email(booking, email_type='refund_processing')
                         else:
                             stripe_refund_amount_cents = round(refund_amount * 100)
                             try:
@@ -427,17 +429,17 @@ def booking_cancel(request, booking_id):
                     else:
                         booking.refund_status = 'PENDING'
                         booking.refund_amount = recalc_refund_amount
+                        send_booking_email(booking, email_type='refund_processing')
                         messages.info(request, f"Your booking is cancelled. A refund of Php{recalc_refund_amount:.2f} is pending manual processing (non-card payment). Please check your email for instructions.")
 
                 else:
                     booking.refund_status = 'NONE'
                     booking.refund_amount = Decimal('0.00')
                     messages.info(request, "Your booking has been cancelled. No refund was issued as per policy.")
-                
-                # Step 2: Update Booking Status
+
                 booking.status = 'CANCELED'
-                
-                # Step 3: Release Seats (update Trip available_seats)
+                send_booking_email(booking, email_type='cancellation')
+
                 if booking.trip.available_seats is not None:
                     print(f"DEBUG: Trip ID: {booking.trip.trip_id}")
                     print(f"DEBUG: Available seats BEFORE adding: {booking.trip.available_seats}")
@@ -542,7 +544,6 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
         messages.warning(request, f"For bookings within {payment_context['offline_payment_cutoff_hours']} hours of departure, only Card payments are accepted to ensure immediate confirmation.")
 
 
-    # --- Rescheduling Eligibility Check ---
     if not (original_booking.status == 'CONFIRMED' and original_booking.payment_status == 'PAID'):
         messages.error(request, "This booking cannot be rescheduled due to its current status or payment status.")
         return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
@@ -556,7 +557,6 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                                           f'&num_travelers={num_passengers}'
         return redirect(redirect_url)
 
-    # Prevent rescheduling to the exact same trip
     if original_booking.trip.trip_id == new_trip.trip_id:
         messages.warning(request, "You cannot reschedule to the same trip. Please select a different one.")
         redirect_url = reverse('trips') + f'?reschedule_booking_id={original_booking.id}' \
@@ -566,8 +566,6 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                                           f'&num_travelers={num_passengers}'
         return redirect(redirect_url)
 
-
-    # --- Financial Calculation ---
     financials = _calculate_reschedule_financials(original_booking, new_trip, policy)
     amount_to_pay = financials['amount_to_pay']
     amount_to_refund = financials['amount_to_refund']
@@ -587,14 +585,11 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
         return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
     print('Rescheduling cutoff time', policy.late_rescheduling_cutoff_hours)
 
-
-    # --- GET Request (Display Confirmation Page) ---
     if request.method == 'GET':
         payment_intent = None
         client_secret = None
 
         if request.user.is_authenticated:
-            # Pre-fill form if user has a default billing address
             user_profile, created = UserProfile.objects.get_or_create(user=request.user)
             billing_form = BillingDetailsForm(initial={
             'billing_name': user_profile.default_name or request.user.get_full_name() or request.user.username,
@@ -656,7 +651,6 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
         }
         return render(request, 'manage_booking/booking_reschedule_confirm.html', context)
 
-    # --- POST Request (Process Reschedule) ---
     elif request.method == 'POST':
         selected_payment_method = request.POST.get('payment_method')
         payment_intent_id = request.POST.get('payment_intent_id')
@@ -675,7 +669,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
             if selected_payment_method == 'CARD':
                 if not billing_form.is_valid():
                     messages.error(request, "Please correct the billing address errors.")
-                    context = { # Re-populate context for error display
+                    context = {
                         'original_booking': original_booking,
                         'new_trip': new_trip,
                         'policy': policy,
@@ -687,9 +681,9 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                         'amount_to_pay': amount_to_pay,
                         'amount_to_refund': amount_to_refund,
                         'num_passengers': num_passengers,
-                        'client_secret': None, # No new intent for a failed form re-render
+                        'client_secret': None,
                         'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
-                        'billing_form': billing_form, # Pass the invalid form back
+                        'billing_form': billing_form,
                     }
                     return render(request, 'manage_booking/booking_reschedule_confirm.html', context)
 
@@ -705,22 +699,20 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                                 return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
 
                             with transaction.atomic():
-                                # Update seats
                                 original_booking.trip.available_seats += original_booking.number_of_passengers
                                 original_booking.trip.save()
                                 new_trip.available_seats -= num_passengers
                                 new_trip.save()
 
-                                # Update booking
                                 original_booking.trip = new_trip
                                 original_booking.number_of_passengers = num_passengers
                                 original_booking.total_price = original_total_price + rescheduling_charge_post
                                 print('New Total Price:', original_booking.total_price)
                                 original_booking.status = 'CONFIRMED'
                                 original_booking.payment_status = 'PAID'
-                                # original_booking.stripe_payment_intent_id = payment_intent_id
                                 original_booking.save()
-                                messages.success(request, f"Booking {original_booking.booking_reference} successfully rescheduled!")
+                                messages.success(request, f"Booking {original_booking.booking_reference} successfully rescheduled! Please check your email for details.")
+                                send_booking_email(original_booking, email_type='rescheduled_confirmation')
                                 return redirect(reverse('manage_booking:booking_detail', args=[original_booking.id]))
 
                         elif payment_intent.status in ['requires_payment_method', 'requires_confirmation', 'requires_action', 'processing']:
@@ -742,13 +734,11 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
             elif selected_payment_method in ['CASH', 'GCASH']:
                 try:
                     with transaction.atomic():
-                        # Update Seat Availability
                         original_booking.trip.available_seats += original_booking.number_of_passengers
                         original_booking.trip.save()
                         new_trip.available_seats -= num_passengers
                         new_trip.save()
 
-                        # Update Booking details
                         original_booking.trip = new_trip
                         original_booking.number_of_passengers = num_passengers
                         original_booking.total_price = original_total_price + rescheduling_charge_post
@@ -758,7 +748,8 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                         original_booking.stripe_payment_intent_id = None
                         original_booking.save()
 
-                        messages.success(request, f"Booking {original_booking.booking_reference} successfully rescheduled to {new_trip.trip_number}! Please complete payment via the selected method.")
+                        messages.success(request, f"Booking {original_booking.booking_reference} successfully rescheduled to {new_trip.trip_number}! Please complete payment via the selected method to confirm your booking.")
+                        send_booking_email(original_booking, email_type='pending_payment_instructions')
                         return redirect(reverse('manage_booking:booking_detail', args=[original_booking.id]))
 
                 except Exception as e:
@@ -768,10 +759,10 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
         else:
             try:
                 with transaction.atomic():
-                    # 1. Handle Payment/Refund
                     if amount_to_refund_post > 0:
                         if settings.STRIPE_MOCK_REFUNDS:
-                            messages.success(request, f"MOCKED REFUND of Php{amount_to_refund_post:.2f} processed successfully (Stripe API call skipped).")
+                            messages.success(request, f"REFUND of Php{amount_to_refund_post:.2f} is being processed. Please check your email for more details..")
+                            send_booking_email(original_booking, email_type='pending_refund')
                             original_booking.refund_status = 'COMPLETED'
                             original_booking.refund_amount = amount_to_refund_post
                         elif original_booking.stripe_payment_intent_id:
@@ -798,25 +789,22 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                                 original_booking.refund_status = 'FAILED'
                                 original_booking.save() #
                                 return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
-                        else: # Refund needed for manual payment
+                        else:
                             original_booking.refund_status = 'PENDING'
                             original_booking.refund_amount = amount_to_refund_post
+                            send_booking_email(original_booking, email_type='pending_refund')
                             messages.info(request, f"Your booking is rescheduled. A refund of Php{amount_to_refund_post:.2f} is pending manual processing. Please check your email for instructions.")
                     else:
                         messages.info(request, "No additional payment or refund required for this reschedule.")
                         original_booking.refund_status = 'NONE'
                         original_booking.refund_amount = Decimal('0.00')
 
-
-                    # 2. Update Seat Availability
                     original_booking.trip.available_seats += original_booking.number_of_passengers
                     original_booking.trip.save()
 
                     new_trip.available_seats -= num_passengers
                     new_trip.save()
 
-
-                    # 3. Update Booking
                     original_booking.trip = new_trip
                     original_booking.number_of_passengers = num_passengers
                     original_booking.total_price = original_total_price + rescheduling_charge_post

@@ -47,8 +47,12 @@ def send_booking_email(booking, email_type, booking_form_data=None, **kwargs):
     elif email_type == 'cancellation':
         subject = f'Your Booking {booking.booking_reference} Has Been Cancelled'
         html_template_name = 'emails/cancellation_email.html'
-        if 'reason' not in kwargs:
-            kwargs['reason'] = 'Your booking was cancelled as requested during the payment process.'
+    elif email_type == 'refund_processing':
+        subject = f"Refund Processing for Booking {booking.booking_reference}"
+        html_template_name = 'emails/refund_processing_email.html'
+    elif email_type == 'rescheduled_confirmation':
+        subject = f"Your Booking {booking.booking_reference} Has Been Rescheduled!"
+        html_template_name = 'emails/rescheduled_confirmation_email.html'
     else:
         print(f"Warning: Unknown email type '{email_type}' requested for booking {booking.booking_reference}")
         return

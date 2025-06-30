@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Refund Processing - Booking {{ booking.booking_reference }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #0056b3;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #28a745; /* Green for success/refund */
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #777;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Refund Processing Confirmation</h1>
+        </div>
+        
+        <p>Dear {{ customer_name }},</p>
+        
+        <p>This email confirms that a refund for your booking **{{ booking.booking_reference }}** is currently being processed.</p>
+        
+        <p>
+            <strong>Refund Amount:</strong> <span class="highlight">Php{{ refund_amount|floatformat:2 }}</span>
+        </p>
+
+        {% if booking.payment_method_type == 'CARD' and booking.card_last4 %}
+            <p>The refund will be issued to your credit card ending in **{{ booking.card_last4 }}** ({{ booking.card_brand|capfirst }}).</p>
+        {% elif booking.payment_method_type %}
+            <p>The refund will be processed via your original payment method: **{{ booking.get_payment_method_type_display }}**.</p>
+        {% else %}
+            <p>The refund will be processed via your original payment method.</p>
+        {% endif %}
+
+        {% if refund_reference %}
+            <p><strong>Refund Reference ID:</strong> {{ refund_reference }}</p>
+        {% endif %}
+
+        <p>
+            Please allow **5-10 business days** for the refund to reflect in your account,
+            depending on your bank's or payment provider's processing times.
+        </p>
+        
+        <p>If you have any questions, please do not hesitate to contact our support team.</p>
+        
+        <p>Thank you for choosing [Your Company Name].</p>
+        <p>Sincerely,<br>The [Your Company Name] Team</p>
+
+        <div class="footer">
+            <p>This is an automated email, please do not reply directly.</p>
+            <p>&copy; {{ "now"|date:"Y" }} [Your Company Name]. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
