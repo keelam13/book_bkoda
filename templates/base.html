@@ -5,9 +5,14 @@
     <head>
 
         {% block meta %}
-            <meta http-equiv="X-UA-Compatible" content="IE=edge">
             <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <meta name="description"
+                content="BKODA Seat Reservation web Application provides online reservation services for passengers">
+            <meta name="keywords"
+            content="transportation, seat reservation, booking, travel, Kabayan, Benguet, Baguio City, Philippines, commute, tourist">
+            <meta name="author" content="Keevin Aroco">
         {% endblock %}
 
         {% block extra_meta %}
@@ -53,11 +58,9 @@
         {% endblock %}
 
         {% block extra_js %}
-            <!-- Custom JS -->
-            <script src="{% static 'js/base.js' %}"></script>
         {% endblock %}
 
-        <title>book bkoda {% block extra_title %}{% endblock %}</title>
+        <title>book BKODA {% block extra_title %}{% endblock %}</title>
     </head>
     <body>
         <header class="text-white">
@@ -138,9 +141,39 @@
 
             {% block content %}
             {% endblock %}
-
-            {% block postload_js %}
-            {% endblock %}       
         </main>
+        <!-- Footer -->
+        <footer class="footer mt-auto bg-primary">
+            <div class="d-flex flex-wrap justify-content-center align-items-center">
+                <p class="text-white mb-2 mt-2 mt-md-0 ms-md-3">
+                    Follow us:
+                    <a href="https://www.facebook.com/profile.php?id=61577802846822" target="_blank" rel="noopener" aria-label="Visit our Facebook page">
+                        <i class="fa-brands fa-facebook"></i>
+                    </a>
+                    <a href="https://www.twitter.com" target="_blank" rel="noopener" aria-label="Visit our Twitter page">
+                        <i class="fa-brands fa-x-twitter"></i>
+                    </a>
+                    <a href="https://www.youtube.com" target="_blank" rel="noopener" aria-label="Visit our YouTube channel">
+                        <i class="fa-brands fa-youtube"></i>
+                    </a>
+                </p>
+                <p class="contact-info mb-2 mt-2 mt-md-0 ms-md-3">
+                    <a href="mailto:bkodatravels@gmail.com">
+                        <i class="fa-solid fa-envelope"></i>
+                        bkodatravels@gmail.com
+                    </a>
+                </p>
+                <p class="contact-info mb-2 mt-2 mt-md-0 ms-md-3">
+                    <a href="tel:+639161234567">
+                        <i class="fa-solid fa-phone"></i>
+                        +6391612345678
+                    </a>
+                </p>
+            </div>
+        </footer>
+        <!-- Custom JS -->
+        <script src="{% static 'js/base.js' %}"></script>
+        {% block postload_js %}
+        {% endblock %}       
     </body>
 </html>
