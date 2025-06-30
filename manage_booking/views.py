@@ -28,16 +28,14 @@ def _calculate_reschedule_financials(original_booking, new_trip, policy):
     policy = BookingPolicy.objects.first()
     num_passengers = original_booking.number_of_passengers
 
-    original_total_price = original_booking.trip.price
-    print('Original total price:', original_total_price)
+    original_total_price = original_booking.total_price
+    print('Original Total Price:', original_total_price)
+    original_base_price = original_booking.trip.price
     new_total_price_base = new_trip.price * num_passengers
-    print('new_total_price_base:', new_total_price_base)
     new_total_price_base = new_total_price_base.quantize(Decimal('0.01'))
-    print('new_total_price_base', new_total_price_base)
-    fare_difference = new_total_price_base - original_total_price
-    print('fare_difference', fare_difference)
+    fare_difference = new_total_price_base - original_base_price
+    print('Fare difference:', fare_difference)
     rescheduling_charge = Decimal('0.00')
-    print('rescheduling_charge', rescheduling_charge)
     reschedule_type_message = ""
 
     # Re-evaluate rescheduling charge based on time until original departure
@@ -52,16 +50,17 @@ def _calculate_reschedule_financials(original_booking, new_trip, policy):
         reschedule_type_message = "Late Reschedule"
         rescheduling_charge = original_total_price * policy.late_rescheduling_charge_percentage
         rescheduling_charge = rescheduling_charge.quantize(Decimal('0.01'))
-        print('rescheduling_charge', rescheduling_charge)
+        print('Rescheduling charge:', rescheduling_charge)
     else:
         reschedule_type_message = "Not Allowed (too close to departure)"
+        print('Reschedule not allowed')
 
     total_due_or_refund = fare_difference + rescheduling_charge
-    print('total_due_or_refund', total_due_or_refund)
+    print('Total Due:', total_due_or_refund)
 
     amount_to_pay = Decimal('0.00')
     amount_to_refund = Decimal('0.00')
-    print('amount_to_pay', amount_to_pay)
+    print('Amout to pay:', amount_to_pay)
 
     if total_due_or_refund > 0:
         amount_to_pay = total_due_or_refund
@@ -70,6 +69,7 @@ def _calculate_reschedule_financials(original_booking, new_trip, policy):
 
     return {
         'original_total_price': original_total_price,
+        'original_base_price': original_base_price,
         'new_total_price_base': new_total_price_base,
         'fare_difference': fare_difference,
         'rescheduling_charge': rescheduling_charge,
@@ -571,8 +571,8 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
     financials = _calculate_reschedule_financials(original_booking, new_trip, policy)
     amount_to_pay = financials['amount_to_pay']
     amount_to_refund = financials['amount_to_refund']
+    new_total_price = amount_to_pay + financials['original_total_price']
     reschedule_type_message = financials['reschedule_type_message']
-    print('Amount to pay:', amount_to_pay)
     time_until_new_departure = payment_context['time_until_departure']
 
     first_passenger_email = ''
@@ -590,6 +590,8 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
 
     # --- GET Request (Display Confirmation Page) ---
     if request.method == 'GET':
+        payment_intent = None
+        client_secret = None
 
         if request.user.is_authenticated:
             # Pre-fill form if user has a default billing address
@@ -620,6 +622,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                     },
                 )
                 original_booking.payment_intent_id = payment_intent.id
+                client_secret = payment_intent.client_secret
                 original_booking.save()
 
                 print('Saved orgiginal booking payment intent:', original_booking.payment_intent_id)
@@ -628,7 +631,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                 messages.error(request, f"Error initializing payment: {e}")
                 return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
             
-        print(f"DEBUG (GET): payment_intent_id={payment_intent.id}")
+        print(f"DEBUG (GET): payment_intent_id={payment_intent.id if payment_intent else 'N/A'}")
         print('Time Until departure:', time_until_new_departure )
         print('Offline Payment cutoff', payment_context['offline_payment_cutoff_seconds'])
         context = {
@@ -642,10 +645,11 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
             'rescheduling_charge': financials['rescheduling_charge'],
             'amount_to_pay': amount_to_pay,
             'amount_to_refund': amount_to_refund,
+            'new_total_price': new_total_price,
             'num_passengers': num_passengers,
             'first_passenger_email': first_passenger_email,
             'first_passenger_contact_number': first_passenger_contact_number,
-            'client_secret': payment_intent.client_secret,
+            'client_secret': client_secret,
             'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
             'billing_form': billing_form,
             **payment_context
@@ -661,9 +665,11 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
 
         financials_post = _calculate_reschedule_financials(original_booking, new_trip, policy)
         amount_to_pay_post = financials_post['amount_to_pay']
+        print('Amount to pay POST:', amount_to_pay_post)
         amount_to_refund_post = financials_post['amount_to_refund']
-        new_total_price_base_post = financials_post['new_total_price_base']
+        original_total_price = financials_post['original_total_price']
         rescheduling_charge_post = financials_post['rescheduling_charge']
+        print('Rescheduling charge POST:', rescheduling_charge_post )
 
         if amount_to_pay_post > 0:
             if selected_payment_method == 'CARD':
@@ -708,7 +714,8 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                                 # Update booking
                                 original_booking.trip = new_trip
                                 original_booking.number_of_passengers = num_passengers
-                                original_booking.total_price = new_total_price_base_post + rescheduling_charge_post
+                                original_booking.total_price = original_total_price + rescheduling_charge_post
+                                print('New Total Price:', original_booking.total_price)
                                 original_booking.status = 'CONFIRMED'
                                 original_booking.payment_status = 'PAID'
                                 # original_booking.stripe_payment_intent_id = payment_intent_id
@@ -744,7 +751,8 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                         # Update Booking details
                         original_booking.trip = new_trip
                         original_booking.number_of_passengers = num_passengers
-                        original_booking.total_price = new_total_price_base_post + rescheduling_charge_post
+                        original_booking.total_price = original_total_price + rescheduling_charge_post
+                        print('New Total Price:', original_booking.total_price)
                         original_booking.status = 'PENDING_PAYMENT'
                         original_booking.payment_status = 'PENDING'
                         original_booking.stripe_payment_intent_id = None
@@ -811,7 +819,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                     # 3. Update Booking
                     original_booking.trip = new_trip
                     original_booking.number_of_passengers = num_passengers
-                    original_booking.total_price = new_total_price_base_post + rescheduling_charge_post
+                    original_booking.total_price = original_total_price + rescheduling_charge_post
                     original_booking.status = 'CONFIRMED'
                     original_booking.payment_status = 'PAID'
                     original_booking.save()

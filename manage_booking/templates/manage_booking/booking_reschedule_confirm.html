@@ -26,6 +26,7 @@
                                 <p><strong>Date:</strong> {{ original_booking.trip.date|date:"F d, Y" }}</p>
                                 <p><strong>Departure:</strong> {{ original_booking.trip.departure_time|time:"h:i A" }}</p>
                                 <p><strong>Passengers:</strong> {{ num_passengers }}</p>
+                                <p><strong>Original Trip Base Price:</strong> <span class="text-muted">Php{{ original_booking.trip.price|floatformat:2 }}</span></p>
                                 <p><strong>Original Total Price:</strong> <span class="text-muted">Php{{ original_total_price|floatformat:2 }}</span></p>
                             </div>
                             <div class="col-md-6 mb-3">
@@ -35,6 +36,7 @@
                                 <p><strong>Departure:</strong> {{ new_trip.departure_time|time:"h:i A" }}</p>
                                 <p><strong>Passengers:</strong> {{ num_passengers }}</p>
                                 <p><strong>New Trip Base Price:</strong> Php{{ new_total_price_base|floatformat:2 }}</p>
+                                <p><strong>New Total Price:</strong> Php{{new_total_price|floatformat:2 }}</p>
                             </div>
                         </div>
 
@@ -176,16 +178,6 @@
                                         </button>
                                     </div>
                                     {% endif %}
-
-                                    <div class="form-check mt-4">
-                                        <input class="form-check-input" type="checkbox" id="termsCheck" required>
-                                        <label class="form-check-label" for="termsCheck">
-                                            I declare to have read and agree to the <a href="#" data-toggle="modal"
-                                                data-target="#privacyPolicyModal">Privacy Policy</a> and <a href="#" data-toggle="modal"
-                                                data-target="#bookingTermsModal">T&C of Booking</a> and <a href="#" data-toggle="modal"
-                                                data-target="#carriageTermsModal">T&C of Carriage</a>.
-                                        </label>
-                                    </div>
                                 </div>
                             </div>
                         {% elif amount_to_refund > 0 %}
@@ -198,6 +190,16 @@
                                 No additional payment or refund is required for this reschedule.
                             </div>
                         {% endif %}
+
+                        <div class="form-check mt-4">
+                            <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                            <label class="form-check-label" for="termsCheck">
+                                I declare to have read and agree to the <a href="#" data-toggle="modal"
+                                    data-target="#privacyPolicyModal">Privacy Policy</a> and <a href="#" data-toggle="modal"
+                                    data-target="#bookingTermsModal">T&C of Booking</a> and <a href="#" data-toggle="modal"
+                                    data-target="#carriageTermsModal">T&C of Carriage</a>.
+                            </label>
+                        </div>
 
                         <input type="hidden" name="selected_payment_method_hidden" id="selected-payment-method-hidden" value="card">
                         <input type="hidden" id="firstPassengerEmail" value="{{ first_passenger_email }}">
@@ -356,7 +358,7 @@
                         </li>
                         <li><strong>Late Rescheduling (15% fee):</strong> If rescheduling between 24 hours and 3 hours (inclusive) before original departure.
                             <ul>
-                                <li><strong>Action:</strong> 15% rescheduling charge applied. Subject to seat availability.</li>
+                                <li><strong>Action:</strong> 15% rescheduling charge applied to the original booking's total paid price. Subject to seat availability.</li>
                             </ul>
                         </li>
                         <li><strong>No Rescheduling Allowed:</strong> If rescheduling less than 3 hours before original departure.</li>
