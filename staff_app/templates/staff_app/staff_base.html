@@ -3,52 +3,7 @@
 {% load crispy_forms_tags %}
 
 {% block extra_css %}
-<style>
-    .staff-app-display {
-        display: flex;
-        min-height: 100vh;
-        position:relative;
-    }
-    .sidebar {
-        width: 250px;
-        background-color: #343a40;
-        color: white;
-        padding: 20px;
-        flex-shrink: 0;
-    }
-    .sidebar .nav-link {
-        color: #adb5bd;
-        padding: 10px 15px;
-        border-radius: 5px;
-        margin-bottom: 5px;
-        transition: background-color 0.2s ease;
-    }
-    .sidebar .nav-link:hover, .sidebar .nav-link.active {
-        background-color: #495057;
-        color: white;
-    }
-    .content {
-        flex-grow: 1;
-        padding: 20px;
-        overflow-y: auto;
-        background-color: #fff;
-        border-radius: 0.5rem;
-    }
-    .navbar-brand {
-        font-weight: bold;
-        font-size: 1.5rem;
-        color: white !important;
-        margin-bottom: 20px;
-        display: block;
-        text-align: center;
-    }
-    .section-title {
-        color: #007bff;
-        border-bottom: 2px solid #007bff;
-        padding-bottom: 5px;
-        margin-bottom: 20px;
-    }
-</style>
+    <link rel="stylesheet" href="{% static 'staff_app/staff_app.css' %}">
 {% endblock %}
 
 {% block content %}

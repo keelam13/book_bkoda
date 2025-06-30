@@ -4,11 +4,14 @@
 {% block title %}Staff Dashboard - {{ block.super }}{% endblock %}
 
 {% block staff_app_content %}
-<div id="dashboard-section" class="staff-content-section">
-    <h2 class="section-title">Dashboard Overview</h2>
+<div class="container mx-auto p-6 bg-white rounded-xl shadow-lg mt-8">
+    <h2 class="staff-section-title">Dashboard Overview</h2>
     <p class="lead">Welcome to the Staff Management Panel!</p>
     <p>You are logged in as: **{{ request.user.username }}** (ID: {{ request.user.id }})</p>
-    <p>Use the navigation on the left to manage trips and bookings efficiently.</p>
+    <div class="alert alert-info">
+        <p>Use the navigation on the left to manage trips and bookings efficiently.</p>
+        <p>**For better feature use, please use a desktop or a device with wider screen.**</p>
+    </div>
     <div class="mt-4 p-3 bg-light border rounded">
         <h5>Quick Stats</h5>
         <p>Total Trips: <span id="dashboard-total-trips">{{ total_trips }}</span></p>
