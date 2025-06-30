@@ -9,6 +9,7 @@ from django.utils import timezone
 from trips.models import Trip
 from booking.models import Booking, BOOKING_STATUS_CHOICES, PAYMENT_STATUS_CHOICES, REFUND_STATUS_CHOICES, PAYMENT_METHOD_CHOICES
 from staff_app.forms import TripForm, BookingForm
+from manage_booking.utils import paginate_queryset
 from io import StringIO
 from .management.commands.trips.generate_trips import Command as GenerateTripsCommand
 from .management.commands.bookings.cancel_unpaid_bookings import Command as CancelUnpaidBookingsCommand
@@ -120,9 +121,11 @@ def trips_list(request):
         min_date = date_aggregation['min_date']
         max_date = date_aggregation['max_date']
 
+    trips_list = paginate_queryset(request, trips_list, items_per_page=5)
+
     context = {
         'page_title': 'Trips List',
-        'trips': trips_list,
+        'trips_list': trips_list,
         'filter_date': filter_date,
         'filter_destination': filter_destination,
         'filter_origin': filter_origin,
@@ -222,9 +225,11 @@ def bookings_list(request):
         booking_date__lt=cutoff_time_for_unpaid
     ).count()
 
+    bookings_list = paginate_queryset(request, bookings_list, items_per_page=5)
+
     context = {
         'page_title': 'Bookings List',
-        'bookings': bookings_list,
+        'bookings_list': bookings_list,
         'filter_trip_number': filter_trip_number,
         'filter_customer_name': filter_customer_name,
         'filter_status': filter_status,
