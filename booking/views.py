@@ -344,7 +344,7 @@ def process_payment(request, booking_id):
 
                         if stripe_intent.payment_method:
                             pm = stripe.PaymentMethod.retrieve(stripe_intent.payment_method)
-                            if pm.type == 'CARD':
+                            if pm.type == 'card':
                                 booking.card_brand = pm.card.brand
                                 booking.card_last4 = pm.card.last4
                             booking.stripe_payment_method_id = pm.id

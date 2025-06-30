@@ -73,7 +73,7 @@ def trips_list(request):
 
         trip = get_object_or_404(Trip, trip_id=trip_id)
 
-        if action == 'update_trip' and trip.date < datetime.now():
+        if action == 'update_trip' and trip.date < datetime.now().date():
             messages.error(request, f'Cannot update past trip {trip.trip_number}. Editing is disallowed for past dates.')
             return redirect('staff_app:trips_list')
 
