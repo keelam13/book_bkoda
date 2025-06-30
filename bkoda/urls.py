@@ -29,3 +29,6 @@ urlpatterns = [
     path('booking/', include('booking.urls')),
     path('manage/', include('manage_booking.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+handler404 = 'bkoda.views.custom_404_view'
+handler500 = 'bkoda.views.custom_500_view'
