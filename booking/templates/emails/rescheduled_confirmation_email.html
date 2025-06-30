@@ -70,15 +70,6 @@
             <p>Your trip has been successfully rescheduled and is now fully confirmed.</p>
         </div>
 
-        <h3>Original Booking Details</h3>
-        <div class="info-message">
-            <ul>
-                <li><strong>Original Route:</strong> {{ original_trip.origin }} to {{ original_trip.destination }}</li>
-                <li><strong>Original Date:</strong> {{ original_trip.date|date:"F d, Y" }}</li>
-                <li><strong>Original Departure Time:</strong> {{ original_trip.departure_time|time:"h:i A" }}</li>
-            </ul>
-        </div>
-
         <h3>New Booking Details</h3>
         <ul>
             <li><strong>Booking Reference:</strong> {{ booking.booking_reference }}</li>
@@ -128,9 +119,12 @@
 
         <h3 style="color: #28a745;">Important Discount Information:</h3>
         <p>A 20% discount is available for Senior Citizens (60 y/o and above) and Students. To avail of this, eligible passengers **must present a valid Senior Citizen ID or a valid School ID** to the **bus attendant on-site** before boarding. The attendant will process the refund directly.</p>
-
+        <br>
         <p>We look forward to seeing you on your new trip date!</p>
+        <br>
         <p>Best regards,<br>The BKODA Transport Team</p>
+        <p>Email: <a href="bkodatravels@gmail.com"></a>bkodatravels@gmail.com</p>
+        <p>Mobile No.: <a href="+639161234567">+63-916-123-4567</a></p>
 
         <div class="footer">
             <p>This is an automated email. Please keep this email for your records.</p>
