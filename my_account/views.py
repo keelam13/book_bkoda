@@ -50,7 +50,6 @@ def my_bookings(request):
     now = timezone.now()
 
     upcoming_confirmed_bookings = []
-    other_bookings = []
 
     pending_payment_bookings = Booking.objects.filter(
         user=request.user,

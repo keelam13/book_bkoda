@@ -7,19 +7,39 @@
 {% block staff_app_content %}
 <div class="container p-3 my-3 bg-white rounded shadow-lg">
     <h1 class="h3 text-secondary border-bottom pb-3 mb-4">Bookings List</h1>
+
+    <!-- Alert for Null Bookings -->
+    {% if expired_bookings_count > 0 %}
+    <div class="alert alert-danger alert-dismissable fade show mb-4" role="alert">
+        <h4 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i> Immediate Action Required!</h4>
+        <p>There are **{{ null_bookings_count }}** booking(s) with **PENDING PAYMENT** status with **NO PAYMENT METHOD** that have passed their 24-hour payment window.</p>
+        <p class="mb-2">Please click the "Cancel Null Bookings" button to automatically cancel these expired bookings and free up seats.</p>
+        <div class="mb-0 d-flex justify-content-start">
+            <!-- Cancel Unpaid Bookings Button -->
+            <form action="{% url 'staff_app:cancel_unpaid_bookings' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm"
+                onclick="return confirm('Are you sure you want to cancel unpaid bookings older than 24 hours? This action cannot be undone.');">
+                <strong>Cancel Null Bookings</strong>
+                </button>
+            </form>
+            </div>
+    </div>
+    {% endif %}
+
     <!-- Alert for Expired Bookings -->
     {% if expired_bookings_count > 0 %}
     <div class="alert alert-warning alert-dismissable fade show mb-4" role="alert">
-        <h4 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i> Action Required!</h4>
+        <h4 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i>Action Required!</h4>
         <p>There are **{{ expired_bookings_count }}** booking(s) with **PENDING PAYMENT** status that have passed their 24-hour payment window.</p>
         <p class="mb-2">Please click the "Cancel Unpaid Bookings" button to automatically cancel these expired bookings and free up seats.</p>
         <div class="mb-0 d-flex justify-content-start">
             <!-- Cancel Unpaid Bookings Button -->
             <form action="{% url 'staff_app:cancel_unpaid_bookings' %}" method="post">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-warning btn-sm" 
+                <button type="submit" class="btn btn-warning btn-sm"
                 onclick="return confirm('Are you sure you want to cancel unpaid bookings older than 24 hours? This action cannot be undone.');">
-                Cancel Unpaid Bookings    
+                <strong>Cancel Unpaid Bookings</strong>
                 </button>
             </form>
         </div>
@@ -31,7 +51,7 @@
         <div class="col-md-6">
             <p class="lead mb-0">Total Bookings: <strong>{{ booking_count }}</strong></p>
             {% if min_booking_date and max_booking_date %}
-                <p class="text-muted small mb-0">Booking Dates Covered: 
+                <p class="text-muted small mb-0">Booking Dates Covered:
                     <strong>{{ min_booking_date|date:"F d, Y" }}</strong>
                     {% if min_booking_date != max_booking_date %}
                          - <strong>{{ max_booking_date|date:"F d, Y" }}</strong>
@@ -146,8 +166,15 @@
                                 <li class="list-group-item"><strong>Payment Status:</strong> {{  booking.get_payment_status_display }}</li>
                             </ul>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-danger mr-auto"
-                                    id="deleteBookingButton_{{ booking.pk }}">Delete Booking</button>
+                                <form action="{% url 'staff_app:bookings_list' %}" method="post" class="d-inline mr-auto">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="booking_pk" value="{{ booking.pk }}">
+                                    <input type="hidden" name="action" value="delete_booking">
+                                    <button type="submit" class="btn btn-danger"
+                                        onclick="return confirm('Are you sure you want to delete Booking {{ booking.booking_reference }}? This action cannot be undone.');">
+                                        Delete Booking
+                                    </button>
+                                </form>
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                             </div>
                             {% else %}
@@ -199,11 +226,18 @@
                                         </div>
                                     </div>
                                     <div class="modal-footer">
-                                        <button type="button" class="btn btn-danger mr-auto"
-                                            id="deleteBookingButton_{{ booking.pk }}">Delete Booking</button>
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                         <button type="submit" class="btn btn-success">Save Changes</button>
+                                        <button type="button" class="btn btn-secondary w-20" data-dismiss="modal">Close</button>
                                     </div>
+                                </form>
+                                <form action="{% url 'staff_app:bookings_list' %}" method="post" class="m-3 align-self-end">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="booking_pk" value="{{ booking.pk }}">
+                                    <input type="hidden" name="action" value="delete_booking">
+                                    <button type="submit" class="btn btn-danger"
+                                        onclick="return confirm('Are you sure you want to delete Booking {{ booking.booking_reference }}? This action cannot be undone.');">
+                                        Delete Booking
+                                    </button>
                                 </form>
                             </ul>
                             {% endif %}
@@ -227,7 +261,7 @@
                 <span class="page-link" aria-hidden="true">&laquo; Previous</span>
             </li>
             {% endif %}
-    
+
             {% if bookings_list.has_next %}
             <li class="page-item">
                 <a class="page-link" href="?page={{ bookings_list.next_page_number }}" aria-label="Next">
@@ -242,7 +276,7 @@
         </ul>
     </nav>
     {% else %}
-    <p class="text-muted lead">No bookings_list found matching your criteria.</p>
+    <p class="text-muted lead">No booking found matching your criteria.</p>
     {% endif %}
 
     <!-- Back to Top Button -->
@@ -260,37 +294,4 @@
         </a>
     </div>
 </div>
-{% endblock %}
-
-{% block postloadjs %}
-{{ block.super }}
-<script type="text/javascript">
-    console.log("Bookings list script loaded!");
-
-    // JavaScript for handling Booking Delete button click
-    $('[id^="deleteBookingButton_"]').click(function () {
-        var bookingPk = this.id.replace('deleteBookingButton_', ''); // Use pk
-        var form = $('#updateBookingForm' + bookingPk);
-        var actionInput = $('#booking_action_' + bookingPk);
-
-        if (!form.length) {
-            form = $('<form>', {
-                action: '{% url "staff_app:bookings_list" %}',
-                method: 'POST',
-                style: 'display:none;'
-            });
-            form.append($('<input>', { type: 'hidden', name: 'csrfmiddlewaretoken', value: '{{ csrf_token }}' }));
-            form.append($('<input>', { type: 'hidden', name: 'booking_pk', value: bookingPk }));
-            actionInput = $('<input>', { type: 'hidden', name: 'action', value: 'delete_booking' });
-            form.append(actionInput);
-            $('body').append(form);
-        } else {
-            actionInput.val('delete_booking');
-        }
-
-        if (confirm('Are you sure you want to delete Booking ' + bookingPk + '? This action cannot be undone.')) {
-            form.submit();
-        }
-    });
-</script>
 {% endblock %}

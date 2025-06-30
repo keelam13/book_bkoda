@@ -9,4 +9,5 @@ urlpatterns = [
     path('bookings/', views.bookings_list, name='bookings_list'),
     path('generate-trips/', views.generate_trips_view, name='generate_trips'),
     path('cancel-unpaid-bookings/', views.cancel_unpaid_bookings_view, name='cancel_unpaid_bookings'),
+    path('cancel-null-bookings/', views.cancel_null_bookings_view, name='cancel_null_bookings'),
 ]

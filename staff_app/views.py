@@ -13,6 +13,7 @@ from manage_booking.utils import paginate_queryset
 from io import StringIO
 from .management.commands.trips.generate_trips import Command as GenerateTripsCommand
 from .management.commands.bookings.cancel_unpaid_bookings import Command as CancelUnpaidBookingsCommand
+from .management.commands.bookings.cancel_null_bookings import Command as CancelNullBookingsCommand
 from datetime import datetime, timedelta
 
 
@@ -152,6 +153,7 @@ def bookings_list(request):
             return redirect('staff_app:bookings_list')
 
         booking = get_object_or_404(Booking, pk=booking_pk)
+        print('Booking:', booking)
         trip_datetime = datetime.combine(booking.trip.date, booking.trip.departure_time)
         if action == 'update_booking' and trip_datetime < datetime.now():
              messages.error(request, f'Cannot update past booking {booking.booking_reference}. Editing is disallowed for past trip dates.')
@@ -184,6 +186,7 @@ def bookings_list(request):
     filter_customer_name = request.GET.get('customer_name')
     filter_status = request.GET.get('status')
     filter_trip_date = request.GET.get('trip_date')
+
 
     # Apply filters
     if filter_trip_number:
@@ -218,11 +221,17 @@ def bookings_list(request):
 
     # --- Calculate Expired Bookings Count ---
     cutoff_time_for_unpaid = timezone.now() - timedelta(hours=24)
+    cutoff_time_for_null = timezone.now() - timedelta(hours=1)
 
     expired_bookings_count = Booking.objects.filter(
         status='PENDING_PAYMENT',
         payment_status='PENDING',
         booking_date__lt=cutoff_time_for_unpaid
+    ).count()
+
+    null_bookings_count = Booking.objects.filter(
+        payment_method_type__isnull=True,
+        booking_date__lt=cutoff_time_for_null
     ).count()
 
     bookings_list = paginate_queryset(request, bookings_list, items_per_page=5)
@@ -243,6 +252,7 @@ def bookings_list(request):
         'min_booking_date': min_booking_date,
         'max_booking_date': max_booking_date,
         'expired_bookings_count': expired_bookings_count,
+        'null_bookings_count': null_bookings_count
     }
     return render(request, 'staff_app/bookings_list.html', context)
 
@@ -297,5 +307,33 @@ def cancel_unpaid_bookings_view(request):
         messages.error(request, f"An error occurred during unpaid bookings cancellation: {e}")
         import traceback
         print(f"Error in cancel_unpaid_bookings_view: {traceback.format_exc()}")
+    
+    return redirect('staff_app:bookings_list')
+
+
+@login_required
+@require_POST
+def cancel_null_bookings_view(request):
+    """
+    View to programmatically run the cancel_null_bookings management command.
+    """
+    out = StringIO()
+    err = StringIO()
+    try:
+        command = CancelNullBookingsCommand()
+        command.stdout = out
+        command.stderr = err
+        command.handle()
+        
+        error_output = err.getvalue().strip()
+        if error_output:
+            messages.error(request, f"Null bookings cancellation completed with warnings/errors: {error_output}")
+        else:
+            messages.success(request, f"Null bookings cancellation completed successfully: {out.getvalue().strip()}")
+            
+    except Exception as e:
+        messages.error(request, f"An error occurred during null bookings cancellation: {e}")
+        import traceback
+        print(f"Error in cancel_null_bookings_view: {traceback.format_exc()}")
     
     return redirect('staff_app:bookings_list')
