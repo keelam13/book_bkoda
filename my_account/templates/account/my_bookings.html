@@ -4,9 +4,8 @@
 
 {% block profile_content %}
 <h3 class="profile-section-title">My Bookings</h3>
-
-<div class="mb-5">
-    <!-- Pending Payment Alerts Section -->
+<!-- Pending Payment Alerts Section -->
+<div class="pending-payment-section">
     <h4 class="text-xl font-semibold mb-3">Pending Payments <i class="fas fa-exclamation-triangle pending-icon mb-3"></i></h4>
     {% if pending_payment_bookings %}
     <div class="alert alert-warning alert-fix-display" role="alert">
@@ -18,9 +17,10 @@
     {% else %}
     <p class="mb-4">Great! You have **NO** bookings awaiting payment.</p>
     {% endif %}
+</div>
 
-    <hr>
-
+<hr>
+<div class="pending-payment-section">
     <!-- Upcoming Confirmed Trips Section -->
     <h4 class="text-xl font-semibold mb-3">Upcoming Confirmed Trips</h4>
     {% if upcoming_confirmed_bookings_page %}
@@ -102,43 +102,47 @@
         </div>
         {% endfor %} 
     </ul>
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center mt-4">
-            {% if upcoming_confirmed_bookings_page.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ upcoming_confirmed_bookings_page.previous_page_number }}" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span> Previous
-                </a>
-            </li>
-            {% else %}
-            <li class="page-item disabled">
-                <span class="page-link" aria-hidden="true">&laquo; Previous</span>
-            </li>
-            {% endif %}
-    
-            {% if upcoming_confirmed_bookings_page.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ upcoming_confirmed_bookings_page.next_page_number }}" aria-label="Next">
-                    Next <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            {% else %}
-            <li class="page-item disabled">
-                <span class="page-link" aria-hidden="true">Next &raquo;</span>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% else %}
-    <div class="alert alert-info alert-fix-display" role="alert">
-        You have no upcoming confirmed trips at the moment.
-        <div class="mt-4">
-            <a href="{% url 'home' %}" class="btn btn-primary">Book a Trip Now!</a>
-        </div>
+</div>
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center mt-4">
+        {% if upcoming_confirmed_bookings_page.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ upcoming_confirmed_bookings_page.previous_page_number }}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span> Previous
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link" aria-hidden="true">&laquo; Previous</span>
+        </li>
+        {% endif %}
+
+        {% if upcoming_confirmed_bookings_page.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ upcoming_confirmed_bookings_page.next_page_number }}" aria-label="Next">
+                Next <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link" aria-hidden="true">Next &raquo;</span>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% else %}
+<div class="alert alert-info alert-fix-display" role="alert">
+    You have no upcoming confirmed trips at the moment.
+    <div class="mt-4">
+        <a href="{% url 'home' %}" class="btn btn-primary">Book a Trip Now!</a>
     </div>
-    {% endif %}
+</div>
+{% endif %}
+<div>
+    <a href="{% url 'manage_booking:confirmed_bookings' %}" class="btn btn-info mr-auto">Manage Bookings</a>
 </div>
 
+    
 <!-- Back to Top Button -->
 <div class="btt-button">
     <a id="back-to-top" class="btn btn-primary rounded-circle shadow d-flex justify-content-center align-items-center">

@@ -19,6 +19,11 @@
                         class="nav-link {% if request.resolver_match.url_name == 'my_bookings' %}active{% endif %}">
                         <i class="bi bi-calendar-check-fill mr-2"></i> My Bookings
                     </a>
+                    {% if user.is_staff %}
+                     <a href="{% url 'staff_app:dashboard' %}" class="nav-link">
+                        <i class="fa-solid fa-laptop"></i> Staff Panel
+                    </a>
+                     {% endif %}
                     <a href="{% url 'account_logout' %}" class="nav-link text-danger mt-3">
                         <i class="bi bi-box-arrow-right"></i> Log Out
                     </a>
