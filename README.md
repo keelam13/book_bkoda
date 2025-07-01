@@ -1,23 +1,23 @@
 # BKODA Seat Reservation
 
-Live Version: [BKODA Seat Reservation](https://bkoda-seat-reservation-5dffea85a169.herokuapp.com/)
+Live Version: [BKODA Seat Reservation](https://book-bkoda-6d62942dbe76.herokuapp.com/))
 
 
 Repository: [GitHub Repo](https://github.com/keelam13/bkoda_seat_reservation)
 
 The app is developed by [Keevin Aroco](https://github.com/keelam13).
 
-![BKODA Seat Reservation](documentation/design/bkoda_logo.png)
+![book BKODA](documentation/design/bkoda_logo.png)
 
 ## About
 
-[BKODA Seat Reservation](https://bkoda-seat-reservation-5dffea85a169.herokuapp.com/) Bkoda Seat Reservation is a web application built with Django that allows users to easily reserve seats for travels from Kabayan, Benguet to Baguio City and vice versa. It provides a user-friendly interface for trip search, seat reservation and booking management.
+[book BKODA](https://github.com/keelam13/book_bkoda) book BKODA is a web application built with Django that allows users to easily reserve seats for travels from Kabayan, Benguet to Baguio City and vice versa. It provides a user-friendly interface for trip search, seat reservation and booking management.
 
 ## User Experience Design
 
 ### Strategy
 
-Developed for the BKODA in the Municipality of Kabayan Benguet in the Philippines. The President of the associatiom wanted an app where clients could easily reserve seats for the trips from Kabayan, Benguet to Baguio City and back. In this locality, the clients usually pay in cash and most of them don't have debit/credit cards. In this case, payment option is going to be a feature for the future improvements of the app. 
+Developed for the BKODA in the Municipality of Kabayan Benguet in the Philippines. The President of the associatio wanted an app where clients could easily reserve seats for the trips from Kabayan, Benguet to Baguio City and back. In this locality, the clients usually pay in cash and most of them don't have debit/credit cards. In this case, payment option is going to be a feature for the future improvements of the app. 
 
 The application focuses on simplicity and efficiency, ensuring that users can quickly and easily reserve their desired number of seats. The design prioritizes clear navigation and a straightforward reservation process to minimize user frustration.
 
@@ -30,28 +30,33 @@ This application is designed for:
 
 ### User Stories
 
-#### **First Time Visitor Goals**
+User Story ID AS A/AN I WANT TO BE ABLE TO... SO THAT I CAN...
 
-| Issue ID | User Story |
-|-------------|-------------|
-|[#6](https://github.com/keelam13/bkoda_seat_reservation/issues/6)|As a Passenger, I want to easily search for available routes and schedules, to be able to decide which trips to take.|
-|[#9](https://github.com/keelam13/bkoda_seat_reservation/issues/9)|As a Passenger, I want to view a visual representation of seat availability, or me to check if I can still be accommodated, especially when reserving for multiple passengers.|
-|[#3](https://github.com/keelam13/bkoda_seat_reservation/issues/3)|As a Passenger, I want to reserve a seat online, so I don't have to be physically present at the terminal to do so.|
-|[#5](https://github.com/keelam13/bkoda_seat_reservation/issues/5)|As a Passenger, I want to view and manage my reservation to cancel or change the number of seats reserved.|
-|[#2](https://github.com/keelam13/bkoda_seat_reservation/issues/2)|As a  Passenger,  I want to register an account to be able to see and manage my reservation.|
+#### **Searching and Viewing**
+1 Passenger Search for trips Select one to book
+2 Passenger View individual trip details Identify the route, date and time of departure and arrival, available seats, and the price
 
-#### **Frequent Visitor Goals**
+#### **Registration and User Accounts**
+3 Site User Easily register for an account Have a personal account and be able to view my profile
+4. Site User Easily register with my social account Register with my Facebook or Gmail accounts
+4 Site User Easily login or logout Access my personal account information
+5 Site User Easily recover my password in case I forget it Recover access to my account
+6 Site User Receive an email confirmation after registering Verify that my account registration was successful
+7 Site User Have a personalized user profile View my personal trip history and booking confirmations, and save my payment information
 
-| Issue ID    | User Story |
-|-------------|-------------|
-|[#10](https://github.com/keelam13/bkoda_seat_reservation/issues/10)|As a Frequent Passenger, I want to be able to easily log in to and log out from my account, so that I can have more access to the app's features.|
+#### **Booking**
+8 Passenger Easily select the trip that I want to book Ensure I don't accidentally select the wrong trip
+9 Passenger Add the passengers Easily make changes before booking
+10 Passenger Easily enter my payment information Check out quickly and with no hassles
+11 Passenger Feel my personal and payment information is safe and secure Confidently provide the needed information to make a purchase
+12 Passenger View an booking confirmation Verify that I haven't made any mistakes
+13 Passenger Receive an email confirmation after payment Keep the confirmation of what I've paid for.
+14 Passenger Easily manage my booking Change the date and/or time of my travel when I have to
 
-#### **Administrator Goals**
+#### **Admin and Transport Management**
+15 Manager Add a trip Add new trips to the list
+16 Manager Easily see bookings Easily plan for the next trips
 
-| Issue ID    | User Story |
-|-------------|-------------|
-|[#4](https://github.com/keelam13/bkoda_seat_reservation/issues/4)|As an Administrator I want to add scheduled trips and if needed delete them to cater to the demands for transportation.|
-|[#1](https://github.com/keelam13/bkoda_seat_reservation/issues/1)|As an Administrator I want to see an overview of the reservations to check if scheduled trips are being booked.|
 ---
 
 ## Technologies used
@@ -69,6 +74,7 @@ This application is designed for:
     + [Django-allauth](https://django-allauth.readthedocs.io/en/latest/): the authentication library used to create the user 
     + [Django-crispy-forms](https://django-cryptography.readthedocs.io/en/latest/): was used to control the rendering behavior of Django forms.
     + [Bootstrap](https://getbootstrap.com/):was used to style the page
+
 - ### Databases:
 
     + [SQLite](https://www.sqlite.org/): was used as a development database.
@@ -120,6 +126,7 @@ The Coder opted to use simple colors using the colors from the Bootstrap Color C
 * **Red:** Used for "Cancel" and "Delete" buttons, indicating actions that require caution.
 * **Blue:** Used for the "Update" button, aligning with the overall theme and suggesting a positive action.
 * **Green:** Used for the "Previous Day," "Next Day," and "Reserve" buttons. The choice of green is intended to signal positive actions and encourage user engagement. Green is often associated with "go" signals and safe operations, making it suitable for these interactive elements. However, careful consideration was given to ensure sufficient contrast against the light blue background to maintain readability and accessibility.
+* **Yellow:** Used for buttons and messages, to warn the user of pending or for bookings requiring actions.
 
 The application primarily utilizes a light blue (#69DDFF) as the table background, creating a calm and trustworthy interface. 
 
