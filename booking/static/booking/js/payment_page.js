@@ -55,7 +55,6 @@ $(document).ready(function () {
             const stripePublicKey = $('#id_stripe_public_key').text().slice(1, -1);
             stripe = Stripe(stripePublicKey);
             elements = stripe.elements();
-            console.log("Stripe object and Elements created for the first time.");
         }
 
         if (card) {
@@ -269,11 +268,9 @@ $(document).ready(function () {
                     paymentIntentIdInput.val(paymentIntent.id);
                     paymentForm.off('submit').submit();
                 } else if (paymentIntent.status === 'requires_action') {
-                    console.log("Payment requires action:", paymentIntent.status);
                     const { error: actionError, paymentIntent: actionPaymentIntent } = await stripe.handleCardAction(paymentIntent.client_secret);
 
                     if (actionError) {
-                        console.error("Stripe handleCardAction error:", actionError);
                         cardErrors.html(`
                             <span class="icon" role="alert"><i class="fas fa-times"></i></span>
                             <span>${actionError.message}</span>
@@ -287,7 +284,6 @@ $(document).ready(function () {
                         paymentIntentIdInput.val(actionPaymentIntent.id);
                         paymentForm.off('submit').submit();
                     } else {
-                        console.warn("Payment still not succeeded after action. Status:", actionPaymentIntent.status);
                         cardErrors.html(`
                             <span class="icon" role="alert"><i class="fas fa-times"></i></span>
                             <span>Payment not successful after action. Status: ${actionPaymentIntent.status}. Please try again.</span>
@@ -299,7 +295,6 @@ $(document).ready(function () {
                         toggleBillingAddressFields();
                     }
                 } else {
-                    console.warn("Payment not succeeded. Unexpected status:", paymentIntent.status);
                     cardErrors.html(`
                         <span class="icon" role="alert"><i class="fas fa-times"></i></span>
                         <span>Payment not successful. Status: ${paymentIntent.status}. Please check details or try another method.</span>

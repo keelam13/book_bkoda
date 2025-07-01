@@ -218,7 +218,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 #swapLocationsBtn {
     background-color: #fff;
-    border: ipx solid #495057 !important;
+    border: 1px solid #495057 !important;
     border-radius: 17px;
     width: calc(1.5em + .75rem + 2px);
     height: calc(1.5em + .75rem + 2px);
