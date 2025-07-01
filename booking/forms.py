@@ -56,7 +56,7 @@ class BookingConfirmationForm(forms.ModelForm):
             self.fields[f'passenger_contact_number{i+1}'] = forms.CharField(
                     max_length=20,
                     required=True,
-                     widget=forms.TextInput()
+                    widget=forms.TextInput()
             )
 
         passenger_placeholders = {
@@ -80,27 +80,34 @@ class BookingConfirmationForm(forms.ModelForm):
                     passenger_number = int(match.group(2))
                     field_type_suffix = match.group(1)
 
-                    base_placeholder = passenger_placeholders.get(field_type_suffix, '')
+                    base_placeholder = passenger_placeholders.get(
+                        field_type_suffix, ''
+                        )
 
-                    current_placeholder_text = f'{base_placeholder} (Passenger {passenger_number})'
+                    current_placeholder_text = (
+                        f'{base_placeholder} (Passenger {passenger_number})'
+                        )
                     if field_obj.required:
                         current_placeholder_text += ' *'
-                    field_obj.widget.attrs['placeholder'] = current_placeholder_text
+                    field_obj.widget.attrs[
+                        'placeholder'] = current_placeholder_text
                 else:
-                    field_obj.widget.attrs['placeholder'] = "Error: Invalid Name"
-            
+                    field_obj.widget.attrs[
+                        'placeholder'] = "Error: Invalid Name"
+
             if field_name == 'passenger_name1':
                 field_obj.widget.attrs['autofocus'] = True
-                print(f"DEBUG FORM: Set autofocus for {field_name}")
-
-        print("DEBUG FORM: Finished field styling loop.")
-        print(f"DEBUG FORM: Final fields in form object: {list(self.fields.keys())}")
 
     def clean(self):
         cleaned_data = super().clean()
 
         if self.trip and self.trip.available_seats < self.num_passengers:
-            self.add_error(None, f"Not enough available seats for {self.num_passengers} passengers. Only {self.trip.available_seats} seats remaining.")
+            self.add_error(
+                None,
+                (f"Not enough available seats for {self.num_passengers}"
+                    f"passengers."
+                    f"Only {self.trip.available_seats} seats remaining.")
+            )
 
         return cleaned_data
 
@@ -121,43 +128,65 @@ class BillingDetailsForm(forms.Form):
         label="Name on Card",
         max_length=255,
         required=True,
-        widget=forms.TextInput(attrs={'placeholder': 'Full Name (as it appears on card)', 'autocomplete': 'name'})
+        widget=forms.TextInput(attrs={
+            'placeholder':
+                'Full Name (as it appears on card)',
+            'autocomplete': 'name'
+        })
     )
     billing_email = forms.EmailField(
         label="Billing Email",
         max_length=255,
         required=True,
-        widget=forms.EmailInput(attrs={'placeholder': 'Email address for billing', 'autocomplete': 'email'})
+        widget=forms.EmailInput(attrs={
+            'placeholder': 'Email address for billing',
+            'autocomplete': 'email'
+        })
     )
     billing_phone = forms.CharField(
         label="Phone (Optional)",
         max_length=20,
         required=False,
-        widget=forms.TextInput(attrs={'placeholder': 'Billing phone number', 'autocomplete': 'tel'})
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Billing phone number',
+            'autocomplete': 'tel'
+        })
     )
     billing_street_address1 = forms.CharField(
         label="Street Address 1",
         max_length=80,
         required=True,
-        widget=forms.TextInput(attrs={'placeholder': 'House number and street name', 'autocomplete': 'address-line1'})
+        widget=forms.TextInput(attrs={
+            'placeholder': 'House number and street name',
+            'autocomplete': 'address-line1'
+        })
     )
     billing_street_address2 = forms.CharField(
         label="Street Address 2 (Optional)",
         max_length=80,
         required=False,
-        widget=forms.TextInput(attrs={'placeholder': 'Apartment, suite, unit etc. (optional)', 'autocomplete': 'address-line2'})
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Apartment,suite, unit etc. (optional)',
+            'autocomplete': 'address-line2'
+        })
     )
     billing_city = forms.CharField(
         label="City",
         max_length=40,
         required=True,
-        widget=forms.TextInput(attrs={'placeholder': 'Town or City', 'autocomplete': 'address-level2'})
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Town or City',
+            'autocomplete': 'address-level2'
+        })
     )
     billing_postcode = forms.CharField(
         label="Postal Code",
         max_length=20,
         required=True,
-        widget=forms.TextInput(attrs={'placeholder': 'Postal Code (e.g. 90210)', 'autocomplete': 'postal-code'})
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Postal Code (e.g. 90210)',
+            'autocomplete': 'postal-code'
+        })
     )
     billing_country = CountryField().formfield(
         label="Country",
@@ -196,6 +225,9 @@ class BillingDetailsForm(forms.Form):
         street_address2 = cleaned_data.get('billing_street_address2')
 
         if street_address2 and not street_address1:
-            self.add_error('billing_street_address2', "Street Address 2 cannot be provided without Street Address 1.")
+            self.add_error(
+                'billing_street_address2',
+                "Street Address 2 cannot be provided without Street Address 1."
+                )
 
         return cleaned_data

@@ -33,15 +33,24 @@ PAYMENT_METHOD_CHOICES = [
     ('GCASH', 'GCash'),
 ]
 
+
 class Booking(models.Model):
     """
     Represents a reservation made by a user for a trip.
     """
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
     number_of_passengers = models.PositiveIntegerField(default=1)
     booking_date = models.DateTimeField(auto_now_add=True)
-    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    total_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00')
+    )
 
     status = models.CharField(
         max_length=20,
@@ -61,7 +70,7 @@ class Booking(models.Model):
         choices=REFUND_STATUS_CHOICES,
         default='NONE',
     )
-    
+
     refund_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -69,21 +78,33 @@ class Booking(models.Model):
         help_text="Total amount refunded for this booking."
     )
 
-    booking_reference = models.CharField(max_length=100, unique=True, blank=True, null=True)
-    stripe_payment_intent_id = models.CharField(max_length=255, blank=True, null=True)
+    booking_reference = models.CharField(
+        max_length=100,
+        unique=True,
+        blank=True,
+        null=True
+    )
+    stripe_payment_intent_id = models.CharField(
+        max_length=255,
+        blank=True, null=True
+    )
 
     payment_method_type = models.CharField(
         max_length=50,
         blank=True,
         null=True,
         choices=PAYMENT_METHOD_CHOICES,
-        help_text="Type of payment method (e.g., Card, Cash, GCash, Bank Transfer)."
+        help_text=(
+            f"Type of payment method"
+            f"(e.g., Card, Cash, GCash, Bank Transfer)."
+        )
     )
     card_brand = models.CharField(
         max_length=50,
         blank=True,
         null=True,
-        help_text="Brand of the card used (e.g., 'Visa', 'Mastercard', 'Amex')."
+        help_text=(
+            f"Brand of the card used (e.g., 'Visa', 'Mastercard', 'Amex').")
     )
     card_last4 = models.CharField(
         max_length=4,
@@ -95,7 +116,8 @@ class Booking(models.Model):
         max_length=255,
         blank=True,
         null=True,
-        help_text="ID of the Stripe PaymentMethod object used for this booking."
+        help_text=(
+            f"ID of the Stripe PaymentMethod object used for this booking.")
     )
 
     class Meta:
@@ -109,7 +131,8 @@ class Booking(models.Model):
         1. Storing original status for comparison.
         2. Generating booking reference (if new).
         3. Updating trip's available seats based on status changes.
-        4. Triggering confirmation/receipt emails on status transition to PAID/CONFIRMED.
+        4. Triggering confirmation/receipt emails on status
+            transition to PAID/CONFIRMED.
         """
         is_new_booking = not self.pk
         original_payment_status = None
@@ -130,23 +153,19 @@ class Booking(models.Model):
                 if self.trip.available_seats is not None:
                     self.trip.available_seats -= self.number_of_passengers
                     self.trip.save()
-                else:
-                    print("WARNING: Trip available_seats is null, cannot subtract seats.")
         elif original_booking:
             if self.number_of_passengers != original_num_passengers:
-                passenger_diff = self.number_of_passengers - original_booking.number_of_passengers
+                passenger_diff = (
+                    self.number_of_passengers) - (
+                        original_booking.number_of_passengers)
                 if self.trip.available_seats is not None:
                     self.trip.available_seats -= passenger_diff
                     self.trip.save()
-                else:
-                    print("WARNING: Trip available_seats is null, cannot adjust seats on passenger count change.")
 
-            if self.status == 'CANCELED' and original_booking_status != 'CANCELED':
-                if self.trip.available_seats is not None:
-                    self.trip.available_seats += self.number_of_passengers
-                    self.trip.save(update_fields=['available_seats'])
-                else:
-                    print("WARNING: Trip available_seats is null, cannot return seats on cancellation.")
+        if self.status == 'CANCELED' and original_booking_status != 'CANCELED':
+            if self.trip.available_seats is not None:
+                self.trip.available_seats += self.number_of_passengers
+                self.trip.save(update_fields=['available_seats'])
 
         super().save(*args, **kwargs)
 
@@ -159,23 +178,32 @@ class Booking(models.Model):
             )
             super().save(update_fields=['booking_reference'])
 
-       # --- Email Sending Logic (after final save) ---
-        is_now_paid_and_confirmed = (self.payment_status == 'PAID' and self.status == 'CONFIRMED')
+        is_now_paid_and_confirmed = (
+            self.payment_status == 'PAID' and self.status == 'CONFIRMED'
+        )
         was_not_paid_and_confirmed_before = (
-            original_payment_status != 'PAID' or original_booking_status != 'CONFIRMED'
+            original_payment_status != 'PAID' or
+            original_booking_status != 'CONFIRMED'
         )
 
         if is_now_paid_and_confirmed and was_not_paid_and_confirmed_before:
-            transaction.on_commit(lambda: send_booking_email(self, 'payment_receipt'))
-            transaction.on_commit(lambda: send_booking_email(self, 'booking_confirmation'))
+            transaction.on_commit(
+                lambda: send_booking_email(self, 'payment_receipt'))
+            transaction.on_commit(
+                lambda: send_booking_email(self, 'booking_confirmation'))
 
     def __str__(self):
         user_display = self.user.username if self.user else "Anonymous"
-        return f"Booking {self.booking_reference or 'N/A'} for {user_display} on {self.trip}"
+        return (f"Booking {self.booking_reference or 'N/A'} for"
+                f"{user_display} on {self.trip}")
 
 
 class Passenger(models.Model):
-    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='passengers')
+    booking = models.ForeignKey(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name='passengers'
+    )
     name = models.CharField(max_length=100)
     age = models.PositiveIntegerField(null=True, blank=True)
     contact_number = models.CharField(max_length=15, blank=True, null=True)
@@ -184,51 +212,81 @@ class Passenger(models.Model):
     def __str__(self):
         booking_ref_display = self.booking.booking_reference or 'N/A'
         return f"{self.name} (Booking: {booking_ref_display})"
-    
+
 
 class BookingPolicy(models.Model):
     """
     Defines the rules for booking cancellation and rescheduling.
     """
-    name = models.CharField(max_length=100, unique=True, default="Standard Booking Policy")
-    description = models.TextField(blank=True, help_text="A description of this policy.")
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        default="Standard Booking Policy"
+    )
+    description = models.TextField(
+        blank=True,
+        help_text="A description of this policy."
+    )
 
     # Cancellation Policy Rules
     free_cancellation_cutoff_hours = models.PositiveIntegerField(
         default=24,
-        help_text="Hours before departure for free cancellation (e.g., 24 means >24h)."
+        help_text=(
+            f"Hours before departure for free cancellation"
+            f"(e.g., 24 means >24h)."
+        )
     )
     late_cancellation_cutoff_hours = models.PositiveIntegerField(
         default=3,
-        help_text="Hours before departure after which no refund is issued for cancellation (e.g., 3 means <=3h)."
+        help_text=(
+            f"Hours before departure after which no refund is issued for"
+            f"cancellation (e.g., 3 means <=3h)."
+        )
     )
     late_cancellation_fee_percentage = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         default=Decimal('0.50'),
-        help_text="Percentage of total price charged for late cancellation (e.g., 0.50 for 50%)."
+        help_text=(
+            f"Percentage of total price charged for late cancellation"
+            f"(e.g., 0.50 for 50%)."
+        )
     )
 
     # Rescheduling Policy Rules
     free_rescheduling_cutoff_hours = models.PositiveIntegerField(
         default=24,
-        help_text="Hours before departure for free rescheduling (e.g., 24 means >24h)."
+        help_text=(
+            f"Hours before departure for free rescheduling"
+            f"(e.g., 24 means >24h)."
+        )
     )
     late_rescheduling_cutoff_hours = models.PositiveIntegerField(
         default=3,
-        help_text="Hours before departure after which rescheduling is not allowed (e.g., 3 means <=3h)."
+        help_text=(
+            f"Hours before departure after which rescheduling is not"
+            f"allowed (e.g., 3 means <=3h)."
+        )
     )
     late_rescheduling_charge_percentage = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         default=Decimal('0.15'),
-        help_text="Percentage of total price charged for late rescheduling (e.g., 0.15 for 15%)."
+        help_text=(
+            F"Percentage of total price charged for late rescheduling"
+            f"(e.g., 0.15 for 15%)."
+        )
     )
 
     # Offline payment cutoff
-    offline_payment_cutoff_hours_before_departure = models.PositiveIntegerField(
-        default=6,
-        help_text="Hours before trip departure after which only instant payment methods (e.g., Card) are allowed."
+    offline_payment_cutoff_hours_before_departure = (
+        models.PositiveIntegerField(
+            default=6,
+            help_text=(
+                f"Hours before trip departure after which only instant payment"
+                f"methods (e.g., Card) are allowed."
+            )
+        )
     )
 
     class Meta:

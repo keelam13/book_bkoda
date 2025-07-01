@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import Booking, Passenger, BookingPolicy
 from trips.models import Trip
 
+
 class PassengerInline(admin.TabularInline):
     model = Passenger
     extra = 1
@@ -64,6 +65,7 @@ class BookingAdmin(admin.ModelAdmin):
     def trip_number_display(self, obj):
         return obj.trip.trip_number
     trip_number_display.short_description = 'Trip Number'
+
 
 admin.site.register(Booking, BookingAdmin)
 admin.site.register(Passenger)
