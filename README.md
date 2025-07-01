@@ -17,7 +17,7 @@ The app is developed by [Keevin Aroco](https://github.com/keelam13).
 
 ### Strategy
 
-Developed for the BKODA in the Municipality of Kabayan Benguet in the Philippines. The President of the association wanted an app where clients could easily reserve seats for the trips from Kabayan, Benguet to Baguio City and back. In this locality, the clients usually pay in cash and most of them don't have debit/credit cards. In this case, payment option is going to be a feature for the future improvements of the app. 
+Developed for the BKODA in the Municipality of Kabayan Benguet in the Philippines. The President of the association wanted an app where clients could easily reserve seats for the trips from Kabayan, Benguet to Baguio City and back. In this locality, the clients usually pay in cash and most of them don't have debit/credit cards. In this project, I enable users to pay with card (debit/credit) if they have, or else they may also opt to pay cash or money wallet (e.g. GCash). GCash is specifically included as an option since it is already being used by many in the area. If they also want to pay with cash, they may pay in selected payment centers or directly to the terminal. However, for offline payment, e.i cash and GCash, they are given up to 24 hours to pay for the booking to be confirmed, and a cutoff time will be observed. All of which are outlined in the Booking policy.
 
 The application focuses on simplicity and efficiency, ensuring that users can quickly and easily reserve their desired number of seats. The design prioritizes clear navigation and a straightforward reservation process to minimize user frustration.
 
@@ -154,63 +154,63 @@ The background image is a shot from the boundary of Kabayan, Benguet's, a scene 
 
 ### Wireframes
 
+Since the project is a continued development from the previous BKODA Seat Reservation app, the wireframes and flowchart are the same with some changes and improvements.
+
 ## Desktop and Tablets
 
 * Home Display
 
-![Desktop Home]
+![Desktop Home](documentation/wireframes/desktop_home.png)
 
 * Sign Up Form Display
 
-![Desktop Sign Up Form]
+![Desktop Sign Up Form](documentation/wireframes/desktop_signup.png)
 
 * Logged in Display
 
-![Desktop Logged in]
+![Desktop Logged in](documentation/wireframes/desktop_logged_in.png)
 
 * Trip List Display
 
-![Desktop Trip List]
+![Desktop Trip List](documentation/wireframes/desktop_triplist.png)
 
 * Reservation Formm Display
 
-![Desktop Reservation Form]
+![Desktop Reservation Form](documentation/wireframes/desktop_reservation_form.png)
 
 * Reservation List Display
 
-![Desktop Reservation List]
+![Desktop Reservation List](documentation/wireframes/desktop_reservation_list.png)
 
 * Reservation Cancelation Display
 
-![Desktop Reservation Cancelation]
+![Desktop Reservation Cancelation](documentation/wireframes/desktop_cancel_confirmation.png)
 
 * Log Out Confirmation Display
 
-![Desktop Logout Confirmation]
+![Desktop Logout Confirmation](documentation/wireframes/desktop_logout_confirmation.png)
 
 ## Mobile Devices
 
 * Home Display
 
-![Mobile Home]
+![Mobile Home](documentation/wireframes/mobile_home.png)
 
 * Navbar Dropdown Display
 
-![Mobile Navbar]
+![Mobile Navbar](documentation/wireframes/mobile_nav.png)
 
 * Trip List Display
 
-![Mobile Trip List]
+![Mobile Trip List](documentation/wireframes/mobile_triplist.png)
 
 * Reservation List Display
 
-![Mobile Reservation List]
+![Mobile Reservation List](documentation/wireframes/mobile_reservation_list.png)
 
 ---
 
 ## Flowcharts
-
-This application is aimed simply for reserving seats for transport.
 
 The flowchart was created to help to understand the application and its functionality.
 
