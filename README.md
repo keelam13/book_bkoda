@@ -1,13 +1,13 @@
 # BKODA Seat Reservation
 
-Live Version: [BKODA Seat Reservation](https://book-bkoda-6d62942dbe76.herokuapp.com/))
+Live Version: [BKODA Seat Reservation](https://book-bkoda-6d62942dbe76.herokuapp.com/)
 
 
-Repository: [GitHub Repo](https://github.com/keelam13/bkoda_seat_reservation)
+Repository: [GitHub Repo](https://github.com/keelam13/book_bkoda)
 
 The app is developed by [Keevin Aroco](https://github.com/keelam13).
 
-![book BKODA](documentation/design/bkoda_logo.png)
+![book BKODA](documentation/design/book_bkoda_logo.png)
 
 ## About
 
@@ -17,7 +17,7 @@ The app is developed by [Keevin Aroco](https://github.com/keelam13).
 
 ### Strategy
 
-Developed for the BKODA in the Municipality of Kabayan Benguet in the Philippines. The President of the associatio wanted an app where clients could easily reserve seats for the trips from Kabayan, Benguet to Baguio City and back. In this locality, the clients usually pay in cash and most of them don't have debit/credit cards. In this case, payment option is going to be a feature for the future improvements of the app. 
+Developed for the BKODA in the Municipality of Kabayan Benguet in the Philippines. The President of the association wanted an app where clients could easily reserve seats for the trips from Kabayan, Benguet to Baguio City and back. In this locality, the clients usually pay in cash and most of them don't have debit/credit cards. In this case, payment option is going to be a feature for the future improvements of the app. 
 
 The application focuses on simplicity and efficiency, ensuring that users can quickly and easily reserve their desired number of seats. The design prioritizes clear navigation and a straightforward reservation process to minimize user frustration.
 
@@ -158,53 +158,53 @@ The background image is a shot from the boundary of Kabayan, Benguet's, a scene 
 
 * Home Display
 
-![Desktop Home](documentation/wireframes/desktop_home.png)
+![Desktop Home]
 
 * Sign Up Form Display
 
-![Desktop Sign Up Form](documentation/wireframes/desktop_signup.png)
+![Desktop Sign Up Form]
 
 * Logged in Display
 
-![Desktop Logged in](documentation/wireframes/desktop_logged_in.png)
+![Desktop Logged in]
 
 * Trip List Display
 
-![Desktop Trip List](documentation/wireframes/desktop_triplist.png)
+![Desktop Trip List]
 
 * Reservation Formm Display
 
-![Desktop Reservation Form](documentation/wireframes/desktop_reservation_form.png)
+![Desktop Reservation Form]
 
 * Reservation List Display
 
-![Desktop Reservation List](documentation/wireframes/desktop_reservation_list.png)
+![Desktop Reservation List]
 
 * Reservation Cancelation Display
 
-![Desktop Reservation Cancelation](documentation/wireframes/desktop_cancel_confirmation.png)
+![Desktop Reservation Cancelation]
 
 * Log Out Confirmation Display
 
-![Desktop Logout Confirmation](documentation/wireframes/desktop_logout_confirmation.png)
+![Desktop Logout Confirmation]
 
 ## Mobile Devices
 
 * Home Display
 
-![Mobile Home](documentation/wireframes/mobile_home.png)
+![Mobile Home]
 
 * Navbar Dropdown Display
 
-![Mobile Navbar](documentation/wireframes/mobile_nav.png)
+![Mobile Navbar]
 
 * Trip List Display
 
-![Mobile Trip List](documentation/wireframes/mobile_triplist.png)
+![Mobile Trip List]
 
 * Reservation List Display
 
-![Mobile Reservation List](documentation/wireframes/mobile_reservation_list.png)
+![Mobile Reservation List]
 
 ---
 
