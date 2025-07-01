@@ -35,6 +35,9 @@
             <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
             <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap">
 
+            <!-- MailChimp -->
+            <link href="//cdn-images.mailchimp.com/embedcode/classic-061523.css" rel="stylesheet" type="text/css">
+
             <!-- Custom CSS -->
             <link rel="stylesheet" href="{% static 'css/base.css' %}">
         {% endblock %}
@@ -145,35 +148,97 @@
         </main>
         <!-- Footer -->
         <footer class="footer mt-auto bg-primary">
-            <div class="d-flex flex-wrap justify-content-center align-items-center">
-                <p class="text-white mb-2 mt-2 mt-md-0 ms-md-3">
-                    Follow us:
-                    <a href="https://www.facebook.com/profile.php?id=61577802846822" target="_blank" rel="noopener" aria-label="Visit our Facebook page">
-                        <i class="fa-brands fa-facebook"></i>
-                    </a>
-                    <a href="https://www.twitter.com" target="_blank" rel="noopener" aria-label="Visit our Twitter page">
-                        <i class="fa-brands fa-x-twitter"></i>
-                    </a>
-                    <a href="https://www.youtube.com" target="_blank" rel="noopener" aria-label="Visit our YouTube channel">
-                        <i class="fa-brands fa-youtube"></i>
-                    </a>
-                </p>
-                <p class="contact-info mb-2 mt-2 mt-md-0 ms-md-3">
-                    <a href="mailto:bkodatravels@gmail.com">
-                        <i class="fa-solid fa-envelope"></i>
-                        bkodatravels@gmail.com
-                    </a>
-                </p>
-                <p class="contact-info mb-2 mt-2 mt-md-0 ms-md-3">
-                    <a href="tel:+639161234567">
-                        <i class="fa-solid fa-phone"></i>
-                        +6391612345678
-                    </a>
-                </p>
+            <div class="row w-100">
+                <div class="col-12 col-md-6">
+                    <div class="d-block">
+                        <p class="text-white mb-3 mt-2 mt-md-0 ms-md-3">
+                            Follow us:
+                            <a href="https://www.facebook.com/profile.php?id=61577802846822" target="_blank" rel="noopener" aria-label="Visit our Facebook page">
+                                <i class="fa-brands fa-facebook"></i>
+                            </a>
+                            <a href="https://www.twitter.com" target="_blank" rel="noopener" aria-label="Visit our Twitter page">
+                                <i class="fa-brands fa-x-twitter"></i>
+                            </a>
+                            <a href="https://www.youtube.com" target="_blank" rel="noopener" aria-label="Visit our YouTube channel">
+                                <i class="fa-brands fa-youtube"></i>
+                            </a>
+                        </p>
+                        <p class="contact-info mb-3 mt-2 mt-md-0 ms-md-3">
+                            <a href="mailto:bkodatravels@gmail.com">
+                                <i class="fa-solid fa-envelope"></i>
+                                bkodatravels@gmail.com
+                            </a>
+                        </p>
+                        <p class="contact-info mb-2 mt-2 mt-md-0 ms-md-3">
+                            <a href="tel:+639161234567">
+                                <i class="fa-solid fa-phone"></i>
+                                +6391612345678
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 p-0 text-white">
+                    <p>Get exclusive offers and discount codes by subscribing to our monthly newsletter.</p>
+                    <div id="mc_embed_shell">
+                        <div id="mc_embed_signup">
+                            <form action="https://herokuapp.us6.list-manage.com/subscribe/post?u=0113d60893bdbe83ac5498c09&amp;id=ca3d18249d&amp;f_id=0004e7e0f0" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate text-black" target="_blank">
+                                <div id="mc_embed_signup_scroll">
+                                    <h2>Subscribe</h2>
+                                    <div class="indicates-required"><span class="asterisk">*</span> indicates required</div>
+                                    <div class="mc-field-group">
+                                        <label for="mce-EMAIL">Email Address <span class="asterisk">*</span></label>
+                                        <input type="email" name="EMAIL" class="required email" id="mce-EMAIL" required="" value="">
+                                    </div>
+                                    <div id="mce-responses" class="clear foot">
+                                        <div class="response" id="mce-error-response" style="display: none;"></div>
+                                        <div class="response" id="mce-success-response" style="display: none;"></div>
+                                    </div>
+                                    <div aria-hidden="true" style="position: absolute; left: -5000px;">
+                                        /* real people should not fill this in and expect good things - do not remove this or risk form bot signups */
+                                        <input type="text" name="b_0113d60893bdbe83ac5498c09_ca3d18249d" tabindex="-1" value="">
+                                    </div>
+                                    <div class="optionalParent">
+                                        <div class="clear foot">
+                                            <input type="submit" name="subscribe" id="mc-embedded-subscribe" class="button" value="Subscribe">
+                                            <p style="margin: 0px auto;">
+                                                <a href="http://eepurl.com/jie9tk" title="Mailchimp - email marketing made easy and fun">
+                                                    <span style="display: inline-block; background-color: transparent; border-radius: 4px;">
+                                                        <img class="refferal_badge" src="https://digitalasset.intuit.com/render/content/dam/intuit/mc-fe/en_us/images/intuit-mc-rewards-text-dark.svg" alt="Intuit Mailchimp" style="width: 220px; height: 40px; display: flex; padding: 2px 0px; justify-content: center; align-items: center;">
+                                                    </span>
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </footer>
         <!-- Custom JS -->
         <script src="{% static 'js/base.js' %}"></script>
+        <script type="text/javascript" src="//s3.amazonaws.com/downloads.mailchimp.com/js/mc-validate.js"></script>
+        <script type="text/javascript">
+        (function($) {
+            window.fnames = new Array();
+            window.ftypes = new Array();
+            fnames[0]='EMAIL';
+            ftypes[0]='email';
+            fnames[1]='FNAME';
+            ftypes[1]='text';
+            fnames[2]='LNAME';
+            ftypes[2]='text';
+            fnames[3]='ADDRESS';
+            ftypes[3]='address';
+            fnames[4]='PHONE';
+            ftypes[4]='phone';
+            fnames[5]='BIRTHDAY';
+            ftypes[5]='birthday';
+            fnames[6]='COMPANY';
+            ftypes[6]='text';}(jQuery));
+            var $mcj = jQuery.noConflict(true);
+        </script>
         {% block postload_js %}
         {% endblock %}       
     </body>
