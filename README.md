@@ -59,6 +59,29 @@ User Story ID AS A/AN I WANT TO BE ABLE TO... SO THAT I CAN...
 
 ---
 
+## Business Model
+
+The Business Model is B2C, whish connects users( passengers ) with the transport providers.
+
+
+### A Persona Summary of the customer
+
+
+
+### A persona summary of the store personnel
+
+
+---
+
+## Web Marketing
+
+1. A call for subscription is added in the footer for monthly newsletters with ![MailChimp](https://mailchimp.com/) where subscribers will receive email notification of promos and discount codes.
+
+
+2. A Facebook Page is also added on the social media corner in the footer. ![book BKODA](https://www.facebook.com/profile.php?id=61577802846822)
+
+[book BKODA Facebook Page](documentation/web_marketing/bkoda_fb_page.pdf)
+
 ## Technologies used
 
 - ### Languages:
