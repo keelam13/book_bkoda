@@ -104,23 +104,24 @@
         <main>
             <div class="overlay"></div>
             <article class="container text-white mt-3">
+                <h2 class="d-none">Welcome and Messages</h2>
                 <section class="container form-group welcome-section text-white m-0 p-0">
-                    <h2 class="d-none">Welcome User</h2>
-                        <div class="row">
-                            <div class="col-md-8 offset-md-2">
-                                <div class="mt-3 text-center">
-                                    {% if user.is_authenticated %}
-                                    <p class="lead">Hello, <strong>{{ user.username }}</strong>!</p>
-                                    {% else %}
-                                    <p class="lead">Please <a href="{% url 'account_login' %}"><strong>log in</strong></a> to access more features.</p>
-                                    {% endif %}
-                                </div>
+                    <h3 class="d-none">Welcome User</h3>
+                    <div class="row">
+                        <div class="col-md-8 offset-md-2">
+                            <div class="mt-3 text-center">
+                                {% if user.is_authenticated %}
+                                <p class="lead">Hello, <strong>{{ user.username }}</strong>!</p>
+                                {% else %}
+                                <p class="lead">Please <a href="{% url 'account_login' %}"><strong>log in</strong></a> to access more features.</p>
+                                {% endif %}
                             </div>
                         </div>
+                    </div>
                 </section>
 
                 <section class="container" id="msg-{{ forloop.counter }}">
-                    <h2 class="d-none">Message Alert</h2>
+                    <h3 class="d-none">Message Alert</h3>
                     <div class="row">
                         <div class="col-md-8 offset-md-2 text-center">
                             <div class="mt-3">

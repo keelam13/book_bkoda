@@ -4,65 +4,63 @@
 {% block title %}Staff Dashboard - {{ block.super }}{% endblock %}
 
 {% block staff_app_content %}
-<div class="container mx-auto p-6 bg-white rounded-xl shadow-lg mt-8">
-    <h2 class="staff-section-title">Dashboard Overview</h2>
-    <p class="lead">Welcome to the Staff Management Panel!</p>
-    <p>You are logged in as: **{{ request.user.username }}** (ID: {{ request.user.id }})</p>
-    <div class="alert alert-info">
-        <p>Use the navigation on the left to manage trips and bookings efficiently.</p>
-        <p>**For better feature use, please use a desktop or a device with wider screen.**</p>
+<h2 class="staff-section-title">Dashboard Overview</h2>
+<p class="lead">Welcome to the Staff Management Panel!</p>
+<p>You are logged in as: **{{ request.user.username }}** (ID: {{ request.user.id }})</p>
+<div class="alert alert-info">
+    <p>Use the navigation on the left to manage trips and bookings efficiently.</p>
+    <p>**For better feature use, please use a desktop or a device with wider screen.**</p>
+</div>
+<div class="mt-4 p-3 bg-light border rounded">
+    <h5>Quick Stats</h5>
+    <p>Total Trips: <span id="dashboard-total-trips">{{ total_trips }}</span></p>
+    <p>Total Bookings: <span id="dashboard-total-bookings">{{ total_bookings }}</span></p>
+    <p>Pending Bookings: <span>{{ pending_bookings }}</span></p>
+    <p>Confirmed Bookings: <span>{{ confirmed_bookings }}</span></p>
+    <p>Total Confirmed Revenue: Php {{ total_revenue_confirmed|floatformat:2 }}</p>
+    <!-- Alert for Expired Bookings on Dashboard -->
+    {% if expired_bookings_count > 0 %}
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <h4 class="alert-heading"><i class="fas fa-bell mr-2"></i> Urgent: Expired Bookings!</h4>
+        <p>There are **{{ expired_bookings_count }}** booking(s) with **PENDING PAYMENT** status that have passed their 24-hour payment window.</p>
+        <p class="mb-0">
+            Please go to the <a href="{% url 'staff_app:bookings_list' %}" class="alert-link">Bookings List</a>
+            to review and potentially cancel these bookings using the "Cancel Unpaid Bookings" button.
+        </p>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
     </div>
-    <div class="mt-4 p-3 bg-light border rounded">
-        <h5>Quick Stats</h5>
-        <p>Total Trips: <span id="dashboard-total-trips">{{ total_trips }}</span></p>
-        <p>Total Bookings: <span id="dashboard-total-bookings">{{ total_bookings }}</span></p>
-        <p>Pending Bookings: <span>{{ pending_bookings }}</span></p>
-        <p>Confirmed Bookings: <span>{{ confirmed_bookings }}</span></p>
-        <p>Total Confirmed Revenue: Php {{ total_revenue_confirmed|floatformat:2 }}</p>
-        <!-- Alert for Expired Bookings on Dashboard -->
-        {% if expired_bookings_count > 0 %}
-        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-            <h4 class="alert-heading"><i class="fas fa-bell mr-2"></i> Urgent: Expired Bookings!</h4>
-            <p>There are **{{ expired_bookings_count }}** booking(s) with **PENDING PAYMENT** status that have passed their 24-hour payment window.</p>
-            <p class="mb-0">
-                Please go to the <a href="{% url 'staff_app:bookings_list' %}" class="alert-link">Bookings List</a>
-                to review and potentially cancel these bookings using the "Cancel Unpaid Bookings" button.
-            </p>
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        {% endif %}
-        <!-- End Alert for Expired Bookings -->
-    </div>
+    {% endif %}
+    <!-- End Alert for Expired Bookings -->
+</div>
 
-    <div class="mt-4">
-        <h5>Recent Bookings</h5>
-        <ul class="list-group">
-            {% for booking in recent_bookings %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>{{ booking.user }} - {{ booking.trip.destination }} ({{ booking.number_of_passengers }}
-                    seats)</span>
-                <small class="text-muted">{{ booking.booking_date|date:"M d, Y" }}</small>
-            </li>
-            {% empty %}
-            <li class="list-group-item text-muted text-center">No recent bookings.</li>
-            {% endfor %}
-        </ul>
-    </div>
+<div class="mt-4">
+    <h5>Recent Bookings</h5>
+    <ul class="list-group">
+        {% for booking in recent_bookings %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ booking.user }} - {{ booking.trip.destination }} ({{ booking.number_of_passengers }}
+                seats)</span>
+            <small class="text-muted">{{ booking.booking_date|date:"M d, Y" }}</small>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted text-center">No recent bookings.</li>
+        {% endfor %}
+    </ul>
+</div>
 
-    <div class="mt-4">
-        <h5>Upcoming Trips</h5>
-        <ul class="list-group">
-            {% for trip in upcoming_trips %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>{{ trip.origin }} - {{ trip.destination }} ({{ trip.date|date:"M d, Y" }})</span>
-                <small class="text-muted">${{ trip.price|floatformat:2 }}</small>
-            </li>
-            {% empty %}
-            <li class="list-group-item text-muted text-center">No upcoming trips.</li>
-            {% endfor %}
-        </ul>
-    </div>
+<div class="mt-4">
+    <h5>Upcoming Trips</h5>
+    <ul class="list-group">
+        {% for trip in upcoming_trips %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ trip.origin }} - {{ trip.destination }} ({{ trip.date|date:"M d, Y" }})</span>
+            <small class="text-muted">${{ trip.price|floatformat:2 }}</small>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted text-center">No upcoming trips.</li>
+        {% endfor %}
+    </ul>
 </div>
 {% endblock %}

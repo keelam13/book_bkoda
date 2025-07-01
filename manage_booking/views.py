@@ -591,7 +591,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
 
         if request.user.is_authenticated:
             user_profile, created = UserProfile.objects.get_or_create(user=request.user)
-            billing_form = BillingDetailsForm(initial={
+            billing_form = BillingDetailsForm(request=request, initial={
             'billing_name': user_profile.default_name or request.user.get_full_name() or request.user.username,
             'billing_email': user_profile.default_email or request.user.email,
             'billing_phone': user_profile.default_phone_number,
@@ -655,7 +655,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
         selected_payment_method = request.POST.get('payment_method')
         payment_intent_id = request.POST.get('payment_intent_id')
         print(f"DEBUG (POST): selected_payment_method={selected_payment_method}, payment_intent_id={payment_intent_id}")
-        billing_form = BillingDetailsForm(request.POST)
+        billing_form = BillingDetailsForm(request.POST, request=request)
 
         financials_post = _calculate_reschedule_financials(original_booking, new_trip, policy)
         amount_to_pay_post = financials_post['amount_to_pay']

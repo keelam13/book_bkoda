@@ -1,24 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load humanize %}
-{% load booking_filters %} {# Include any custom filters needed #}
+{% load booking_filters %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'booking/css/booking_form.css' %}"> {# Re-use if styles are general #}
-    <style>
-        /* Add specific styles for confirmation page if needed */
-        .confirmation-icon {
-            font-size: 4rem;
-            color: #28a745; /* Green color for success */
-        }
-        .summary-card {
-            background-color: #f8f9fa; /* Light background for summary */
-            border-left: 5px solid #28a745; /* Green border for visual emphasis */
-        }
-        .sticky-top {
-            top: 20px; /* Adjust as needed to keep it from sticking too high */
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'booking/css/booking_form.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -141,9 +127,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block postload_js %}
-    {{ block.super }}
-    {# No need for stripe or booking_form.js on confirmation page unless for specific tracking/analytics #}
 {% endblock %}

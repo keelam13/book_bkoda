@@ -1,5 +1,6 @@
+<h2 class="d-none">Search Bar</h2>
 <section class="container text-white form-group search-form">
-    <h1 class="cta">Book your trip now!</h1>
+    <h3 class="cta">Book your trip now!</h3>
     <div class="col d-flex justify-content-center">
         <form action="{% url 'trips' %}" method="GET" class="w-100">
             {% csrf_token %}
@@ -49,6 +50,9 @@
                     <div class="input-with-icon">
                         <span class="icon-inside-input"><i class="bi bi-person-fill"></i></span>
                         {{ form.num_travelers }}
+                        <small id="id_num_travelers_helptext" class="form-text text-muted d-none">
+                        Enter the total number of passengers.
+                        </small>
                     </div>
                     {% if form.num_travelers.errors %}
                         <div class="text-danger small">{{ form.num_travelers.errors }}</div>

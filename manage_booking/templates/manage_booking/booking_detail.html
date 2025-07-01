@@ -43,7 +43,7 @@
             </div>
         </div>
 
-        <h5><strong>Passenger Details:</h5>
+        <h5><strong>Passenger Details:</strong></h5>
         <ul class="list-group list-group-flush mb-3">
             {% for passenger in booking.passengers.all %}
             <li class="list-group-item">
@@ -64,12 +64,12 @@
             
             {% if can_reschedule %}
             <a href="{% url 'manage_booking:booking_reschedule_select_trip' booking.id %}"
-                class="btn btn-warning me-2">Reschedule Booking</a>
+                class="btn btn-warning mb-2 me-2">Reschedule Booking</a>
             {% endif %}
             {% if can_cancel %}
-            <a href="{% url 'manage_booking:booking_cancel' booking.id %}" class="btn btn-danger">Cancel Booking</a>
+            <a href="{% url 'manage_booking:booking_cancel' booking.id %}" class="btn btn-danger mb-2">Cancel Booking</a>
             {% endif %}
-            <a href="{{ return_url }}" class="btn btn-secondary ms-2">Close</a>
+            <a href="{{ return_url }}" class="btn btn-secondary mb-2 ms-2">Close</a>
         </div>
     </div>
 </div>

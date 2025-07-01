@@ -17,6 +17,7 @@
 </article>
 
 <article class="container trips-display mt-4">
+    <h2 class="d-none">Trip Search Results</h2>
      {% if is_rescheduling_mode %}
         <div class="alert alert-info alert-fix-display text-center" role="alert">
             Rescheduling Booking: <strong>{{ original_booking.booking_reference }}</strong> (Original Trip: {{ original_booking.trip.origin }} to {{ original_booking.trip.destination }} on {{ original_booking.trip.date|date:"F d, Y" }} at {{ original_booking.trip.departure_time|time:"H: i" }}).
@@ -25,7 +26,7 @@
     {% endif %}
     <div class="mb-3 d-flex flex-column flex-sm-row justify-content-sm-around">
         <div class="col-md-4 mb-2 mb-sm-0 text-center">
-            <a href="{% if disable_previous_day %}#{% else %}{% url 'trips' %}?departure_date={{ previous_day|date:'Y-m-d' }}&origin={{ origin }}&destination={{ destination }}&num_travelers={{ number_of_passengers }}{% if is_rescheduling_mode %}&reschedule_booking_id={{ original_booking_id }}{% endif %}{% endif %}"
+            <a href="{% if disable_previous_day %}#{% else %}{% url 'trips' %}?departure_date={{ previous_day|date:'Y-m-d' }}&origin={{ origin|urlencode }}&destination={{ destination|urlencode }}&num_travelers={{ number_of_passengers }}{% if is_rescheduling_mode %}&reschedule_booking_id={{ original_booking_id }}{% endif %}{% endif %}"
                 class="btn btn-sm btn-primary w-100 d-flex align-items-center justify-content-center py-2 {% if disable_previous_day %}disabled{% endif %}"
                 aria-label="Previous Day" title="Previous Day">Previous Day</a>
         </div>
@@ -33,7 +34,7 @@
             <span class="btn btn-sm btn-light w-100 d-flex align-items-center justify-content-center py-2">{{ current_day|date:"F d, Y" }}</span>
         </div>
         <div class="col-md-4 mb-2 mb-sm-0 text-center">
-            <a href="{% if disable_next_day %}#{% else %}{% url 'trips' %}?departure_date={{ next_day|date:'Y-m-d' }}&origin={{ origin }}&destination={{ destination }}&num_travelers={{ number_of_passengers }}{% if is_rescheduling_mode %}&reschedule_booking_id={{ original_booking_id }}{% endif %}{% endif %}"
+            <a href="{% if disable_next_day %}#{% else %}{% url 'trips' %}?departure_date={{ next_day|date:'Y-m-d' }}&origin={{ origin|urlencode }}&destination={{ destination|urlencode }}&num_travelers={{ number_of_passengers }}{% if is_rescheduling_mode %}&reschedule_booking_id={{ original_booking_id }}{% endif %}{% endif %}"
                 class="btn btn-sm btn-primary w-100 d-flex align-items-center justify-content-center py-2 {% if disable_next_day %}disabled{% endif %}"
                 aria-label="Next Day" title="Next Day">Next Day</a>
         </div>

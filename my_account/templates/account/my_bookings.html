@@ -25,9 +25,9 @@
     <h4 class="text-xl font-semibold mb-3">Upcoming Confirmed Trips</h4>
     {% if upcoming_confirmed_bookings_page %}
     <p class="mb-4 text-center">
-    Showing <strong>{{ upcoming_confirmed_bookings_page.start_index }}</strong> -
-    <strong>{{ upcoming_confirmed_bookings_page.end_index }}</strong> of
-    <strong>{{ upcoming_confirmed_bookings_page.paginator.count }}</strong> upcoming confirmed trips.
+        Showing <strong>{{ upcoming_confirmed_bookings_page.start_index }}</strong> -
+        <strong>{{ upcoming_confirmed_bookings_page.end_index }}</strong> of
+        <strong>{{ upcoming_confirmed_bookings_page.paginator.count }}</strong> upcoming confirmed trips.
     </p>
     <ul class="list-unstyled">
         {% for booking in upcoming_confirmed_bookings_page %}
@@ -142,7 +142,6 @@
     <a href="{% url 'manage_booking:confirmed_bookings' %}" class="btn btn-info mr-auto">Manage Bookings</a>
 </div>
 
-    
 <!-- Back to Top Button -->
 <div class="btt-button">
     <a id="back-to-top" class="btn btn-primary rounded-circle shadow d-flex justify-content-center align-items-center">
