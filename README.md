@@ -64,12 +64,14 @@ User Story ID AS A/AN I WANT TO BE ABLE TO... SO THAT I CAN...
 The Business Model is B2C, whish connects users( passengers ) with the transport providers.
 
 
-### A Persona Summary of the customer
+### Persona Summary: The Passenger
+
+The book BKODA platform is aimed at a diverse group of travelers aged 18 and older, considering their needs for convenient and reliable transportation. As every traveler has different preferences for their daily trips (e.g., from a city to a specific tourist attraction, or airport transfers), the platform strives to provide the best possible service by offering a wide array of transport options. The emphasis is on delivering an excellent user experience, allowing passengers to easily find suitable trips, view all available trip times and destinations, and book their preferred option with ease. The platform is designed to cater to travelers who prioritize clear information, straightforward booking processes, and dependable service for their daily travel needs.
 
 
 
-### A persona summary of the store personnel
-
+### Persona Summary: BKODA Transport
+The book BKODA platform understands that each company, regardless of size, needs efficient tools to manage their services and reach a wider customer base. The platform emphasizes providing robust functionality that empowers transport companies to easily list and manage their routes (like "daily trips from Kabayan, Benguet to Baguio City and v.v.), update their vehicle availability, handle bookings, and track their performance. The goal is to facilitate seamless online operations, enabling these companies to expand their reach and optimize their daily services for travelers. The platform considers the company's potential growth by offering comprehensive management tools, including detailed data insights on bookings, inventory (seats), and financial transactions.
 
 ---
 
