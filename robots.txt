@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /accounts/
+Disallow: /booking/
+Sitemap: https://book-bkoda-6d62942dbe76.herokuapp.com/sitemap.xml

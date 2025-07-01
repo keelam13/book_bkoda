@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
+
+
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/accounts/signup/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/accounts/login/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/trips/?origin=Kabayan&amp;destination=Baguio&amp;departure_date=2025-07-01&amp;num_travelers=1</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/accounts/password/reset/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/trips/?departure_date=2025-07-02&amp;origin=Kabayan&amp;destination=Baguio&amp;num_travelers=1</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/162/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/163/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/164/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/165/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/trips/?departure_date=2025-07-01&amp;origin=Kabayan&amp;destination=Baguio&amp;num_travelers=1</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.51</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/trips/?departure_date=2025-07-03&amp;origin=Kabayan&amp;destination=Baguio&amp;num_travelers=1</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.51</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/174/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.51</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/173/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.51</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/171/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.51</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/175/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.51</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/172/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.51</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/trips/?departure_date=2025-07-04&amp;origin=Kabayan&amp;destination=Baguio&amp;num_travelers=1</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.41</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/184/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.41</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/185/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.41</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/183/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.41</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/182/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.41</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/181/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.41</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/trips/?departure_date=2025-07-05&amp;origin=Kabayan&amp;destination=Baguio&amp;num_travelers=1</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.33</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/194/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.33</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/191/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.33</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/192/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.33</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/193/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.33</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/195/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.33</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/trips/?departure_date=2025-07-06&amp;origin=Kabayan&amp;destination=Baguio&amp;num_travelers=1</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.26</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/202/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.26</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/203/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.26</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/201/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.26</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/205/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.26</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/204/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.26</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/trips/?departure_date=2025-07-07&amp;origin=Kabayan&amp;destination=Baguio&amp;num_travelers=1</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.21</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/252/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.21</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/253/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.21</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/254/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.21</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/251/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.21</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/255/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.21</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/trips/?departure_date=2025-07-08&amp;origin=Kabayan&amp;destination=Baguio&amp;num_travelers=1</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.17</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/264/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.17</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/265/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.17</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/262/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.17</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/263/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.17</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/261/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.17</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/trips/?departure_date=2025-07-09&amp;origin=Kabayan&amp;destination=Baguio&amp;num_travelers=1</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.13</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/273/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.13</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/271/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.13</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/272/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.13</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/274/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.13</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/275/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.13</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/trips/?departure_date=2025-07-10&amp;origin=Kabayan&amp;destination=Baguio&amp;num_travelers=1</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.11</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/282/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.11</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/281/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.11</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/285/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.11</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/284/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.11</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/283/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.11</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/291/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.09</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/295/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.09</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/292/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.09</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/293/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.09</priority>
+</url>
+<url>
+  <loc>https://book-bkoda-6d62942dbe76.herokuapp.com/booking/book/294/1/</loc>
+  <lastmod>2025-07-01T06:47:38+00:00</lastmod>
+  <priority>0.09</priority>
+</url>
+
+
+</urlset>
