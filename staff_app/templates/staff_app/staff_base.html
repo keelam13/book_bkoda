@@ -7,43 +7,49 @@
 {% endblock %}
 
 {% block content %}
-    <article class="staff-app-display">
-        <h2 class="d-none">Staff Panel</h2>
-        <section class="sidebar">
-            <h3 class="h3 text-secondary border-bottom pb-3 mb-4">Staff Panel</h3>
-            <nav class="mb-4">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'staff_app:dashboard' %}">
-                            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'trip' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'staff_app:trips_list' %}">
-                            <i class="fas fa-route me-2"></i> Trips
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'booking' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'staff_app:bookings_list' %}">
-                            <i class="fas fa-ticket-alt me-2"></i> Bookings
-                        </a>
-                    </li>
-                    <li class="nav-item mt-auto">
-                        <a class="nav-link" href="{% url 'account_logout' %}">
-                            <i class="fas fa-sign-out-alt me-2"></i> Logout
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">
-                            <i class="fas fa-home me-2"></i> Back to Site
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </section>
-        <section class="content">
-            {% block staff_app_content %}
-            {% endblock %}
-        </section>
-    </article>
+<div class="staff-app-display">
+    <div class="row">
+        <div class="col-md-3 mb-md-3">
+            <div class="sidebar mb-3">
+                <div class="list-group list-group-flush">
+                    <nav class="mb-4">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'staff_app:dashboard' %}">
+                                    <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if 'trip' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'staff_app:trips_list' %}">
+                                    <i class="fas fa-route me-2"></i> Trips
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if 'booking' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'staff_app:bookings_list' %}">
+                                    <i class="fas fa-ticket-alt me-2"></i> Bookings
+                                </a>
+                            </li>
+                            <li class="nav-item mt-auto">
+                                <a class="nav-link" href="{% url 'account_logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'home' %}">
+                                    <i class="fas fa-home me-2"></i> Back to Site
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="content staff-app-content">
+                {% block staff_app_content %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
