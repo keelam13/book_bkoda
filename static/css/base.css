@@ -4,16 +4,22 @@
     box-sizing: border-box;
 }
 
-html, body {
+html {
+    overflow-x: hidden;
+}
+
+body {
     background: url('/static/images/welcome_kabayan.webp')
         no-repeat center center fixed;
     background-size: cover;
     height: 100%;
+    width: 100%;
     display: flex;
     flex-direction: column;
     margin: 0;
     color: #555;
     font-family: 'Lato', sans-serif;
+    overflow-x: hidden;
 }
 
 .overlay {
@@ -280,6 +286,17 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     }
 }
 
+@media (max-width: 768px) {
+    hr {
+        border: 0;
+        height: 1px;
+        background-color: white;
+        color: #fff;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+}
+
 /* Alert */
 .alert-error {
     color: #842029;
@@ -396,5 +413,15 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     background: transparent;
     clear: left;
     font: 14px Helvetica,Arial,sans-serif;
-    width: 600px;
+    width: 100%;
+}
+
+#mc_embed_signup .mc-field-group {
+    width: 100%;
+    padding: 0;
+}
+
+#mc_embed_signup .foot {
+    width: 100%;
+    padding-top: 5px;
 }
