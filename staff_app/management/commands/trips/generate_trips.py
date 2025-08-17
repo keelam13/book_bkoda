@@ -58,7 +58,6 @@ class Command(BaseCommand):
                         price=price,
                         trip_number=f'KAB-BAG-{current_date.strftime("%Y%m%d")}-{trip_time.strftime("%H%M")}',
                         arrival_time= (datetime.combine(current_date, trip_time) + timedelta(hours=3)).time(),
-                        # duration="3 hours",
                         company_name="BKODA Transport",
                     )
                     self.stdout.write(self.style.SUCCESS(f'Created KAB-BAG trip for {current_date} at {trip_time}'))
@@ -83,7 +82,6 @@ class Command(BaseCommand):
                         price=price,
                         trip_number=f'BAG-KAB-{current_date.strftime("%Y%m%d")}-{trip_time.strftime("%H%M")}',
                         arrival_time=(datetime.combine(current_date, trip_time) + timedelta(hours=3)).time(),
-                        # duration="3 hours",
                         company_name="BKODA Transport",
                     )
                     self.stdout.write(self.style.SUCCESS(f'Created BAG-KAB trip for {current_date} at {trip_time}'))

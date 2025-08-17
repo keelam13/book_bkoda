@@ -374,7 +374,7 @@ def process_payment(request, booking_id):
                             del request.session['anonymous_booking_id']
 
                         messages.success(request, f"Payment successful! Booking {booking.booking_reference} is now confirmed.")
-                        send_booking_email(booking, email_type='confirmed')
+                        send_booking_email(booking, email_type='booking_confirmation')
                         return redirect('booking_success', booking_id=booking.id)
 
                 else:
