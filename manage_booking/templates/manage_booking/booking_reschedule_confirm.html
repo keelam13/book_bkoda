@@ -196,7 +196,7 @@
                             <label class="form-check-label" for="termsCheck">
                                 I declare to have read and agree to the <a href="#" data-toggle="modal"
                                     data-target="#privacyPolicyModal">Privacy Policy</a> and <a href="#" data-toggle="modal"
-                                    data-target="#bookingTermsModal">T&C of Booking</a> and <a href="#" data-toggle="modal"
+                                    data-target="#bookingTermsModal">Booking Policy</a> and <a href="#" data-toggle="modal"
                                     data-target="#carriageTermsModal">T&C of Carriage</a>.
                             </label>
                         </div>
@@ -205,8 +205,7 @@
                         <input type="hidden" id="firstPassengerEmail" value="{{ first_passenger_email }}">
                         <input type="hidden" id="firstPassengerContactNumber" value="{{ first_passenger_contact_number }}">
                         <input type="hidden" name="payment_intent_id" id="payment_intent_id">
-                        <!-- <input type="hidden" id="passenger_name1" value="{{ request.user.get_full_name|default:request.user.username }}"> -->
-                        
+
                         <div class="d-grid mt-4">
                             {% if amount_to_pay > 0 %}
                                 <button type="submit" id="submit-button" name="action" value="confirm_payment"
@@ -269,7 +268,7 @@
 <div id="loading-overlay">
     <h1 class="text-light logo-font loading-spinner">
         <span class="icon">
-            <i class="fas fa-3x fa-sync-alt fa-spin">bB</i>
+            <i class="fas fa-3x fa-sync-alt fa-spin"></i>
         </span>
     </h1>
 </div>
@@ -347,6 +346,10 @@
                                 <li><strong>Action:</strong> Booking status changes to CANCELED. No refund issued.</li>
                             </ul>
                         </li>
+                        <li><strong>NOTE:</strong> The cancellation refund percentage is determined by the time elapsed between the
+                            cancellation request and the <strong>original departure time</strong> of the booking. Any rescheduling of the trip
+                            does not change the cancellation refund policy.
+                        </li>
                     </ul>
 
                     <h6>5. Rescheduling Policy</h6>
@@ -359,6 +362,8 @@
                         <li><strong>Late Rescheduling (15% fee):</strong> If rescheduling between 24 hours and 3 hours (inclusive) before original departure.
                             <ul>
                                 <li><strong>Action:</strong> 15% rescheduling charge applied to the original booking's total paid price. Subject to seat availability.</li>
+                                <li><strong>Clarification:</strong> Once a booking has been rescheduled, it is no longer eligible for a full refund if 
+                                    subsequently cancelled. The original cancellation policy will apply, based on the original departure date and time.</li>
                             </ul>
                         </li>
                         <li><strong>No Rescheduling Allowed:</strong> If rescheduling less than 3 hours before original departure.</li>
@@ -368,6 +373,7 @@
                     <ul>
                         <li>Refunds for eligible cancellations will be processed according to the original payment method. Please allow 2-3 business days for the refund to reflect in your account.</li>
                         <li>For cash payments via payment centers, refunds will be processed either via GCash, bank transfer, or pickup at the office (all terminals).</li>
+                        <li><strong>Note:</strong> Any rescheduling fees paid are non-refundable.</li>
                     </ul>
 
                     <h6>7. Changes to Schedules and Services</h6>
