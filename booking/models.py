@@ -1,5 +1,6 @@
 from django.db import models, transaction
 from django.contrib.auth.models import User
+from django.utils import timezone
 from trips.models import Trip
 from decimal import Decimal
 from datetime import datetime
@@ -11,6 +12,7 @@ BOOKING_STATUS_CHOICES = [
     ('CANCELED', 'Canceled'),
     ('COMPLETED', 'Completed'),
     ('CANCELLATION_FAILED', 'Cancellation Failed'),
+    ('RESCHEDULED', 'Rescheduled'),
 ]
 
 PAYMENT_STATUS_CHOICES = [
@@ -43,7 +45,17 @@ class Booking(models.Model):
         on_delete=models.SET_NULL,
         null=True, blank=True
     )
-    trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
+    trip = models.ForeignKey(
+        Trip,
+        on_delete=models.CASCADE,
+        related_name='current_bookings')
+    original_trip = models.ForeignKey(
+        Trip, 
+        on_delete=models.SET_NULL, 
+        related_name='rescheduled_from_bookings',
+        null=True, 
+        blank=True
+    )
     number_of_passengers = models.PositiveIntegerField(default=1)
     booking_date = models.DateTimeField(auto_now_add=True)
     total_price = models.DecimalField(
@@ -120,6 +132,13 @@ class Booking(models.Model):
             f"ID of the Stripe PaymentMethod object used for this booking.")
     )
 
+    original_departure_time = models.DateTimeField(
+        null=True, blank=True,
+        help_text="The departure time of the initial booking. Used for cancellation/rescheduling policy checks."
+    )
+
+    is_rescheduled = models.BooleanField(default=False)
+
     class Meta:
         ordering = ['-booking_date']
         verbose_name = 'Booking'
@@ -128,16 +147,22 @@ class Booking(models.Model):
     def save(self, *args, **kwargs):
         """
         Overrides the save method to handle:
-        1. Storing original status for comparison.
-        2. Generating booking reference (if new).
-        3. Updating trip's available seats based on status changes.
-        4. Triggering confirmation/receipt emails on status
+        1. Setting original departure time on creation.
+        2. Storing original status for comparison.
+        3. Generating booking reference (if new).
+        4. Updating trip's available seats based on status changes.
+        5. Triggering confirmation/receipt emails on status
             transition to PAID/CONFIRMED.
         """
         is_new_booking = not self.pk
         original_payment_status = None
         original_booking_status = None
         original_num_passengers = 0
+
+        if is_new_booking:
+            combined_datetime = datetime.combine(self.trip.date, self.trip.departure_time)
+            self.original_departure_time = timezone.make_aware(combined_datetime)
+            print(f"DEBUG: Setting original_departure_time to {self.original_departure_time}")
 
         if not is_new_booking:
             try:
@@ -191,6 +216,9 @@ class Booking(models.Model):
                 lambda: send_booking_email(self, 'payment_receipt'))
             transaction.on_commit(
                 lambda: send_booking_email(self, 'booking_confirmation'))
+
+    def is_pending_reschedule(self):
+        return self.status == 'PENDING_PAYMENT' and self.original_trip is not None
 
     def __str__(self):
         user_display = self.user.username if self.user else "Anonymous"
