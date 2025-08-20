@@ -304,14 +304,68 @@ def booking_cancel(request, booking_id):
         booking.status == 'CONFIRMED' and booking.payment_status == 'PAID'
     )
 
-    time_until_departure_hours = -1
+    if booking.is_rescheduled:
+        if booking.original_departure_time:
+            departure_datetime = booking.original_departure_time
+        else:
+            departure_datetime = timezone.make_aware(datetime.combine(booking.trip.date, booking.trip.departure_time))
+    else:
+        departure_datetime = timezone.make_aware(datetime.combine(booking.trip.date, booking.trip.departure_time))
 
-    if booking.trip.date and booking.trip.departure_time:
-        departure_datetime_naive = datetime.combine(booking.trip.date, booking.trip.departure_time)
-        departure_datetime = timezone.make_aware(departure_datetime_naive)
-        current_time = timezone.now()
-        time_until_departure = departure_datetime - current_time
-        time_until_departure_hours = time_until_departure.total_seconds() / 3600
+    current_time = timezone.now()
+    time_until_departure = departure_datetime - current_time
+    time_until_departure_hours = time_until_departure.total_seconds() / 3600
+
+    print(f"\n--- DEBUGGING BOOKING ID: {booking.id} ---")
+    print(f"Original Departure Time (aware): {booking.original_departure_time}")
+    print(f"TRIP DATE (naive): {booking.trip.date}")
+    print(f"TRIP TIME (naive): {booking.trip.departure_time}")
+    print(f"DEPARTURE DATETIME (aware): {departure_datetime}")
+    print(f"CURRENT TIME (aware): {current_time}")
+    print(f"TIME UNTIL DEPARTURE (timedelta): {time_until_departure}")
+    print(f"TIME UNTIL DEPARTURE (HOURS): {time_until_departure_hours}")
+    print(f"POLICY: free_cancellation_cutoff_hours: {policy.free_cancellation_cutoff_hours}")
+    print(f"POLICY: late_cancellation_cutoff_hours: {policy.late_cancellation_cutoff_hours}")
+    print("-------------------------------------------\n")
+    print(f"DEBUG: Booking ID {booking.id} Status: {booking.status}")
+    print(f"DEBUG: Booking ID {booking.id} Payment Status: {booking.payment_status}")
+    print(f"DEBUG: Eligible for action: {eligible_status_for_action}")
+
+    if eligible_status_for_action:
+        if time_until_departure_hours > policy.free_cancellation_cutoff_hours:
+            can_proceed_with_cancellation = True
+            refund_amount = booking.total_price # Full refund
+            refund_type_message = "FULL"
+        elif time_until_departure_hours >= policy.late_cancellation_cutoff_hours:
+            can_proceed_with_cancellation = True
+            refund_amount = booking.total_price * (1 - cancellation_fee_rate)
+            refund_type_message = f"{int((1 - cancellation_fee_rate) * 100)}% (due to late cancellation fee)"
+        else:
+            can_proceed_with_cancellation = True
+            refund_amount = Decimal('0.00') # NO REFUND
+            refund_type_message = f"NONE (less than {policy.late_cancellation_cutoff_hours} hours before departure)"
+            messages.warning(request, "Cancellation is allowed, but no refund will be issued due to proximity to departure time.")
+    else:
+        messages.error(request, "This booking cannot be cancelled due to its current status or payment status.")
+        refund_type_message = "N/A"
+
+
+    # --- Handle POST request (Confirm Cancellation) ---
+    if request.method == 'POST':
+        recalc_can_proceed = False
+        recalc_refund_amount = Decimal('0.00')
+        recalc_refund_type_message = "N/A"
+
+        if booking.is_rescheduled:
+            if booking.original_departure_time:
+                departure_datetime_recheck = booking.original_departure_time
+            else:
+                departure_datetime_recheck = timezone.make_aware(datetime.combine(booking.trip.date, booking.trip.departure_time))
+        else:
+            departure_datetime_recheck = timezone.make_aware(datetime.combine(booking.trip.date, booking.trip.departure_time))
+
+        time_until_departure_recheck = departure_datetime_recheck - timezone.now()
+        time_until_departure_hours_recheck = time_until_departure_recheck.total_seconds() / 3600
 
         print(f"\n--- DEBUGGING BOOKING ID: {booking.id} ---")
         print(f"TRIP DATE (naive): {booking.trip.date}")
@@ -323,67 +377,20 @@ def booking_cancel(request, booking_id):
         print(f"POLICY: free_cancellation_cutoff_hours: {policy.free_cancellation_cutoff_hours}")
         print(f"POLICY: late_cancellation_cutoff_hours: {policy.late_cancellation_cutoff_hours}")
         print("-------------------------------------------\n")
-        print(f"DEBUG: Booking ID {booking.id} Status: {booking.status}")
-        print(f"DEBUG: Booking ID {booking.id} Payment Status: {booking.payment_status}")
-        print(f"DEBUG: Eligible for action: {eligible_status_for_action}")
 
         if eligible_status_for_action:
-            if time_until_departure_hours > policy.free_cancellation_cutoff_hours:
-                can_proceed_with_cancellation = True
-                refund_amount = booking.total_price # Full refund
-                refund_type_message = "FULL"
-            elif time_until_departure_hours >= policy.late_cancellation_cutoff_hours:
-                can_proceed_with_cancellation = True
-                refund_amount = booking.total_price * (1 - cancellation_fee_rate)
-                refund_type_message = f"{int((1 - cancellation_fee_rate) * 100)}% (due to late cancellation fee)"
-            else:
-                can_proceed_with_cancellation = True
-                refund_amount = Decimal('0.00') # NO REFUND
-                refund_type_message = f"NONE (less than {policy.late_cancellation_cutoff_hours} hours before departure)"
-                messages.warning(request, "Cancellation is allowed, but no refund will be issued due to proximity to departure time.")
-        else:
-            messages.error(request, "This booking cannot be cancelled due to its current status or payment status.")
-            refund_type_message = "N/A"
-    else:
-        messages.error(request, "Departure date or time is missing for this trip, unable to determine cancellation eligibility.")
-        refund_type_message = "N/A"
-
-
-    # --- Handle POST request (Confirm Cancellation) ---
-    if request.method == 'POST':
-        recalc_can_proceed = False
-        recalc_refund_amount = Decimal('0.00')
-        recalc_refund_type_message = "N/A"
-
-        if booking.trip.date and booking.trip.departure_time:
-            departure_datetime_recheck = timezone.make_aware(datetime.combine(booking.trip.date, booking.trip.departure_time))
-            time_until_departure_recheck = departure_datetime_recheck - timezone.now()
-            time_until_departure_hours_recheck = time_until_departure_recheck.total_seconds() / 3600
-
-            print(f"\n--- DEBUGGING BOOKING ID: {booking.id} ---")
-            print(f"TRIP DATE (naive): {booking.trip.date}")
-            print(f"TRIP TIME (naive): {booking.trip.departure_time}")
-            print(f"DEPARTURE DATETIME (aware): {departure_datetime}")
-            print(f"CURRENT TIME (aware): {current_time}")
-            print(f"TIME UNTIL DEPARTURE (timedelta): {time_until_departure}")
-            print(f"TIME UNTIL DEPARTURE (HOURS): {time_until_departure_hours}")
-            print(f"POLICY: free_cancellation_cutoff_hours: {policy.free_cancellation_cutoff_hours}")
-            print(f"POLICY: late_cancellation_cutoff_hours: {policy.late_cancellation_cutoff_hours}")
-            print("-------------------------------------------\n")
-
-            if eligible_status_for_action:
-                if time_until_departure_hours_recheck > policy.free_cancellation_cutoff_hours:
-                    recalc_can_proceed = True
-                    recalc_refund_amount = booking.total_price
-                    recalc_refund_type_message = "FULL"
-                elif time_until_departure_hours_recheck >= policy.late_cancellation_cutoff_hours:
-                    recalc_can_proceed = True
-                    recalc_refund_amount = booking.total_price * (1 - cancellation_fee_rate)
-                    recalc_refund_type_message = f"{int((1 - cancellation_fee_rate) * 100)}% (due to late cancellation fee)"
-                else: # Allow cancel, no refund
-                    recalc_can_proceed = True
-                    recalc_refund_amount = Decimal('0.00')
-                    recalc_refund_type_message = f"NONE (less than {policy.late_cancellation_cutoff_hours} hours before departure)"
+            if time_until_departure_hours_recheck > policy.free_cancellation_cutoff_hours:
+                recalc_can_proceed = True
+                recalc_refund_amount = booking.total_price
+                recalc_refund_type_message = "FULL"
+            elif time_until_departure_hours_recheck >= policy.late_cancellation_cutoff_hours:
+                recalc_can_proceed = True
+                recalc_refund_amount = booking.total_price * (1 - cancellation_fee_rate)
+                recalc_refund_type_message = f"{int((1 - cancellation_fee_rate) * 100)}% (due to late cancellation fee)"
+            else: # Allow cancel, no refund
+                recalc_can_proceed = True
+                recalc_refund_amount = Decimal('0.00')
+                recalc_refund_type_message = f"NONE (less than {policy.late_cancellation_cutoff_hours} hours before departure)"
 
         if not recalc_can_proceed:
             messages.error(request, "Cancellation cannot be processed at this time based on policy or booking status.")
@@ -737,6 +744,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                                     payment_status='PAID',
                                     booking_reference=f"R-{original_booking.booking_reference}",
                                     is_rescheduled=True,
+                                    original_departure_time=original_booking.original_departure_time,
                                     stripe_payment_intent_id=payment_intent.id,
                                     payment_method_type='CARD',
                                 )
@@ -751,6 +759,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                                 new_trip.available_seats -= num_passengers
                                 new_trip.save()
 
+                                print(f"Orig Dep Time: {original_booking.original_departure_time}"),
                                 print(f"Is Rescheduled (Card payment): {original_booking.is_rescheduled}")
                                 messages.success(request, f"Booking {new_booking.booking_reference} successfully rescheduled! Please check your email for details.")
                                 send_booking_email(new_booking, email_type='rescheduled_confirmation')
@@ -789,6 +798,8 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                             booking_reference=f"R-{original_booking.booking_reference}",
                             is_rescheduled=True,
                             payment_method_type=selected_payment_method,
+                            original_departure_time=original_booking.original_departure_time,
+                            
                         )
 
                         for passenger in original_booking.passengers.all():

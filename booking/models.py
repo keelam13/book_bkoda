@@ -159,7 +159,7 @@ class Booking(models.Model):
         original_booking_status = None
         original_num_passengers = 0
 
-        if is_new_booking:
+        if is_new_booking and not self.original_departure_time:
             combined_datetime = datetime.combine(self.trip.date, self.trip.departure_time)
             self.original_departure_time = timezone.make_aware(combined_datetime)
             print(f"DEBUG: Setting original_departure_time to {self.original_departure_time}")
