@@ -1,11 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import  messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db import transaction
 from django.db.models import Sum, Min, Max
 from django.views.decorators.http import require_POST
 from django.utils import timezone
-
-# Import models and forms from your app
 from trips.models import Trip
 from booking.models import Booking, BOOKING_STATUS_CHOICES, PAYMENT_STATUS_CHOICES, REFUND_STATUS_CHOICES, PAYMENT_METHOD_CHOICES
 from staff_app.forms import TripForm, BookingForm
@@ -155,11 +154,24 @@ def bookings_list(request):
         booking = get_object_or_404(Booking, pk=booking_pk)
         print('Booking:', booking)
         trip_datetime = datetime.combine(booking.trip.date, booking.trip.departure_time)
-        if action == 'update_booking' and trip_datetime < datetime.now():
+        if action == 'confirm_reschedule_payment':
+            try:
+                if booking.is_pending_reschedule():
+                    booking.status = 'CONFIRMED'
+                    booking.payment_status = 'PAID'
+                    booking.is_rescheduled = True
+                    booking.save()
+                    messages.success(request, f'Reschedule for booking {booking.booking_reference} confirmed successfully!')
+                else:
+                    messages.error(request, 'Booking cannot be confirmed manually in its current state.')
+            except Exception as e:
+                messages.error(request, f'An error occurred during reschedule confirmation: {e}')
+
+        elif action == 'update_booking' and trip_datetime < datetime.now():
              messages.error(request, f'Cannot update past booking {booking.booking_reference}. Editing is disallowed for past trip dates.')
              return redirect('staff_app:bookings_list')
 
-        if action == 'update_booking':
+        elif action == 'update_booking':
             form = BookingForm(request.POST, instance=booking)
 
             if form.is_valid():
@@ -337,3 +349,39 @@ def cancel_null_bookings_view(request):
         print(f"Error in cancel_null_bookings_view: {traceback.format_exc()}")
     
     return redirect('staff_app:bookings_list')
+
+
+@login_required
+@user_passes_test(is_staff_user)
+def confirm_reschedule_payment(request, pk):
+    """
+    Staff view to manually confirm a pending payment for a rescheduled booking.
+    This view handles the logic directly without a signal.
+    """
+    booking = get_object_or_404(Booking, pk=pk)
+
+    if request.method == 'POST':
+        try:
+            original_booking = Booking.objects.get(pk=pk)
+        except Booking.DoesNotExist:
+            messages.error(request, "Booking not found.")
+            return redirect('staff_app:bookings_list')
+
+        if booking.status == 'PENDING_PAYMENT' and booking.payment_status == 'PENDING':
+            with transaction.atomic():
+                booking.status = 'CONFIRMED'
+                booking.payment_status = 'PAID'
+
+                if original_booking.trip_id != booking.trip_id:
+                    booking.is_rescheduled = True
+                
+                booking.save()
+                
+                messages.success(request, f"Payment for booking {booking.booking_reference} successfully confirmed.")
+                return redirect('staff_app:bookings_list')
+        else:
+            messages.error(request, "This booking cannot be manually confirmed.")
+            return redirect('staff_app:bookings_list')
+
+    context = {'booking': booking}
+    return render(request, 'staff_app/confirm_reschedule_modal.html', context)

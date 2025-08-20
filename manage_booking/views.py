@@ -40,14 +40,12 @@ def _calculate_reschedule_financials(original_booking, new_trip, policy):
     reschedule_type_message = ""
 
     # Re-evaluate rescheduling charge based on time until original departure
-    departure_datetime_naive = datetime.combine(original_booking.trip.date, original_booking.trip.departure_time)
-    departure_datetime = timezone.make_aware(departure_datetime_naive)
-    time_until_departure = departure_datetime - timezone.now()
-    time_until_departure_hours = time_until_departure.total_seconds() / 3600
+    time_until_departure = original_booking.original_departure_time - timezone.now()
+    time_until_original_departure = time_until_departure.total_seconds() / 3600
 
-    if time_until_departure_hours > policy.free_rescheduling_cutoff_hours:
+    if time_until_original_departure > policy.free_rescheduling_cutoff_hours:
         reschedule_type_message = "Free Reschedule"
-    elif time_until_departure_hours >= policy.late_rescheduling_cutoff_hours:
+    elif time_until_original_departure >= policy.late_rescheduling_cutoff_hours:
         reschedule_type_message = "Late Reschedule"
         rescheduling_charge = original_total_price * policy.late_rescheduling_charge_percentage
         rescheduling_charge = rescheduling_charge.quantize(Decimal('0.01'))
@@ -77,7 +75,7 @@ def _calculate_reschedule_financials(original_booking, new_trip, policy):
         'amount_to_pay': amount_to_pay,
         'amount_to_refund': amount_to_refund,
         'reschedule_type_message': reschedule_type_message,
-        'time_until_departure_hours': time_until_departure_hours,
+        'time_until_original_departure': time_until_original_departure,
         'num_passengers': num_passengers
     }
 
@@ -533,6 +531,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
     new_trip = get_object_or_404(Trip, pk=new_trip_id)
     num_passengers = original_booking.number_of_passengers
     print(f"DEBUG: Rescheduling booking ID {booking_id} to new trip ID {new_trip_id} for {num_passengers} passengers.")
+    print(f"Is Rescheduled: {original_booking.is_rescheduled}")
 
     policy = BookingPolicy.objects.first()
     if not policy:
@@ -665,7 +664,33 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
         rescheduling_charge_post = financials_post['rescheduling_charge']
         print('Rescheduling charge POST:', rescheduling_charge_post )
 
-        if amount_to_pay_post > 0:
+        if amount_to_pay_post <= 0:
+            try:
+                with transaction.atomic():
+                    original_booking.trip.available_seats += original_booking.number_of_passengers
+                    original_booking.trip.save()
+                    new_trip.available_seats -= num_passengers
+                    new_trip.save()
+
+                    original_booking.trip = new_trip
+                    original_booking.number_of_passengers = num_passengers
+                    original_booking.total_price = original_total_price + rescheduling_charge_post
+
+                    original_booking.status = 'CONFIRMED'
+                    original_booking.payment_status = 'PAID'
+                    original_booking.is_rescheduled = True
+                    print(f"Is Rescheduled (No payment): {original_booking.is_rescheduled}")
+                    original_booking.save()
+
+                    messages.success(request, f"Booking {original_booking.booking_reference} successfully rescheduled for free!")
+                    send_booking_email(original_booking, email_type='rescheduled_confirmation')
+                    return redirect(reverse('manage_booking:booking_detail', args=[original_booking.id]))
+            
+            except Exception as e:
+                messages.error(request, f"An error occurred during a no-fee reschedule: {e}")
+                return redirect(reverse('manage_booking:booking_detail', args=[original_booking.id]))
+
+        elif amount_to_pay_post > 0:
             if selected_payment_method == 'CARD':
                 if not billing_form.is_valid():
                     messages.error(request, "Please correct the billing address errors.")
@@ -699,21 +724,37 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                                 return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
 
                             with transaction.atomic():
+                                original_booking.status = 'RESCHEDULED'
+                                original_booking.save(update_fields=['status'])
+
+                                new_booking = Booking.objects.create(
+                                    user=original_booking.user,
+                                    trip=new_trip,
+                                    original_trip=original_booking.trip,
+                                    number_of_passengers=num_passengers,
+                                    total_price=original_total_price + rescheduling_charge_post,
+                                    status='CONFIRMED',
+                                    payment_status='PAID',
+                                    booking_reference=f"R-{original_booking.booking_reference}",
+                                    is_rescheduled=True,
+                                    stripe_payment_intent_id=payment_intent.id,
+                                    payment_method_type='CARD',
+                                )
+
+                                for passenger in original_booking.passengers.all():
+                                    passenger.pk = None
+                                    passenger.booking = new_booking
+                                    passenger.save()
+
                                 original_booking.trip.available_seats += original_booking.number_of_passengers
                                 original_booking.trip.save()
                                 new_trip.available_seats -= num_passengers
                                 new_trip.save()
 
-                                original_booking.trip = new_trip
-                                original_booking.number_of_passengers = num_passengers
-                                original_booking.total_price = original_total_price + rescheduling_charge_post
-                                print('New Total Price:', original_booking.total_price)
-                                original_booking.status = 'CONFIRMED'
-                                original_booking.payment_status = 'PAID'
-                                original_booking.save()
-                                messages.success(request, f"Booking {original_booking.booking_reference} successfully rescheduled! Please check your email for details.")
-                                send_booking_email(original_booking, email_type='rescheduled_confirmation')
-                                return redirect(reverse('manage_booking:booking_detail', args=[original_booking.id]))
+                                print(f"Is Rescheduled (Card payment): {original_booking.is_rescheduled}")
+                                messages.success(request, f"Booking {new_booking.booking_reference} successfully rescheduled! Please check your email for details.")
+                                send_booking_email(new_booking, email_type='rescheduled_confirmation')
+                                return redirect(reverse('manage_booking:booking_detail', args=[new_booking.id]))
 
                         elif payment_intent.status in ['requires_payment_method', 'requires_confirmation', 'requires_action', 'processing']:
                             messages.error(request, "Payment is still pending or requires further action. Please try again.")
@@ -734,27 +775,39 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
             elif selected_payment_method in ['CASH', 'GCASH']:
                 try:
                     with transaction.atomic():
+                        original_booking.status = 'RESCHEDULED'
+                        original_booking.save(update_fields=['status'])
+
+                        new_booking = Booking.objects.create(
+                            user=original_booking.user,
+                            trip=new_trip,
+                            original_trip=original_booking.trip,
+                            number_of_passengers=num_passengers,
+                            total_price=original_total_price + rescheduling_charge_post,
+                            status='PENDING_PAYMENT',
+                            payment_status='PENDING',
+                            booking_reference=f"R-{original_booking.booking_reference}",
+                            is_rescheduled=True,
+                            payment_method_type=selected_payment_method,
+                        )
+
+                        for passenger in original_booking.passengers.all():
+                            passenger.pk = None
+                            passenger.booking = new_booking
+                            passenger.save()
+
                         original_booking.trip.available_seats += original_booking.number_of_passengers
                         original_booking.trip.save()
                         new_trip.available_seats -= num_passengers
                         new_trip.save()
 
-                        original_booking.trip = new_trip
-                        original_booking.number_of_passengers = num_passengers
-                        original_booking.total_price = original_total_price + rescheduling_charge_post
-                        print('New Total Price:', original_booking.total_price)
-                        original_booking.status = 'PENDING_PAYMENT'
-                        original_booking.payment_status = 'PENDING'
-                        original_booking.stripe_payment_intent_id = None
-                        original_booking.save()
-
-                        messages.success(request, f"Booking {original_booking.booking_reference} successfully rescheduled to {new_trip.trip_number}! Please complete payment via the selected method to confirm your booking.")
-                        send_booking_email(original_booking, email_type='pending_payment_instructions')
-                        return redirect(reverse('manage_booking:booking_detail', args=[original_booking.id]))
+                        messages.success(request, f"Booking {new_booking.booking_reference} successfully rescheduled to {new_trip.trip_number}! Please complete payment via the selected method to confirm your booking.")
+                        send_booking_email(new_booking, email_type='pending_payment_instructions')
+                        return redirect(reverse('manage_booking:booking_detail', args=[new_booking.id]))
 
                 except Exception as e:
                     messages.error(request, f"An error occurred during rescheduling with manual payment: {e}")
-                    return redirect(reverse('manage_booking:booking_detail', args=[original_booking.id]))
+                    return redirect(reverse('manage_booking:booking_detail', args=[new_booking.id]))
 
         else:
             try:

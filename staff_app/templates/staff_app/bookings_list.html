@@ -153,7 +153,7 @@
                                     </ul>
                                     {% endif %}
                                 </li>
-                                <li class="list-group-item"><strong>Total Price:</strong> ${{ booking.total_price }}</li>
+                                <li class="list-group-item"><strong>Total Price:</strong> Php {{ booking.total_price }}</li>
                                 <li class="list-group-item"><strong>Refund Status:</strong> {{ booking.get_refund_status_display }}</li>
                                 <li class="list-group-item"><strong>Refund Amount:</strong> Php {{ booking.refund_amount }}</li>
                                 <li class="list-group-item"><strong>Payment Method:</strong> {{ booking.get_payment_method_type_display|default:"N/A" }}</li>
@@ -161,6 +161,8 @@
                                 <li class="list-group-item"><strong>Card Last 4:</strong> {{  booking.card_last4|default:"N/A" }}</li>
                                 <li class="list-group-item"><strong>Status:</strong> {{ booking.get_status_display }}</li>
                                 <li class="list-group-item"><strong>Payment Status:</strong> {{  booking.get_payment_status_display }}</li>
+                                <li class="list-group-item"><strong>Is Rescheduled:</strong> {{ booking.is_rescheduled }}</li>
+                                <li class="list-group-item"><strong>Pending Reschedule:</strong> {{ booking.is_pending_reschedule }}</li>
                             </ul>
                             <div class="modal-footer">
                                 <form action="{% url 'staff_app:bookings_list' %}" method="post" class="d-inline mr-auto">
@@ -190,13 +192,30 @@
                                     </ul>
                                     {% endif %}
                                 </li>
-                                <li class="list-group-item"><strong>Total Price:</strong> ${{ booking.total_price }}</li>
+                                <li class="list-group-item"><strong>Total Price:</strong> Php {{ booking.total_price }}</li>
                                 <li class="list-group-item"><strong>Refund Status:</strong> {{ booking.get_refund_status_display }}</li>
                                 <li class="list-group-item"><strong>Refund Amount:</strong> Php {{ booking.refund_amount }}</li>
                                 <li class="list-group-item"><strong>Payment Method:</strong> {{ booking.get_payment_method_type_display|default:"N/A" }}</li>
                                 <li class="list-group-item"><strong>Card Brand:</strong> {{ booking.card_brand|default:"N/A" }}</li>
                                 <li class="list-group-item"><strong>Card Last 4:</strong> {{  booking.card_last4|default:"N/A" }}</li>
+                                <li class="list-group-item"><strong>Is Rescheduled:</strong> {{ booking.is_rescheduled }}</li>
+                                <li class="list-group-item"><strong>Pending Reschedule:</strong> {{ booking.is_pending_reschedule }}</li>
                             </ul>
+                            {% if booking.is_pending_reschedule %}
+                                <form method="POST" action="{% url 'staff_app:bookings_list' %}" class="mb-4">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="booking_pk" value="{{ booking.pk }}">
+                                    <input type="hidden" name="action" value="confirm_reschedule_payment">
+                                    
+                                    <h6 class="text-primary mb-3">Confirm Reschedule Payment:</h6>
+                                    <div class="alert alert-info" role="alert">
+                                        This booking is pending manual payment. Confirming this payment will also mark it as a rescheduled trip if the trip details have changed.
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-success">Confirm Reschedule Payment</button>
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                </form>
+                            {% endif %}
                             <form method="POST" action="{% url 'staff_app:bookings_list' %}"
                                 id="updateBookingForm{{ booking.pk }}">
                                 {% csrf_token %}
