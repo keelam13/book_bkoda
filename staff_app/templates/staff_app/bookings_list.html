@@ -215,38 +215,39 @@
                                     <button type="submit" class="btn btn-success">Confirm Reschedule Payment</button>
                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                 </form>
+                            {% else %}
+                                <form method="POST" action="{% url 'staff_app:bookings_list' %}"
+                                    id="updateBookingForm{{ booking.pk }}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="booking_pk" value="{{ booking.pk }}">
+                                    <input type="hidden" name="action" value="update_booking"
+                                        id="booking_action_{{ booking.pk }}">
+                                    <div class="modal-body">
+                                        <h6 class="text-primary mb-3">Booking Details (Editable):</h6>
+                                        <div class="form-group">
+                                            <label for="id_booking_status_{{ booking.pk }}">Status</label>
+                                            <select class="form-control" id="id_booking_status_{{ booking.pk }}" name="status">
+                                                {% for value, label in BOOKING_STATUS_CHOICES %}
+                                                <option value="{{ value }}" {% if booking.status == value %}selected{% endif %}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="id_booking_payment_status_{{ booking.pk }}">Payment Status</label>
+                                            <select class="form-control" id="id_booking_payment_status_{{ booking.pk }}"
+                                                name="payment_status">
+                                                {% for value, label in PAYMENT_STATUS_CHOICES %}
+                                                <option value="{{ value }}" {% if booking.payment_status == value %}selected{% endif %}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="submit" class="btn btn-success">Save Changes</button>
+                                        <button type="button" class="btn btn-secondary w-20" data-dismiss="modal">Close</button>
+                                    </div>
+                                </form>
                             {% endif %}
-                            <form method="POST" action="{% url 'staff_app:bookings_list' %}"
-                                id="updateBookingForm{{ booking.pk }}">
-                                {% csrf_token %}
-                                <input type="hidden" name="booking_pk" value="{{ booking.pk }}">
-                                <input type="hidden" name="action" value="update_booking"
-                                    id="booking_action_{{ booking.pk }}">
-                                <div class="modal-body">
-                                    <h6 class="text-primary mb-3">Booking Details (Editable):</h6>
-                                    <div class="form-group">
-                                        <label for="id_booking_status_{{ booking.pk }}">Status</label>
-                                        <select class="form-control" id="id_booking_status_{{ booking.pk }}" name="status">
-                                            {% for value, label in BOOKING_STATUS_CHOICES %}
-                                            <option value="{{ value }}" {% if booking.status == value %}selected{% endif %}>{{ label }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="id_booking_payment_status_{{ booking.pk }}">Payment Status</label>
-                                        <select class="form-control" id="id_booking_payment_status_{{ booking.pk }}"
-                                            name="payment_status">
-                                            {% for value, label in PAYMENT_STATUS_CHOICES %}
-                                            <option value="{{ value }}" {% if booking.payment_status == value %}selected{% endif %}>{{ label }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn-success">Save Changes</button>
-                                    <button type="button" class="btn btn-secondary w-20" data-dismiss="modal">Close</button>
-                                </div>
-                            </form>
                             <form action="{% url 'staff_app:bookings_list' %}" method="post" class="m-3 d-flex justify-content-end">
                                 {% csrf_token %}
                                 <input type="hidden" name="booking_pk" value="{{ booking.pk }}">
