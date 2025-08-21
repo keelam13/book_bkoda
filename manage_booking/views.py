@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from .utils import paginate_queryset
 from booking.utils import send_booking_email
-from .booking_service import _calculate_reschedule_financials, _create_new_rescheduled_booking
+from .booking_service import _calculate_reschedule_financials, _create_new_rescheduled_booking, _process_refund_for_reschedule
 
 import stripe
 
@@ -598,174 +598,139 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
 
         financials_post = _calculate_reschedule_financials(original_booking, new_trip, policy)
         amount_to_pay_post = financials_post['amount_to_pay']
-        amount_to_refund_post = financials_post['amount_to_refund']
 
         new_booking_params = {
             'total_price': financials_post['original_total_price'] + financials_post['rescheduling_charge'],
         }
+        try:
+            with transaction.atomic():
+                if amount_to_pay_post > 0:
+                    if selected_payment_method == 'CARD':
+                        if not billing_form.is_valid():
+                            messages.error(request, "Please correct the billing address errors.")
+                            context = {
+                                'original_booking': original_booking,
+                                'new_trip': new_trip,
+                                'policy': policy,
+                                'reschedule_type_message': reschedule_type_message,
+                                'original_total_price': financials['original_total_price'],
+                                'new_total_price_base': financials['new_total_price_base'],
+                                'fare_difference': financials['fare_difference'],
+                                'rescheduling_charge': financials['rescheduling_charge'],
+                                'amount_to_pay': amount_to_pay,
+                                'amount_to_refund': amount_to_refund,
+                                'num_passengers': num_passengers,
+                                'client_secret': None,
+                                'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+                                'billing_form': billing_form,
+                            }
+                            return render(request, 'manage_booking/booking_reschedule_confirm.html', context)
 
-        if amount_to_pay_post <= 0:
-            new_booking_params.update({
-                'status': 'CONFIRMED',
-                'payment_status': 'PAID',
-                'payment_method_type': 'FREE_RESCHEDULE',
-            })
-
-            new_booking = _create_new_rescheduled_booking(
-            request, 
-            original_booking, 
-            new_trip,
-            new_booking_params
-            )
-
-            messages.success(request, f"Booking {original_booking.booking_reference} successfully rescheduled for free!")
-            send_booking_email(original_booking, email_type='rescheduled_confirmation')
-            return redirect(reverse('manage_booking:booking_detail', args=[new_booking.id]))
-
-        elif amount_to_pay_post > 0:
-            if selected_payment_method == 'CARD':
-                if not billing_form.is_valid():
-                    messages.error(request, "Please correct the billing address errors.")
-                    context = {
-                        'original_booking': original_booking,
-                        'new_trip': new_trip,
-                        'policy': policy,
-                        'reschedule_type_message': reschedule_type_message,
-                        'original_total_price': financials['original_total_price'],
-                        'new_total_price_base': financials['new_total_price_base'],
-                        'fare_difference': financials['fare_difference'],
-                        'rescheduling_charge': financials['rescheduling_charge'],
-                        'amount_to_pay': amount_to_pay,
-                        'amount_to_refund': amount_to_refund,
-                        'num_passengers': num_passengers,
-                        'client_secret': None,
-                        'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
-                        'billing_form': billing_form,
-                    }
-                    return render(request, 'manage_booking/booking_reschedule_confirm.html', context)
-
-                if payment_intent_id:
-                    try:
-                        stripe.api_key = settings.STRIPE_SECRET_KEY
-                        payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
-
-                        if payment_intent.status == 'succeeded':
-                            expected_amount_cents = int(amount_to_pay * 100)
-                            if payment_intent.amount != expected_amount_cents:
-                                messages.error(request, "Payment amount mismatch. Please contact support.")
-                                return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
-
-                            new_booking_params.update({
-                                'status': 'CONFIRMED',
-                                'payment_status': 'PAID',
-                                'stripe_payment_intent_id': payment_intent.id,
-                                'payment_method_type': 'CARD',
-                            })
-
-                            new_booking = _create_new_rescheduled_booking(
-                                request,
-                                original_booking,
-                                new_trip,
-                                new_booking_params
-                                )
-
-                            messages.success(request, f"Booking {new_booking.booking_reference} successfully rescheduled! Please check your email for details.")
-                            send_booking_email(new_booking, email_type='rescheduled_confirmation')
-                            return redirect(reverse('manage_booking:booking_detail', args=[new_booking.id]))
-
-                        elif payment_intent.status in ['requires_payment_method', 'requires_confirmation', 'requires_action', 'processing']:
-                            messages.error(request, "Payment is still pending or requires further action. Please try again.")
-                            return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id, ]))
-                        else:
-                            messages.error(request, f"Payment failed with status: {payment_intent.status}. Please try again.")
-                            return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
-
-                    except stripe.error.StripeError as e:
-                        messages.error(request, f"Stripe error: {e}")
-                        return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
-                    except Exception as e:
-                        messages.error(request, f"An unexpected error occurred: {e}")
-                        return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
-                else:
-                    messages.error(request, "Payment needs to be completed via the payment form.")
-                    return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
-            elif selected_payment_method in ['CASH', 'GCASH']:
-                new_booking_params.update({
-                    'status': 'PENDING_PAYMENT',
-                    'payment_status': 'PENDING',
-                    'payment_method_type': selected_payment_method
-                })
-
-                new_booking = _create_new_rescheduled_booking(
-                    request,
-                    original_booking,
-                    new_trip,
-                    new_booking_params
-                )
-
-                messages.success(request, f"Booking {new_booking.booking_reference} successfully rescheduled to {new_trip.trip_number}! Please complete payment via the selected method to confirm your booking.")
-                send_booking_email(new_booking, email_type='pending_payment_instructions')
-                return redirect(reverse('manage_booking:booking_detail', args=[new_booking.id]))
-
-        else:
-            try:
-                with transaction.atomic():
-                    if amount_to_refund_post > 0:
-                        if settings.STRIPE_MOCK_REFUNDS:
-                            messages.success(request, f"REFUND of Php{amount_to_refund_post:.2f} is being processed. Please check your email for more details..")
-                            send_booking_email(original_booking, email_type='pending_refund')
-                            original_booking.refund_status = 'COMPLETED'
-                            original_booking.refund_amount = amount_to_refund_post
-                        elif original_booking.stripe_payment_intent_id:
-                            stripe_refund_amount_cents = round(amount_to_refund_post * 100)
+                        if payment_intent_id:
                             try:
-                                refund = stripe.Refund.create(
-                                    payment_intent=original_booking.stripe_payment_intent_id,
-                                    amount=stripe_refund_amount_cents,
-                                    metadata={
-                                        'booking_id': str(original_booking.id),
-                                        'new_trip_id': str(new_trip.id),
-                                        'refund_for_reschedule': 'true',
-                                    }
-                                )
-                                if refund.status == 'succeeded':
-                                    original_booking.refund_status = 'COMPLETED'
-                                    original_booking.refund_amount = amount_to_refund_post
-                                    messages.success(request, f"Refund of Php{amount_to_refund_post:.2f} processed successfully via Stripe.")
+                                stripe.api_key = settings.STRIPE_SECRET_KEY
+                                payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+
+                                if payment_intent.status == 'succeeded':
+                                    expected_amount_cents = int(amount_to_pay * 100)
+                                    if payment_intent.amount != expected_amount_cents:
+                                        messages.error(request, "Payment amount mismatch. Please contact support.")
+                                        return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
+
+                                    new_booking_params.update({
+                                        'status': 'CONFIRMED',
+                                        'payment_status': 'PAID',
+                                        'stripe_payment_intent_id': payment_intent.id,
+                                        'payment_method_type': 'CARD',
+                                    })
+
+                                    new_booking = _create_new_rescheduled_booking(
+                                        request,
+                                        original_booking,
+                                        new_trip,
+                                        new_booking_params
+                                        )
+
+                                    messages.success(request, f"Booking {new_booking.booking_reference} successfully rescheduled! Please check your email for details.")
+                                    send_booking_email(new_booking, email_type='rescheduled_confirmation')
+                                    return redirect(reverse('manage_booking:booking_detail', args=[new_booking.id]))
+
+                                elif payment_intent.status in ['requires_payment_method', 'requires_confirmation', 'requires_action', 'processing']:
+                                    messages.error(request, "Payment is still pending or requires further action. Please try again.")
+                                    return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id, ]))
                                 else:
-                                    original_booking.refund_status = 'PENDING'
-                                    messages.warning(request, f"Stripe refund status: {refund.status}. It may still be processing or require review.")
+                                    messages.error(request, f"Payment failed with status: {payment_intent.status}. Please try again.")
+                                    return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
+
                             except stripe.error.StripeError as e:
-                                messages.error(request, f"A Stripe error occurred during refund processing: {e}. Please contact support.")
-                                original_booking.refund_status = 'FAILED'
-                                original_booking.save() #
-                                return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
+                                messages.error(request, f"Stripe error: {e}")
+                                return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
+                            except Exception as e:
+                                messages.error(request, f"An unexpected error occurred: {e}")
+                                return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
                         else:
-                            original_booking.refund_status = 'PENDING'
-                            original_booking.refund_amount = amount_to_refund_post
-                            send_booking_email(original_booking, email_type='pending_refund')
-                            messages.info(request, f"Your booking is rescheduled. A refund of Php{amount_to_refund_post:.2f} is pending manual processing. Please check your email for instructions.")
-                    else:
-                        messages.info(request, "No additional payment or refund required for this reschedule.")
-                        original_booking.refund_status = 'NONE'
-                        original_booking.refund_amount = Decimal('0.00')
+                            messages.error(request, "Payment needs to be completed via the payment form.")
+                            return redirect(reverse('manage_booking:booking_reschedule_confirm', args=[booking_id, new_trip_id]))
+                    elif selected_payment_method in ['CASH', 'GCASH']:
+                        new_booking_params.update({
+                            'status': 'PENDING_PAYMENT',
+                            'payment_status': 'PENDING',
+                            'payment_method_type': selected_payment_method
+                        })
 
-                    original_booking.trip.available_seats += original_booking.number_of_passengers
-                    original_booking.trip.save()
+                        new_booking = _create_new_rescheduled_booking(
+                            request,
+                            original_booking,
+                            new_trip,
+                            new_booking_params
+                        )
 
-                    new_trip.available_seats -= num_passengers
-                    new_trip.save()
+                        messages.success(request, f"Booking {new_booking.booking_reference} successfully rescheduled to {new_trip.trip_number}! Please complete payment via the selected method to confirm your booking.")
+                        send_booking_email(new_booking, email_type='pending_payment_instructions')
+                        return redirect(reverse('manage_booking:booking_detail', args=[new_booking.id]))
 
-                    original_booking.trip = new_trip
-                    original_booking.number_of_passengers = num_passengers
-                    original_booking.total_price = original_total_price + rescheduling_charge_post
-                    original_booking.status = 'CONFIRMED'
-                    original_booking.payment_status = 'PAID'
-                    original_booking.save()
+                elif amount_to_pay_post < 0:
+                    amount_to_refund = abs(amount_to_pay_post)
+                    try:
+                        _process_refund_for_reschedule(request, original_booking, new_trip, amount_to_refund)
+                    except Exception as e:
+                        messages.error(request, f"Refund processing failed: {e}")
+                        return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
+
+                    new_booking_params.update({
+                        'status': 'CONFIRMED',
+                        'payment_status': 'PAID',
+                        'payment_method_type': 'REFUND_RESCHEDULE',
+                    })
+
+                    new_booking = _create_new_rescheduled_booking(
+                        request, 
+                        original_booking, 
+                        new_trip,
+                        new_booking_params
+                    )
 
                     messages.success(request, f"Booking {original_booking.booking_reference} successfully rescheduled to {new_trip.trip_number}!")
+                    send_booking_email(original_booking, email_type='rescheduled_confirmation')
                     return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
+                
+                else:
+                    new_booking_params.update({
+                        'status': 'CONFIRMED',
+                        'payment_status': 'PAID',
+                        'payment_method_type': 'FREE_RESCHEDULE',
+                    })
 
-            except Exception as e:
-                messages.error(request, f"An error occurred during rescheduling: {e}")
-                return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
+                    new_booking = _create_new_rescheduled_booking(
+                    request, 
+                    original_booking, 
+                    new_trip,
+                    new_booking_params
+                    )
+
+                    messages.success(request, f"Booking {original_booking.booking_reference} successfully rescheduled for free!")
+                    send_booking_email(original_booking, email_type='rescheduled_confirmation')
+                    return redirect(reverse('manage_booking:booking_detail', args=[new_booking.id]))
+        except Exception as e:
+            messages.error(request, f"An error occurred during reschedule: {e}")
+            return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
