@@ -5,6 +5,7 @@ from django.utils import timezone
 from booking.models import Booking, BookingPolicy
 from booking.utils import send_booking_email
 from decimal import Decimal
+from datetime import datetime
 
 import stripe
 
@@ -61,6 +62,40 @@ def _calculate_reschedule_financials(original_booking, new_trip, policy):
     }
 
 
+def _calculate_cancellation_financials(booking, policy):
+    """
+    Calculates the refund amount and type for a booking cancellation.
+    Returns a dictionary of financial details.
+    """
+    if booking.is_rescheduled and booking.original_departure_time:
+        departure_datetime = booking.original_departure_time
+    else:
+        departure_datetime = timezone.make_aware(datetime.combine(booking.trip.date, booking.trip.departure_time))
+
+    current_time = timezone.now()
+    time_until_departure_hours = (departure_datetime - current_time).total_seconds() / 3600
+
+    refund_amount = Decimal('0.00')
+    refund_type_message = "N/A"
+    can_proceed = True
+    cancellation_fee_rate = policy.late_cancellation_fee_percentage
+
+    if time_until_departure_hours > policy.free_cancellation_cutoff_hours:
+        refund_amount = booking.total_price  # Full refund
+        refund_type_message = "FULL"
+    elif time_until_departure_hours >= policy.late_cancellation_cutoff_hours:
+        refund_amount = booking.total_price * (1 - cancellation_fee_rate)
+        refund_type_message = f"{int((1 - cancellation_fee_rate) * 100)}% (due to late cancellation fee)"
+    else:
+        refund_amount = Decimal('0.00')  # No refund
+        refund_type_message = f"NONE (less than {policy.late_cancellation_cutoff_hours} hours before departure)"
+
+    return {
+        'can_proceed': can_proceed,
+        'refund_amount': refund_amount,
+        'refund_type_message': refund_type_message,
+        'time_until_departure_hours': time_until_departure_hours,
+    }
 
 
 def _create_new_rescheduled_booking(request, original_booking, new_trip, new_booking_params):
@@ -103,39 +138,43 @@ def _process_refund_for_reschedule(request, original_booking, new_trip, amount_t
     Processes a refund for a booking reschedule and updates the original booking.
     
     This function should be called within a transaction.
+
+    STRIPE_MOCK_REFUNDS is used to simulate refund processing in development.
     """
-    if settings.STRIPE_MOCK_REFUNDS:
-        messages.success(request, f"REFUND of Php{amount_to_refund:.2f} is being processed. Please check your email for more details.")
-        send_booking_email(original_booking, email_type='pending_refund')
-        original_booking.refund_status = 'COMPLETED'
-        original_booking.refund_amount = amount_to_refund
-        original_booking.save(update_fields=['refund_status', 'refund_amount'])
-    elif original_booking.stripe_payment_intent_id:
-        stripe_refund_amount_cents = round(amount_to_refund * 100)
-        try:
-            refund = stripe.Refund.create(
-                payment_intent=original_booking.stripe_payment_intent_id,
-                amount=stripe_refund_amount_cents,
-                metadata={
-                    'booking_id': str(original_booking.id),
-                    'new_trip_id': str(new_trip.id),
-                    'refund_for_reschedule': 'true',
-                }
-            )
-            if refund.status == 'succeeded':
-                original_booking.refund_status = 'COMPLETED'
-                original_booking.refund_amount = amount_to_refund
-                messages.success(request, f"Refund of Php{amount_to_refund:.2f} processed successfully via Stripe.")
-                original_booking.save(update_fields=['refund_status', 'refund_amount'])
-            else:
-                original_booking.refund_status = 'PENDING'
-                original_booking.refund_amount = amount_to_refund
-                original_booking.save(update_fields=['refund_status', 'refund_amount'])
-                messages.warning(request, f"Stripe refund status: {refund.status}. It may still be processing or require review.")
-        except stripe.error.StripeError as e:
-            original_booking.refund_status = 'FAILED'
-            original_booking.save(update_fields=['refund_status'])
-            raise Exception(f"A Stripe error occurred during refund processing: {e}")
+    if original_booking.stripe_payment_intent_id:
+        if settings.STRIPE_MOCK_REFUNDS:
+            messages.success(request, f"REFUND of Php{amount_to_refund:.2f} is being processed. Please check your email for more details.")
+            send_booking_email(original_booking, email_type='pending_refund')
+            original_booking.refund_status = 'COMPLETED'
+            original_booking.refund_amount = amount_to_refund
+            original_booking.save(update_fields=['refund_status', 'refund_amount'])
+        # Added for future development
+        else:
+            stripe_refund_amount_cents = round(amount_to_refund * 100)
+            try:
+                refund = stripe.Refund.create(
+                    payment_intent=original_booking.stripe_payment_intent_id,
+                    amount=stripe_refund_amount_cents,
+                    metadata={
+                        'booking_id': str(original_booking.id),
+                        'new_trip_id': str(new_trip.id),
+                        'refund_for_reschedule': 'true',
+                    }
+                )
+                if refund.status == 'succeeded':
+                    original_booking.refund_status = 'COMPLETED'
+                    original_booking.refund_amount = amount_to_refund
+                    messages.success(request, f"Refund of Php{amount_to_refund:.2f} processed successfully via Stripe.")
+                    original_booking.save(update_fields=['refund_status', 'refund_amount'])
+                else:
+                    original_booking.refund_status = 'PENDING'
+                    original_booking.refund_amount = amount_to_refund
+                    original_booking.save(update_fields=['refund_status', 'refund_amount'])
+                    messages.warning(request, f"Stripe refund status: {refund.status}. It may still be processing or require review.")
+            except stripe.error.StripeError as e:
+                original_booking.refund_status = 'FAILED'
+                original_booking.save(update_fields=['refund_status'])
+                raise Exception(f"A Stripe error occurred during refund processing: {e}")
     else:
         original_booking.refund_status = 'PENDING'
         original_booking.refund_amount = amount_to_refund
@@ -143,4 +182,45 @@ def _process_refund_for_reschedule(request, original_booking, new_trip, amount_t
         send_booking_email(original_booking, email_type='pending_refund')
         messages.info(request, f"Your booking is rescheduled. A refund of Php{amount_to_refund:.2f} is pending manual processing. Please check your email for instructions.")
 
-    return True
+
+def _process_refund_for_cancellation(request, booking, refund_amount, refund_type_message):
+    """
+    Handles the transactional part of a booking cancellation, including refund processing.
+    Assumes this function is called from within a transaction.
+    """
+
+    if booking.stripe_payment_intent_id:
+        if settings.STRIPE_MOCK_REFUNDS:
+            messages.success(request, f'REFUND of Php{refund_amount} is being processed. An email is sent for more details.')
+            send_booking_email(booking, email_type='refund_processing')
+            booking.refund_status = 'COMPLETED'
+            booking.refund_amount = refund_amount
+        else:
+            stripe_refund_amount_cents = round(refund_amount * 100)
+            try:
+                refund = stripe.Refund.create(
+                    payment_intent=booking.stripe_payment_intent_id,
+                    amount=stripe_refund_amount_cents,
+                    metadata={
+                        'booking_id': str(booking.id),
+                        'booking_reference': booking.booking_reference,
+                        'refund_type': refund_type_message,
+                    }
+                )
+                if refund.status == 'succeeded':
+                    booking.refund_status = 'COMPLETED'
+                    booking.refund_amount = refund_amount
+                    messages.success(request, f"Refund of Php{refund_amount:.2f} processed successfully via Stripe.")
+                else:
+                    booking.refund_status = 'PENDING'
+                    messages.warning(request, f"Stripe refund status: {refund.status}. It may still be processing or require review. We will inform you once it's complete.")
+            except stripe.error.StripeError as e:
+                booking.refund_status = 'FAILED'
+                booking.save()
+                raise Exception(f"A Stripe error occurred during refund processing: {e}")
+    else:
+        booking.refund_status = 'PENDING'
+        booking.refund_amount = refund_amount
+        send_booking_email(booking, email_type='refund_processing')
+        messages.info(request, f"Your booking is cancelled. A refund of Php{refund_amount:.2f} is pending manual processing (non-card payment).")
+   

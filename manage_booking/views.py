@@ -16,7 +16,13 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from .utils import paginate_queryset
 from booking.utils import send_booking_email
-from .booking_service import _calculate_reschedule_financials, _create_new_rescheduled_booking, _process_refund_for_reschedule
+from .booking_service import (
+    _calculate_reschedule_financials,
+    _create_new_rescheduled_booking,
+    _process_refund_for_reschedule,
+    _calculate_cancellation_financials,
+    _process_refund_for_cancellation
+)
 
 import stripe
 
@@ -238,186 +244,59 @@ def booking_cancel(request, booking_id):
         messages.error(request, "No booking policy found. Please configure a policy in the admin.")
         return redirect('some_error_page_or_home')
 
-    can_proceed_with_cancellation = False
-    refund_amount = Decimal('0.00')
-    cancellation_fee_rate = policy.late_cancellation_fee_percentage
-    refund_type_message = "N/A"
-
     eligible_status_for_action = (
         booking.status == 'CONFIRMED' and booking.payment_status == 'PAID'
     )
 
-    if booking.is_rescheduled:
-        if booking.original_departure_time:
-            departure_datetime = booking.original_departure_time
-        else:
-            departure_datetime = timezone.make_aware(datetime.combine(booking.trip.date, booking.trip.departure_time))
-    else:
-        departure_datetime = timezone.make_aware(datetime.combine(booking.trip.date, booking.trip.departure_time))
-
-    current_time = timezone.now()
-    time_until_departure = departure_datetime - current_time
-    time_until_departure_hours = time_until_departure.total_seconds() / 3600
-
-    print(f"\n--- DEBUGGING BOOKING ID: {booking.id} ---")
-    print(f"Original Departure Time (aware): {booking.original_departure_time}")
-    print(f"TRIP DATE (naive): {booking.trip.date}")
-    print(f"TRIP TIME (naive): {booking.trip.departure_time}")
-    print(f"DEPARTURE DATETIME (aware): {departure_datetime}")
-    print(f"CURRENT TIME (aware): {current_time}")
-    print(f"TIME UNTIL DEPARTURE (timedelta): {time_until_departure}")
-    print(f"TIME UNTIL DEPARTURE (HOURS): {time_until_departure_hours}")
-    print(f"POLICY: free_cancellation_cutoff_hours: {policy.free_cancellation_cutoff_hours}")
-    print(f"POLICY: late_cancellation_cutoff_hours: {policy.late_cancellation_cutoff_hours}")
-    print("-------------------------------------------\n")
-    print(f"DEBUG: Booking ID {booking.id} Status: {booking.status}")
-    print(f"DEBUG: Booking ID {booking.id} Payment Status: {booking.payment_status}")
-    print(f"DEBUG: Eligible for action: {eligible_status_for_action}")
-
-    if eligible_status_for_action:
-        if time_until_departure_hours > policy.free_cancellation_cutoff_hours:
-            can_proceed_with_cancellation = True
-            refund_amount = booking.total_price # Full refund
-            refund_type_message = "FULL"
-        elif time_until_departure_hours >= policy.late_cancellation_cutoff_hours:
-            can_proceed_with_cancellation = True
-            refund_amount = booking.total_price * (1 - cancellation_fee_rate)
-            refund_type_message = f"{int((1 - cancellation_fee_rate) * 100)}% (due to late cancellation fee)"
-        else:
-            can_proceed_with_cancellation = True
-            refund_amount = Decimal('0.00') # NO REFUND
-            refund_type_message = f"NONE (less than {policy.late_cancellation_cutoff_hours} hours before departure)"
-            messages.warning(request, "Cancellation is allowed, but no refund will be issued due to proximity to departure time.")
-    else:
+    if not eligible_status_for_action:
         messages.error(request, "This booking cannot be cancelled due to its current status or payment status.")
         refund_type_message = "N/A"
 
+    financials = _calculate_cancellation_financials(booking, policy)
 
-    # --- Handle POST request (Confirm Cancellation) ---
     if request.method == 'POST':
-        recalc_can_proceed = False
-        recalc_refund_amount = Decimal('0.00')
-        recalc_refund_type_message = "N/A"
-
-        if booking.is_rescheduled:
-            if booking.original_departure_time:
-                departure_datetime_recheck = booking.original_departure_time
-            else:
-                departure_datetime_recheck = timezone.make_aware(datetime.combine(booking.trip.date, booking.trip.departure_time))
-        else:
-            departure_datetime_recheck = timezone.make_aware(datetime.combine(booking.trip.date, booking.trip.departure_time))
-
-        time_until_departure_recheck = departure_datetime_recheck - timezone.now()
-        time_until_departure_hours_recheck = time_until_departure_recheck.total_seconds() / 3600
-
-        print(f"\n--- DEBUGGING BOOKING ID: {booking.id} ---")
-        print(f"TRIP DATE (naive): {booking.trip.date}")
-        print(f"TRIP TIME (naive): {booking.trip.departure_time}")
-        print(f"DEPARTURE DATETIME (aware): {departure_datetime}")
-        print(f"CURRENT TIME (aware): {current_time}")
-        print(f"TIME UNTIL DEPARTURE (timedelta): {time_until_departure}")
-        print(f"TIME UNTIL DEPARTURE (HOURS): {time_until_departure_hours}")
-        print(f"POLICY: free_cancellation_cutoff_hours: {policy.free_cancellation_cutoff_hours}")
-        print(f"POLICY: late_cancellation_cutoff_hours: {policy.late_cancellation_cutoff_hours}")
-        print("-------------------------------------------\n")
-
-        if eligible_status_for_action:
-            if time_until_departure_hours_recheck > policy.free_cancellation_cutoff_hours:
-                recalc_can_proceed = True
-                recalc_refund_amount = booking.total_price
-                recalc_refund_type_message = "FULL"
-            elif time_until_departure_hours_recheck >= policy.late_cancellation_cutoff_hours:
-                recalc_can_proceed = True
-                recalc_refund_amount = booking.total_price * (1 - cancellation_fee_rate)
-                recalc_refund_type_message = f"{int((1 - cancellation_fee_rate) * 100)}% (due to late cancellation fee)"
-            else: # Allow cancel, no refund
-                recalc_can_proceed = True
-                recalc_refund_amount = Decimal('0.00')
-                recalc_refund_type_message = f"NONE (less than {policy.late_cancellation_cutoff_hours} hours before departure)"
-
-        if not recalc_can_proceed:
+        if not financials['can_proceed']:
             messages.error(request, "Cancellation cannot be processed at this time based on policy or booking status.")
             return redirect('manage_booking:booking_detail', booking_id=booking.id)
 
         try:
             with transaction.atomic():
-            # Step 1: Process Refund if applicable
-                if recalc_refund_amount > 0:
-                    if booking.stripe_payment_intent_id:
-                        if settings.STRIPE_MOCK_REFUNDS:
-                            messages.success(request, f'REFUND of Php{recalc_refund_amount} is being processed. An email is sent to for more details.')
-                            booking.refund_status = 'COMPLETED'
-                            booking.refund_amount = recalc_refund_amount
-                            send_booking_email(booking, email_type='refund_processing')
-                        else:
-                            stripe_refund_amount_cents = round(refund_amount * 100)
-                            try:
-                                refund = stripe.Refund.create(
-                                    payment_intent=booking.stripe_payment_intent_id,
-                                    amount=stripe_refund_amount_cents,
-                                    metadata={
-                                        'booking_id': str(booking.id),
-                                        'booking_reference': booking.booking_reference,
-                                        'refund_type': recalc_refund_type_message,
-                                    }
-                                )
-                                if refund.status == 'succeeded':
-                                    booking.refund_status = 'COMPLETED'
-                                    booking.refund_amount = recalc_refund_amount
-                                    messages.success(request, f"Refund of Php{recalc_refund_amount:.2f} processed successfully via Stripe.")
-                                else:
-                                    booking.refund_status = 'PENDING'
-                                    messages.warning(request, f"Stripe refund status: {refund.status}. It may still be processing or require review. We will inform you once it's complete.")
-                            except stripe.error.StripeError as e:
-                                messages.error(request, f"A Stripe error occurred during refund processing: {e}. Please contact support.")
-                                booking.refund_status = 'FAILED'
-                                booking.save()
-                                return redirect('manage_booking:booking_detail', booking_id=booking.id)
-
-                    else:
-                        booking.refund_status = 'PENDING'
-                        booking.refund_amount = recalc_refund_amount
-                        send_booking_email(booking, email_type='refund_processing')
-                        messages.info(request, f"Your booking is cancelled. A refund of Php{recalc_refund_amount:.2f} is pending manual processing (non-card payment). Please check your email for instructions.")
-
+                if financials['refund_amount'] > 0:
+                    _process_refund_for_cancellation(
+                            request,
+                            booking,
+                            financials['refund_amount'],
+                            financials['refund_type_message']
+                        )
                 else:
                     booking.refund_status = 'NONE'
                     booking.refund_amount = Decimal('0.00')
                     messages.info(request, "Your booking has been cancelled. No refund was issued as per policy.")
 
                 booking.status = 'CANCELED'
-                send_booking_email(booking, email_type='cancellation')
+                booking.save(update_fields=['status', 'refund_status', 'refund_amount'])
 
                 if booking.trip.available_seats is not None:
-                    print(f"DEBUG: Trip ID: {booking.trip.trip_id}")
-                    print(f"DEBUG: Available seats BEFORE adding: {booking.trip.available_seats}")
-                    print(f"DEBUG: Passengers to add back: {booking.number_of_passengers}")
-
                     booking.trip.available_seats += booking.number_of_passengers
-                    print(f"DEBUG: Available seats AFTER adding (before save): {booking.trip.available_seats}")
-
-                    booking.trip.save()
-                    print(f"DEBUG: Trip.save() called for Trip ID: {booking.trip.trip_id}")
+                    booking.trip.save(update_fields=['available_seats'])
                 else:
                     messages.warning(request, "Could not update trip available seats as it's null.")
-                    print(f"DEBUG: Warning - Trip available_seats is NULL for Trip ID: {booking.trip.trip_id}")
 
-                booking.save()
                 messages.success(request, f"Booking {booking.booking_reference} has been successfully cancelled.")
+                send_booking_email(booking, email_type='cancellation')
                 return redirect('manage_booking:booking_detail', booking_id=booking.id)
 
         except Exception as e:
             messages.error(request, f"An unexpected error occurred during cancellation: {e}. Please contact support.")
             return redirect('manage_booking:booking_detail', booking_id=booking.id)
 
-    # --- Handle GET request (Display Confirmation Page) ---
     context = {
         'booking': booking,
-        'time_until_departure_hours': time_until_departure_hours,
-        'refund_amount': refund_amount,
-        'can_proceed_with_cancellation': can_proceed_with_cancellation,
+        'time_until_departure_hours': financials['time_until_departure_hours'],
+        'refund_amount': financials['refund_amount'],
+        'can_proceed_with_cancellation': financials['can_proceed'],
         'policy': policy,
-        'refund_type_message': refund_type_message,
+        'refund_type_message': financials['refund_type_message'],
     }
     return render(request, 'manage_booking/booking_cancel_confirm.html', context)
 
