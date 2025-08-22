@@ -21,7 +21,7 @@ from .booking_service import (
     _create_new_rescheduled_booking,
     _process_refund_for_reschedule,
     _calculate_cancellation_financials,
-    _process_refund_for_cancellation
+    _process_refund
 )
 
 import stripe
@@ -261,17 +261,23 @@ def booking_cancel(request, booking_id):
 
         try:
             with transaction.atomic():
-                if financials['refund_amount'] > 0:
-                    _process_refund_for_cancellation(
+                refund_amount = financials['refund_amount']
+                if refund_amount > 0:
+                    metadata = {
+                        'booking_id': str(booking.id),
+                        'booking_reference': booking.booking_reference,
+                        'refund_type': financials['refund_type_message'],
+                    }
+                    _process_refund(
                             request,
                             booking,
-                            financials['refund_amount'],
-                            financials['refund_type_message']
+                            refund_amount,
+                            metadata
                         )
                 else:
                     booking.refund_status = 'NONE'
                     booking.refund_amount = Decimal('0.00')
-                    messages.info(request, "Your booking has been cancelled. No refund was issued as per policy.")
+                    messages.info(request, "No refund was issued for this cancellation as per policy.")
 
                 booking.status = 'CANCELED'
                 booking.save(update_fields=['status', 'refund_status', 'refund_amount'])
@@ -571,7 +577,12 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                 elif amount_to_pay_post < 0:
                     amount_to_refund = abs(amount_to_pay_post)
                     try:
-                        _process_refund_for_reschedule(request, original_booking, new_trip, amount_to_refund)
+                        metadata = {
+                            'booking_id': str(original_booking.id),
+                            'new_trip_id': str(new_trip.trip_id),
+                            'refund_for_reschedule': 'true',
+                        }
+                        _process_refund(request, original_booking, amount_to_refund, metadata)
                     except Exception as e:
                         messages.error(request, f"Refund processing failed: {e}")
                         return redirect('manage_booking:booking_detail', booking_id=original_booking.id)
