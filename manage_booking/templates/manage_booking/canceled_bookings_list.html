@@ -17,10 +17,8 @@
         <li class="bg-light p-3 rounded shadow-sm d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h2 class="h5 text-secondary"><strong>Booking Reference:</strong> {{ booking.booking_reference }}</h2>
-                <p class="text-muted mb-1"><strong>Trip Details:</strong> {{ booking.trip.origin }} &rarr; {{
-                    booking.trip.destination }}</p>
-                <p class="text-muted mb-1"><strong>Date & Time:</strong> {{ booking.trip.date|date:"F d, Y" }} at {{
-                    booking.trip.departure_time|time:"H:i" }}</p>
+                <p class="text-muted mb-1"><strong>Trip Details:</strong> {{ booking.trip.origin }} &rarr; {{ booking.trip.destination }}</p>
+                <p class="text-muted mb-1"><strong>Date & Time:</strong> {{ booking.trip.date|date:"F d, Y" }} at {{ booking.trip.departure_time|time:"H:i" }}</p>
                 <p class="text-muted mb-1"><strong>No. of Passengers:</strong> {{ booking.number_of_passengers }}</p>
                 <p class="text-muted mb-1"><strong>Total Price:</strong> Php{{ booking.total_price|floatformat:2 }}</p>
             </div>
@@ -47,7 +45,7 @@
 
             {% if canceled_bookings_page.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ cancled_bookings_page.next_page_number }}" aria-label="Next">
+                <a class="page-link" href="?page={{ canceled_bookings_page.next_page_number }}" aria-label="Next">
                     Next <span aria-hidden="true">&raquo;</span>
                 </a>
             </li>

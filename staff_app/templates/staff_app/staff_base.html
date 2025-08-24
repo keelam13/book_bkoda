@@ -29,14 +29,17 @@
                                     <i class="fas fa-ticket-alt me-2"></i> Bookings
                                 </a>
                             </li>
-                            <li class="nav-item mt-auto">
-                                <a class="nav-link" href="{% url 'account_logout' %}">
-                                    <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                <a class="nav-link" href="{% url 'account:account_details' %}">
+                                    <i class="fa-solid fa-angle-left"></i> Back to My Account
                                 </a>
-                            </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'home' %}">
                                     <i class="fas fa-home me-2"></i> Back to Site
+                                </a>
+                            </li>
+                            <li class="nav-item mt-auto">
+                                <a class="nav-link text-danger" href="{% url 'account_logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Logout
                                 </a>
                             </li>
                         </ul>

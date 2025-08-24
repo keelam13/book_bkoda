@@ -29,8 +29,12 @@
                         class="nav-link {% if request.resolver_match.url_name == 'all_bookings' %}active{% endif %}">
                         <i class="fa-solid fa-list-ul"></i> All Bookings
                     </a>
-                    <a href="{% url 'account_logout' %}" class="nav-link text-danger mt-3">
-                        <i class="bi bi-box-arrow-right"></i> Log Out
+                    <a href="{% url 'account:account_details' %}"
+                        class="nav-link">
+                        <i class="fa-solid fa-angle-left"></i> Back to My Account
+                    </a>
+                    <a href="{% url 'account_logout' %}" class="nav-link text-danger">
+                        <i class="fas fa-sign-out-alt me-2"></i> Log Out
                     </a>
                 </div>
             </div>

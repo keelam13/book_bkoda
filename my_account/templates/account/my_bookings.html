@@ -11,7 +11,7 @@
     <div class="alert alert-warning alert-fix-display" role="alert">
         You have {{ num_pending_payment }} bookings awaiting payment. Please complete the payment to confirm your trip(s).
         <div class="mt-4">
-            <a href="{% url 'manage_booking:pending_payment' %}" class="btn btn-info mr-auto">Manage Bookings</a>
+            <a href="{% url 'manage_booking:pending_payment' %}" class="btn btn-info mr-auto">See Pending Bookings</a>
         </div>
     </div>
     {% else %}
