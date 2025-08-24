@@ -32,7 +32,7 @@ body {
 	z-index: 0;
 }
 
-/* Button */
+/* Buttons */
 .btn.disabled,
 .btn:disabled {
     background-color: #a0c4ff !important;
@@ -53,6 +53,44 @@ body {
 .btn-outline-white:focus {
     background: #007bff;
     border: 1px solid #007bff;
+}
+
+/* Close Button */
+.btn-close {
+    position: absolute;
+    color: #fff;
+    top: -15px;
+    right: -15px;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    margin-left: 2rem;
+}
+
+.btn-close:hover {
+    color: #007bff;
+}
+
+/* Back Angle Button */
+.btn-back-angle {
+    font-size: medium;
+}
+
+.btn-back-angle:hover {
+    color: #007bff !important;
+}
+
+/* Back to Top Button */
+.btt-button {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 1000;
+}
+
+#back-to-top {
+    width: 48px;
+    height: 48px;
 }
 
 /* Logo */
@@ -246,6 +284,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     margin-bottom: 0;
 }
 
+.booking-summary-card {
+    z-index: 1;
+}
+
 @media (min-width: 768px) {
     #swapLocationsBtn  {
         margin-bottom: 1px;
@@ -302,42 +344,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     color: #842029;
     background-color: #f8d7da;
     border-color: #f5c2c7;
-}
-
-/* Buttons */
-.btt-button {
-    position: fixed;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    z-index: 1050;
-}
-
-#back-to-top {
-    width: 48px;
-    height: 48px;
-}
-
-.btn-close {
-    position: absolute;
-    color: #fff;
-    top: -15px;
-    right: -15px;
-    background: transparent;
-    border: none;
-    font-size: 1.5rem;
-    margin-left: 2rem;
-}
-
-.btn-close:hover {
-    color: #007bff;
-}
-
-.btn-back-angle {
-    font-size: medium;
-}
-
-.btn-back-angle:hover {
-    color: #007bff !important;
 }
 
 /* Account */
