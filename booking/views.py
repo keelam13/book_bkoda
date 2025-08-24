@@ -398,6 +398,7 @@ def process_payment(request, booking_id):
                     booking.status = 'PENDING_PAYMENT'
                     booking.payment_status = 'PENDING'
                     booking.payment_method_type = selected_payment_method
+                    booking.stripe_payment_intent_id = None
                     booking.save()
 
                 if not request.user.is_authenticated and 'anonymous_booking_id' in request.session:

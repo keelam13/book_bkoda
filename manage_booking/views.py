@@ -19,7 +19,6 @@ from booking.utils import send_booking_email
 from .booking_service import (
     _calculate_reschedule_financials,
     _create_new_rescheduled_booking,
-    _process_refund_for_reschedule,
     _calculate_cancellation_financials,
     _process_refund
 )
