@@ -22,6 +22,11 @@ body {
     overflow-x: hidden;
 }
 
+main {
+    flex: 1 0 auto;
+    min-height: 75vh;
+}
+
 .overlay {
 	height: 100%;
 	width: 100%;
@@ -87,11 +92,6 @@ body {
     right: 1.5rem;
     z-index: 1000;
 }
-
-/* #back-to-top {
-    width: 48px;
-    height: 48px;
-} */
 
 /* Logo */
 header {
