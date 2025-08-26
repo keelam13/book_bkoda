@@ -2,13 +2,17 @@
 .stripe-style-input {
   box-sizing: border-box;
   height: 40px;
-  padding: 10px 12px;
+  padding: 5px 6px;
   border: 1px solid transparent;
   border-radius: 5px;
   background-color: white;
   box-shadow: 0 1px 3px 0 #e6ebf1;
   -webkit-transition: box-shadow 150ms ease;
   transition: box-shadow 150ms ease;
+}
+
+.StripeElement iframe {
+  height: unset !important;
 }
 
 .StripeElement--focus {
@@ -31,6 +35,21 @@
     right: .5rem;
 }
 
+/* Custom Flexbox CSS for the expiry and CVC fields */
+.d-flex {
+    display: flex;
+    justify-content: space-between;
+}
+
+.flex-grow-1 {
+    flex-grow: 1;
+}
+
+.me-3 {
+    margin-right: 1rem;
+}
+
+/* Loading Overlay */
 #loading-overlay {
 	display: none;
 	position: fixed;
@@ -98,4 +117,15 @@
 }
 .sticky-top {
     top: 20px;
+}
+
+/* Media query to stack elements on small screens */
+@media (max-width: 576px) {
+    .d-flex {
+        flex-direction: column;
+    }
+    .me-3 {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
 }

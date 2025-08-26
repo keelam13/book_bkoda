@@ -26,14 +26,16 @@ $(document).ready(function () {
     // Global Stripe variables
     let stripe = null;
     let elements = null;
-    let card = null;
+    let cardNumber = null;
+    let cardExpiry = null;
+    let cardCvc = null;
 
     const cardElementStyle = {
         base: {
             color: '#000',
             fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
             fontSmoothing: 'antialiased',
-            fontSize: '16px',
+            fontSize: '12px',
             '::placeholder': {
                 color: '#aab7c4'
             }
@@ -57,19 +59,47 @@ $(document).ready(function () {
             elements = stripe.elements();
         }
 
-        if (card) {
-            card.unmount();
-            $('#card-element').empty();
-            card = null;
+        if (cardNumber) cardNumber.unmount();
+        if (cardExpiry) cardExpiry.unmount();
+        if (cardCvc) cardCvc.unmount();
+
+        cardNumber = elements.create('cardNumber', { style: cardElementStyle });
+        cardExpiry = elements.create('cardExpiry', { style: cardElementStyle });
+        cardCvc = elements.create('cardCvc', { style: cardElementStyle });
+        
+        cardNumber.mount('#card-number-element');
+        cardExpiry.mount('#card-expiry-element');
+        cardCvc.mount('#card-cvc-element');
+
+        cardNumber.addEventListener('change', function(event) {
+            if (event.error) {
+                const html = `
+                        <span class="icon" role="alert">
+                            <i class="fas fa-times"></i>
+                        </span>
+                        <span>${event.error.message}</span>
+                    `;
+                cardErrors.html(html);
+            } else {
+                cardErrors.text('');
             }
+        });
 
-        $('#card-element').empty();
+        cardExpiry.addEventListener('change', function(event) {
+            if (event.error) {
+                const html = `
+                        <span class="icon" role="alert">
+                            <i class="fas fa-times"></i>
+                        </span>
+                        <span>${event.error.message}</span>
+                    `;
+                cardErrors.html(html);
+            } else {
+                cardErrors.text('');
+            }
+        });
 
-        // Create and mount a NEW card element
-        card = elements.create('card', { style: cardElementStyle });
-        card.mount('#card-element');
-
-        card.addEventListener('change', function (event) {
+        cardCvc.addEventListener('change', function(event) {
             if (event.error) {
                 const html = `
                         <span class="icon" role="alert">
@@ -89,10 +119,10 @@ $(document).ready(function () {
      * Unmounts the card element and nullifies global Stripe related variables.
      */
     function teardownStripe() {
-        if (card) {
-            card.unmount();
-            card = null;
-            $('#card-element').empty(); 
+        if (cardNumber) {
+            cardNumber.unmount();
+            cardNumber = null;
+            $('#card-number-element').empty(); 
         }
         
         elements = null;
@@ -213,7 +243,10 @@ $(document).ready(function () {
         if (paymentMethod === 'CARD') {
             manualBillingAddressFields.find('input, select').attr('disabled', false);
 
-            if (card) card.update({ disabled: true });
+            if (cardNumber) cardNumber.update({ disabled: true });
+            if (cardExpiry) cardExpiry.update({ disabled: true });
+            if (cardCvc) cardCvc.update({ disabled: true });
+
             submitButton.attr('disabled', true);
             cardErrors.text('');
 
@@ -224,7 +257,9 @@ $(document).ready(function () {
                 `);
                 paymentForm.fadeToggle(100);
                 loadingOverlay.fadeToggle(100);
-                if (card) card.update({ 'disabled': false });
+                if (cardNumber) cardNumber.update({ 'disabled': false });
+                if (cardExpiry) cardExpiry.update({ 'disabled': false });
+                if (cardCvc) cardCvc.update({ 'disabled': false });
                 submitButton.attr('disabled', false);
                 toggleBillingAddressFields();
                 return;
@@ -240,18 +275,38 @@ $(document).ready(function () {
                 `);
                 paymentForm.fadeToggle(100);
                 loadingOverlay.fadeToggle(100);
-                if (card) card.update({ 'disabled': false });
+                if (cardNumber) cardNumber.update({ 'disabled': false });
+                if (cardExpiry) cardExpiry.update({ 'disabled': false });
+                if (cardCvc) cardCvc.update({ 'disabled': false });
                 submitButton.attr('disabled', false);
                 toggleBillingAddressFields();
                 return;
             }
 
             try {
+                const { paymentMethod: createdPaymentMethod, error: createError } = await stripe.createPaymentMethod({
+                    type: 'card',
+                    card: cardNumber,
+                    billing_details: billingDetails,
+                });
+
+                if (createError) {
+                    cardErrors.html(`
+                        <span class="icon" role="alert"><i class="fas fa-times"></i></span>
+                        <span>${createError.message}</span>
+                    `);
+                    paymentForm.fadeToggle(100);
+                    loadingOverlay.fadeToggle(100);
+                    if (cardNumber) cardNumber.update({ 'disabled': false });
+                    if (cardExpiry) cardExpiry.update({ 'disabled': false });
+                    if (cardCvc) cardCvc.update({ 'disabled': false });
+                    submitButton.attr('disabled', false);
+                    toggleBillingAddressFields();
+                    return;
+                }
+                
                 const { paymentIntent, error } = await stripe.confirmCardPayment(currentClientSecret, {
-                    payment_method: {
-                        card: card,
-                        billing_details: billingDetails,
-                    },
+                    payment_method: createdPaymentMethod.id,
                 });
 
                 if (error) {
@@ -261,12 +316,17 @@ $(document).ready(function () {
                     `);
                     paymentForm.fadeToggle(100);
                     loadingOverlay.fadeToggle(100);
-                    if (card) card.update({ 'disabled': false });
+                    if (cardNumber) cardNumber.update({ 'disabled': false });
+                    if (cardExpiry) cardExpiry.update({ 'disabled': false });
+                    if (cardCvc) cardCvc.update({ 'disabled': false });
                     submitButton.attr('disabled', false);
                     toggleBillingAddressFields();
-                } else if (paymentIntent.status === 'succeeded') {
+                    return;
+                }else if (paymentIntent.status === 'succeeded') {
                     paymentIntentIdInput.val(paymentIntent.id);
-                    paymentForm.off('submit').submit();
+                    setTimeout(function() {
+                        paymentForm.off('submit').submit();
+                    }, 50);
                 } else if (paymentIntent.status === 'requires_action') {
                     const { error: actionError, paymentIntent: actionPaymentIntent } = await stripe.handleCardAction(paymentIntent.client_secret);
 
@@ -277,12 +337,18 @@ $(document).ready(function () {
                         `);
                         paymentForm.fadeToggle(100);
                         loadingOverlay.fadeToggle(100);
-                        if (card) card.update({ 'disabled': false });
+                        if (cardNumber) cardNumber.update({ 'disabled': false });
+                        if (cardExpiry) cardExpiry.update({ 'disabled': false });
+                        if (cardCvc) cardCvc.update({ 'disabled': false });
                         submitButton.attr('disabled', false);
                         toggleBillingAddressFields();
+                        return;
                     } else if (actionPaymentIntent.status === 'succeeded') {
                         paymentIntentIdInput.val(actionPaymentIntent.id);
-                        paymentForm.off('submit').submit();
+                        setTimeout(function() {
+                            paymentForm[0].submit();
+                        }, 50);
+                        return;
                     } else {
                         cardErrors.html(`
                             <span class="icon" role="alert"><i class="fas fa-times"></i></span>
@@ -290,9 +356,12 @@ $(document).ready(function () {
                         `);
                         paymentForm.fadeToggle(100);
                         loadingOverlay.fadeToggle(100);
-                        if (card) card.update({ 'disabled': false });
+                        if (cardNumber) cardNumber.update({ 'disabled': false });
+                        if (cardExpiry) cardExpiry.update({ 'disabled': false });
+                        if (cardCvc) cardCvc.update({ 'disabled': false });
                         submitButton.attr('disabled', false);
                         toggleBillingAddressFields();
+                        return;
                     }
                 } else {
                     cardErrors.html(`
@@ -301,9 +370,12 @@ $(document).ready(function () {
                     `);
                     paymentForm.fadeToggle(100);
                     loadingOverlay.fadeToggle(100);
-                    if (card) card.update({ 'disabled': false });
+                    if (cardNumber) cardNumber.update({ 'disabled': false });
+                    if (cardExpiry) cardExpiry.update({ 'disabled': false });
+                    if (cardCvc) cardCvc.update({ 'disabled': false });
                     submitButton.attr('disabled', false);
                     toggleBillingAddressFields();
+                    return;
                 }
             } catch (jsError) {
                 cardErrors.html(`
@@ -312,9 +384,12 @@ $(document).ready(function () {
                 `);
                 paymentForm.fadeToggle(100);
                 loadingOverlay.fadeToggle(100);
-                if (card) card.update({ 'disabled': false });
+                if (cardNumber) cardNumber.update({ 'disabled': false });
+                if (cardExpiry) cardExpiry.update({ 'disabled': false });
+                if (cardCvc) cardCvc.update({ 'disabled': false });
                 submitButton.attr('disabled', false);
                 toggleBillingAddressFields();
+                return;
             }
         } else {
             // For CASH or GCASH, ensure fields are disabled before submission
