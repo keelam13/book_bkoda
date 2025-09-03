@@ -8,7 +8,7 @@
 <h2 class="staff-section-title">Bookings List</h2>
 
 <!-- Alert for Null Bookings -->
-{% if expired_bookings_count > 0 %}
+<!-- {% if expired_bookings_count > 0 %} -->
 <div class="alert alert-danger alert-fix-display mb-4" role="alert">
     <h4 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i> Immediate Action Required!</h4>
     <p>There are **{{ null_bookings_count }}** booking(s) with **PENDING PAYMENT** status with **NO PAYMENT METHOD** that have passed their 24-hour payment window.</p>
@@ -24,10 +24,10 @@
         </form>
     </div>
 </div>
-{% endif %}
+<!-- {% endif %} -->
 
 <!-- Alert for Expired Bookings -->
-{% if expired_bookings_count > 0 %}
+<!-- {% if expired_bookings_count > 0 %} -->
 <div class="alert alert-warning alert-fix-display mb-4" role="alert">
     <h4 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i>Action Required!</h4>
     <p>There are **{{ expired_bookings_count }}** booking(s) with **PENDING PAYMENT** status that have passed their 24-hour payment window.</p>
@@ -43,7 +43,7 @@
         </form>
     </div>
 </div>
-{% endif %}
+<!-- {% endif %} -->
 
 <!-- Booking Overview -->
 <div class="row align-items-center mb-4">

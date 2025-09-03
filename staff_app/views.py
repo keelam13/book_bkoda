@@ -10,9 +10,9 @@ from booking.models import Booking, BOOKING_STATUS_CHOICES, PAYMENT_STATUS_CHOIC
 from staff_app.forms import TripForm, BookingForm
 from manage_booking.utils import paginate_queryset
 from io import StringIO
-from .management.commands.trips.generate_trips import Command as GenerateTripsCommand
-from .management.commands.bookings.cancel_unpaid_bookings import Command as CancelUnpaidBookingsCommand
-from .management.commands.bookings.cancel_null_bookings import Command as CancelNullBookingsCommand
+from .management.commands.generate_trips import Command as GenerateTripsCommand
+from .management.commands.cancel_unpaid_bookings import Command as CancelUnpaidBookingsCommand
+from .management.commands.cancel_null_bookings import Command as CancelNullBookingsCommand
 from datetime import datetime, timedelta
 
 

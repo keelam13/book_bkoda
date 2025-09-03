@@ -47,7 +47,7 @@ class Command(BaseCommand):
         cutoff_time = timezone.now() - timedelta(hours=1)
 
         null_bookings = Booking.objects.filter(
-            payment_method__isnull=True,
+            payment_method_type__isnull=True,
             booking_date__lt=cutoff_time
         )
 
