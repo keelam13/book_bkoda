@@ -87,6 +87,7 @@ main {
 
 /* Back to Top Button */
 .btt-button {
+    display: none;
     position: fixed;
     bottom: 1.5rem;
     right: 1.5rem;
