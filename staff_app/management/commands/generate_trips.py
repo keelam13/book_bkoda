@@ -33,12 +33,9 @@ class Command(BaseCommand):
 
         time_intervals = [time(hour) for hour in range(6, 16, 2)]
 
-        self.stdout.write(f"Starting trip generation from {start_date} to {end_date}")
-
         current_date = start_date
 
         while current_date <= end_date:
-            self.stdout.write(f"Generating trips for {current_date}...")
             used_times_kb = set()
             used_times_bk = set()
 
@@ -60,9 +57,7 @@ class Command(BaseCommand):
                         arrival_time= (datetime.combine(current_date, trip_time) + timedelta(hours=3)).time(),
                         company_name="BKODA Transport",
                     )
-                    self.stdout.write(self.style.SUCCESS(f'Created KAB-BAG trip for {current_date} at {trip_time}'))
                 except ValueError as e:
-                    self.stdout.write(self.style.WARNING(f'Skipping KAB-BAG trip for {current_date}: {e}'))
                     break
 
             # Baguio to Kabayan
@@ -84,14 +79,12 @@ class Command(BaseCommand):
                         arrival_time=(datetime.combine(current_date, trip_time) + timedelta(hours=3)).time(),
                         company_name="BKODA Transport",
                     )
-                    self.stdout.write(self.style.SUCCESS(f'Created BAG-KAB trip for {current_date} at {trip_time}'))
                 except ValueError as e:
-                    self.stdout.write(self.style.WARNING(f'Skipping BAG-KAB trip for {current_date}: {e}'))
                     break
 
             current_date += timedelta(days=1)
 
-        self.stdout.write(self.style.SUCCESS('Trip generation completed successfully!'))
+        self.stdout.write(self.style.SUCCESS(f"Trip generation from {start_date} to {end_date} completed successfully!"))
 
     def get_unique_time(self, time_intervals, used_times):
         """

@@ -14,11 +14,18 @@ from .management.commands.generate_trips import Command as GenerateTripsCommand
 from .management.commands.cancel_unpaid_bookings import Command as CancelUnpaidBookingsCommand
 from .management.commands.cancel_null_bookings import Command as CancelNullBookingsCommand
 from datetime import datetime, timedelta
+import re
 
 
 # Helper function to check if a user is staff
 def is_staff_user(user):
     return user.is_authenticated and user.is_staff
+
+
+def remove_ansi_codes(text):
+    ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
+    return ansi_escape.sub('', text)
+
 
 # --- Dashboard View ---
 @login_required
@@ -286,12 +293,11 @@ def generate_trips_view(request):
         if error_output:
             messages.error(request, f"Trip generation completed with warnings/errors: {error_output}")
         else:
-            messages.success(request, f"Trip generation completed successfully: {out.getvalue().strip()}")
+            messages.success(request, remove_ansi_codes(out.getvalue().strip()))
             
     except Exception as e:
         messages.error(request, f"An error occurred during trip generation: {e}")
         import traceback
-        print(f"Error in generate_trips_view: {traceback.format_exc()}")
     
     return redirect('staff_app:trips_list')
 
