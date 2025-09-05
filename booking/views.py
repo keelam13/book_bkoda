@@ -92,7 +92,44 @@ def _get_initial_billing_details(request, booking=None):
     return {}
 
 
+def _get_pending_booking(request):
+    """
+    Helper function to check for an existing pending booking.
+
+    Checks for pending bookings for both authenticated and anonymous users.
+    Returns the pending booking object or None if no pending booking is found.
+    """
+    pending_booking = None
+    if request.user.is_authenticated:
+        pending_booking = Booking.objects.filter(
+            user=request.user, 
+            status='PENDING_PAYMENT'
+        ).first()
+    elif 'anonymous_booking_id' in request.session:
+        try:
+            booking_id = request.session['anonymous_booking_id']
+            pending_booking = Booking.objects.get(
+                id=booking_id,
+                status='PENDING_PAYMENT',
+                trip__departure_date__gte=datetime.now().date(),
+            )
+        except Booking.DoesNotExist:
+            del request.session['anonymous_booking_id']
+
+    return pending_booking
+
+
 def book_trip(request, trip_id, number_of_passengers):
+
+    # --- PENDING BOOKING CHECK ---
+    existing_pending_booking = _get_pending_booking(request)
+
+    if existing_pending_booking:
+        messages.info(request, f"You have an existing pending booking ({existing_pending_booking.booking_reference}). Please complete the payment or cancel it before starting a new one.")
+        return redirect('process_payment', booking_id=existing_pending_booking.id)
+    
+    # --- END PENDING BOOKING CHECK ---
+
     trip = get_object_or_404(Trip, pk=trip_id)
     num_passengers = int(number_of_passengers)
     passenger_range = range(1, num_passengers + 1)
