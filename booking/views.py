@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from trips.models import Trip
@@ -99,19 +100,23 @@ def _get_pending_booking(request):
     Checks for pending bookings for both authenticated and anonymous users.
     Returns the pending booking object or None if no pending booking is found.
     """
+    now = timezone.now()
     pending_booking = None
     if request.user.is_authenticated:
         pending_booking = Booking.objects.filter(
+            Q(trip__date__gt=now.date()) | Q(trip__date=now.date(), trip__departure_time__gte=now.time()),
             user=request.user, 
-            status='PENDING_PAYMENT'
+            status='PENDING_PAYMENT',
+            payment_method_type__isnull=True
         ).first()
     elif 'anonymous_booking_id' in request.session:
         try:
             booking_id = request.session['anonymous_booking_id']
             pending_booking = Booking.objects.get(
+                Q(trip__date__gt=now.date()) | Q(trip__date=now.date(), trip__departure_time__gte=now.time()),
                 id=booking_id,
                 status='PENDING_PAYMENT',
-                trip__departure_date__gte=datetime.now().date(),
+                payment_method_type__isnull=True
             )
         except Booking.DoesNotExist:
             del request.session['anonymous_booking_id']
