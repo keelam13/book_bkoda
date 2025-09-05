@@ -292,7 +292,6 @@ def process_payment(request, booking_id):
                     request.session.modified = True
 
             messages.success(request, f"Booking {booking.booking_reference} has been successfully canceled.")
-            send_booking_email(booking, email_type='cancellation')
             return redirect('home')
 
         elif action == 'confirm_payment':

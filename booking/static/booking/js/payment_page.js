@@ -23,6 +23,10 @@ $(document).ready(function () {
     const billingPostcodeInput = $('#id_billing_postcode');
     const billingCountrySelect = $('#id_billing_country');
 
+        // Custom Modal elements
+    const cancelButton = $('#cancel-booking-button');
+    const cancellationConfirmModal = $('#cancellationConfirmModal');
+
     // Global Stripe variables
     let stripe = null;
     let elements = null;
@@ -396,5 +400,11 @@ $(document).ready(function () {
             manualBillingAddressFields.find('input, select').attr('disabled', true);
             paymentForm.off('submit').submit();
         }
+    });
+
+    // --- Custom Modal and Cancellation Logic ---
+    cancelButton.on('click', (e) => {
+        e.preventDefault(); 
+        cancellationConfirmModal.modal('show');
     });
 });
