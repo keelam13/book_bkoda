@@ -26,24 +26,40 @@
 </div>
 <!-- {% endif %} -->
 
-<!-- Alert for Expired Bookings -->
-<!-- {% if expired_bookings_count > 0 %} -->
+<!-- Alert for Abandoned Bookings on Booking List -->
+{% if unpaid_bookings_count > 0 or null_bookings_count > 0 or departed_bookings_count > 0 %}
 <div class="alert alert-warning alert-fix-display mb-4" role="alert">
-    <h4 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i>Action Required!</h4>
-    <p>There are **{{ expired_bookings_count }}** booking(s) with **PENDING PAYMENT** status that have passed their 24-hour payment window.</p>
-    <p class="mb-2">Please click the "Cancel Unpaid Bookings" button to automatically cancel these expired bookings and free up seats.</p>
+    <h4 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i>Urgent: Action Required!</h4>
+    <p>The following bookings are past due and require your attention:</p>
+    <ul class="mb-2 list-unstyled">
+        {% if departed_bookings_count > 0 %}
+        <li>
+            <i class="fas fa-calendar-times mr-2"></i>
+            <strong>{{ departed_bookings_count }}</strong> booking(s) for trips that have already departed.</li>
+        {% endif %}
+        {% if unpaid_bookings_count > 0 %}
+        <li>
+            <i class="fas fa-calendar-times mr-2"></i>
+            <strong>{{ unpaid_bookings_count }}</strong> booking(s) with pending payment older than 24 hours.</li>
+        {% endif %}
+        {% if null_bookings_count > 0 %}
+        <li>
+            <i class="fas fa-calendar-times mr-2"></i>
+            <strong>{{ null_bookings_count }}</strong> booking(s) with no payment method older than 1 hour.</li>
+        {% endif %}
+    </ul>
+    <p class="mb-2">Click the "Cancel Abandoned Bookings" button to automatically cancel these and free up seats.</p>
     <div class="mb-0 d-flex justify-content-start">
-        <!-- Cancel Unpaid Bookings Button -->
-        <form action="{% url 'staff_app:cancel_unpaid_bookings' %}" method="post">
+        <form action="{% url 'staff_app:cancel_abandoned_bookings' %}" method="post">
             {% csrf_token %}
             <button type="submit" class="btn btn-warning btn-sm"
-            onclick="return confirm('Are you sure you want to cancel unpaid bookings older than 24 hours? This action cannot be undone.');">
-            <strong>Cancel Unpaid Bookings</strong>
+            onclick="return confirm('Are you sure you want to cancel all abandoned bookings? This action cannot be undone.');">
+            <strong>Cancel Abandoned Bookings</strong>
             </button>
         </form>
     </div>
 </div>
-<!-- {% endif %} -->
+{% endif %}
 
 <!-- Booking Overview -->
 <div class="row align-items-center mb-4">

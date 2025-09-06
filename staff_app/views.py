@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import  messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
-from django.db.models import Sum, Min, Max
+from django.db.models import Sum, Min, Max, Q
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from trips.models import Trip
@@ -11,8 +11,7 @@ from staff_app.forms import TripForm, BookingForm
 from manage_booking.utils import paginate_queryset
 from io import StringIO
 from .management.commands.generate_trips import Command as GenerateTripsCommand
-from .management.commands.cancel_unpaid_bookings import Command as CancelUnpaidBookingsCommand
-from .management.commands.cancel_null_bookings import Command as CancelNullBookingsCommand
+from .management.commands.cancel_abandoned_bookings import Command as CancelNullBookingsCommand
 from datetime import datetime, timedelta
 import re
 
@@ -43,12 +42,28 @@ def staff_dashboard(request):
 
     # --- Calculate Expired Bookings Count for Dashboard Alert ---
     cutoff_time_for_unpaid = timezone.now() - timedelta(hours=24)
+    cutoff_time_for_null = timezone.now() - timedelta(hours=1)
+    now = timezone.now()
 
-    expired_bookings_count = Booking.objects.filter(
+    unpaid_bookings_count = Booking.objects.filter(
         status='PENDING_PAYMENT',
         payment_status='PENDING',
         booking_date__lt=cutoff_time_for_unpaid
     ).count()
+    print('Unpaid Bookings Count:', unpaid_bookings_count)
+
+    null_bookings_count = Booking.objects.filter(
+        Q(payment_method_type__isnull=True) | Q(payment_method_type=''),
+        status='PENDING_PAYMENT',
+        booking_date__lt=cutoff_time_for_null
+    ).count()
+    print('Null Bookings Count:', null_bookings_count)
+
+    departed_bookings_count = Booking.objects.filter(
+        Q(trip__date__lt=now.date()) | Q(trip__date=now.date(), trip__departure_time__lt=now.time()),
+        status='PENDING_PAYMENT'
+    ).count()
+    print('Departed Bookings Count:', departed_bookings_count)
 
     context = {
         'total_trips': total_trips,
@@ -58,7 +73,9 @@ def staff_dashboard(request):
         'total_revenue_confirmed': total_revenue_confirmed,
         'recent_bookings': Booking.objects.order_by('-booking_date')[:5],
         'upcoming_trips': Trip.objects.order_by('date')[:5],
-        'expired_bookings_count': expired_bookings_count,
+        'unpaid_bookings_count': unpaid_bookings_count,
+        'departed_bookings_count': departed_bookings_count,
+        'null_bookings_count': null_bookings_count
     }
     return render(request, 'staff_app/dashboard.html', context)
 
@@ -159,7 +176,6 @@ def bookings_list(request):
             return redirect('staff_app:bookings_list')
 
         booking = get_object_or_404(Booking, pk=booking_pk)
-        print('Booking:', booking)
         trip_datetime = datetime.combine(booking.trip.date, booking.trip.departure_time)
         if action == 'confirm_reschedule_payment':
             try:
@@ -241,17 +257,27 @@ def bookings_list(request):
     # --- Calculate Expired Bookings Count ---
     cutoff_time_for_unpaid = timezone.now() - timedelta(hours=24)
     cutoff_time_for_null = timezone.now() - timedelta(hours=1)
+    now = timezone.now()
 
-    expired_bookings_count = Booking.objects.filter(
+    unpaid_bookings_count = Booking.objects.filter(
         status='PENDING_PAYMENT',
         payment_status='PENDING',
         booking_date__lt=cutoff_time_for_unpaid
     ).count()
+    print('Unpaid Bookings Count:', unpaid_bookings_count)
 
     null_bookings_count = Booking.objects.filter(
-        payment_method_type__isnull=True,
+        Q(payment_method_type__isnull=True) | Q(payment_method_type=''),
+        status='PENDING_PAYMENT',
         booking_date__lt=cutoff_time_for_null
     ).count()
+    print('Null Bookings Count:', null_bookings_count)
+
+    departed_bookings_count = Booking.objects.filter(
+        Q(trip__date__lt=now.date()) | Q(trip__date=now.date(), trip__departure_time__lt=now.time()),
+        status='PENDING_PAYMENT'
+    ).count()
+    print('Departed Bookings Count:', departed_bookings_count)
 
     bookings_list = paginate_queryset(request, bookings_list, items_per_page=5)
 
@@ -270,7 +296,8 @@ def bookings_list(request):
         'booking_count': booking_count,
         'min_booking_date': min_booking_date,
         'max_booking_date': max_booking_date,
-        'expired_bookings_count': expired_bookings_count,
+        'unpaid_bookings_count': unpaid_bookings_count,
+        'departed_bookings_count': departed_bookings_count,
         'null_bookings_count': null_bookings_count
     }
     return render(request, 'staff_app/bookings_list.html', context)
@@ -301,37 +328,37 @@ def generate_trips_view(request):
     
     return redirect('staff_app:trips_list')
 
-@login_required
-@require_POST
-def cancel_unpaid_bookings_view(request):
-    """
-    View to programmatically run the cancel_unpaid_bookings management command.
-    """
-    out = StringIO()
-    err = StringIO()
-    try:
-        command = CancelUnpaidBookingsCommand()
-        command.stdout = out
-        command.stderr = err
-        command.handle()
+# @login_required
+# @require_POST
+# def cancel_unpaid_bookings_view(request):
+#     """
+#     View to programmatically run the cancel_unpaid_bookings management command.
+#     """
+#     out = StringIO()
+#     err = StringIO()
+#     try:
+#         command = CancelUnpaidBookingsCommand()
+#         command.stdout = out
+#         command.stderr = err
+#         command.handle()
         
-        error_output = err.getvalue().strip()
-        if error_output:
-            messages.error(request, f"Unpaid bookings cancellation completed with warnings/errors: {error_output}")
-        else:
-            messages.success(request, f"Unpaid bookings cancellation completed successfully: {out.getvalue().strip()}")
+#         error_output = err.getvalue().strip()
+#         if error_output:
+#             messages.error(request, f"Unpaid bookings cancellation completed with warnings/errors: {error_output}")
+#         else:
+#             messages.success(request, f"Unpaid bookings cancellation completed successfully: {out.getvalue().strip()}")
             
-    except Exception as e:
-        messages.error(request, f"An error occurred during unpaid bookings cancellation: {e}")
-        import traceback
-        print(f"Error in cancel_unpaid_bookings_view: {traceback.format_exc()}")
+#     except Exception as e:
+#         messages.error(request, f"An error occurred during unpaid bookings cancellation: {e}")
+#         import traceback
+#         print(f"Error in cancel_unpaid_bookings_view: {traceback.format_exc()}")
     
-    return redirect('staff_app:bookings_list')
+#     return redirect('staff_app:bookings_list')
 
 
 @login_required
 @require_POST
-def cancel_null_bookings_view(request):
+def cancel_abandoned_bookings_view(request):
     """
     View to programmatically run the cancel_null_bookings management command.
     """
@@ -352,7 +379,6 @@ def cancel_null_bookings_view(request):
     except Exception as e:
         messages.error(request, f"An error occurred during null bookings cancellation: {e}")
         import traceback
-        print(f"Error in cancel_null_bookings_view: {traceback.format_exc()}")
     
     return redirect('staff_app:bookings_list')
 
@@ -391,3 +417,30 @@ def confirm_reschedule_payment(request, pk):
 
     context = {'booking': booking}
     return render(request, 'staff_app/confirm_reschedule_modal.html', context)
+
+
+# @login_required
+# @require_POST
+# def cancel_expired_bookings_view(request):
+#     """
+#     View to programmatically run the cancel_expired_bookings management command.
+#     This view should be accessible only to staff users.
+#     """
+#     out = StringIO()
+#     err = StringIO()
+#     try:
+#         command = CancelExpiredBookingsCommand()
+#         command.stdout = out
+#         command.stderr = err
+#         command.handle()
+
+#         error_output = err.getvalue().strip()
+#         if error_output:
+#             messages.error(request, f"Expired booking cancellation completed with warnings/errors: {error_output}")
+#         else:
+#             messages.success(request, f"Expired booking cancellation completed successfully.")
+
+#     except Exception as e:
+#         messages.error(request, f"An error occurred during expired booking cancellation: {e}")
+
+#     return redirect('staff_app:bookings_list')
