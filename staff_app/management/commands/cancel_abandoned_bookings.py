@@ -33,7 +33,7 @@ class Command(BaseCommand):
                         status='CANCELLED', 
                         payment_status='FAILED',
                     )
-                self.stdout.write(self.style.SUCCESS(f"Successfully cancelled {updated_null_count} old, null-payment booking(s)."))
+                self.stdout.write(self.style.SUCCESS(f"Successfully cancelled {updated_null_count} old, null-payment booking(s). "))
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f"An error occurred while cancelling old null bookings: {e}"))
         else:
@@ -50,7 +50,7 @@ class Command(BaseCommand):
                         status='CANCELLED', 
                         payment_status='FAILED',
                     )
-                self.stdout.write(self.style.SUCCESS(f"Successfully cancelled {updated_departed_count} departed pending booking(s)."))
+                self.stdout.write(self.style.SUCCESS(f"Successfully cancelled {updated_departed_count} departed pending booking(s). "))
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f"An error occurred while cancelling departed bookings: {e}"))
         else:
@@ -67,7 +67,7 @@ class Command(BaseCommand):
                         status='CANCELLED', 
                         payment_status='FAILED',
                     )
-                self.stdout.write(self.style.SUCCESS(f"Successfully cancelled {updated_unpaid_count} unpaid booking(s)."))
+                self.stdout.write(self.style.SUCCESS(f"Successfully cancelled {updated_unpaid_count} unpaid booking(s). "))
                 send_booking_email(unpaid_bookings, email_type='cancellation_unpaid')
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f"An error occurred while cancelling unpaid bookings: {e}"))

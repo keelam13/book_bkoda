@@ -22,6 +22,7 @@ def is_staff_user(user):
     return user.is_authenticated and user.is_staff
 
 
+# Function to remove ANSI escape codes from text
 def remove_ansi_codes(text):
     ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
     return ansi_escape.sub('', text)
@@ -58,6 +59,7 @@ def staff_dashboard(request):
     return render(request, 'staff_app/dashboard.html', context)
 
 
+# --- Trips List View ---
 @login_required
 def trips_list(request):
     """
@@ -139,6 +141,7 @@ def trips_list(request):
     return render(request, 'staff_app/trips_list.html', context)
 
 
+# --- Bookings List View ---
 @login_required
 def bookings_list(request):
     """
@@ -257,6 +260,8 @@ def bookings_list(request):
     }
     return render(request, 'staff_app/bookings_list.html', context)
 
+
+# --- Generate Trips View ---
 @login_required
 @require_POST
 def generate_trips_view(request):
@@ -283,34 +288,8 @@ def generate_trips_view(request):
     
     return redirect('staff_app:trips_list')
 
-# @login_required
-# @require_POST
-# def cancel_unpaid_bookings_view(request):
-#     """
-#     View to programmatically run the cancel_unpaid_bookings management command.
-#     """
-#     out = StringIO()
-#     err = StringIO()
-#     try:
-#         command = CancelUnpaidBookingsCommand()
-#         command.stdout = out
-#         command.stderr = err
-#         command.handle()
-        
-#         error_output = err.getvalue().strip()
-#         if error_output:
-#             messages.error(request, f"Unpaid bookings cancellation completed with warnings/errors: {error_output}")
-#         else:
-#             messages.success(request, f"Unpaid bookings cancellation completed successfully: {out.getvalue().strip()}")
-            
-#     except Exception as e:
-#         messages.error(request, f"An error occurred during unpaid bookings cancellation: {e}")
-#         import traceback
-#         print(f"Error in cancel_unpaid_bookings_view: {traceback.format_exc()}")
-    
-#     return redirect('staff_app:bookings_list')
 
-
+# --- Cancel Abandoned Bookings View ---
 @login_required
 @require_POST
 def cancel_abandoned_bookings_view(request):
@@ -329,8 +308,7 @@ def cancel_abandoned_bookings_view(request):
         if error_output:
             messages.error(request, f"Null bookings cancellation completed with warnings/errors: {error_output}")
         else:
-            messages.success(request, f"Null bookings cancellation completed successfully: {out.getvalue().strip()}")
-            
+            messages.success(request, remove_ansi_codes(out.getvalue().strip()))
     except Exception as e:
         messages.error(request, f"An error occurred during null bookings cancellation: {e}")
         import traceback
@@ -338,6 +316,7 @@ def cancel_abandoned_bookings_view(request):
     return redirect('staff_app:bookings_list')
 
 
+# --- Confirm Reschedule Payment View ---
 @login_required
 @user_passes_test(is_staff_user)
 def confirm_reschedule_payment(request, pk):
@@ -372,30 +351,3 @@ def confirm_reschedule_payment(request, pk):
 
     context = {'booking': booking}
     return render(request, 'staff_app/confirm_reschedule_modal.html', context)
-
-
-# @login_required
-# @require_POST
-# def cancel_expired_bookings_view(request):
-#     """
-#     View to programmatically run the cancel_expired_bookings management command.
-#     This view should be accessible only to staff users.
-#     """
-#     out = StringIO()
-#     err = StringIO()
-#     try:
-#         command = CancelExpiredBookingsCommand()
-#         command.stdout = out
-#         command.stderr = err
-#         command.handle()
-
-#         error_output = err.getvalue().strip()
-#         if error_output:
-#             messages.error(request, f"Expired booking cancellation completed with warnings/errors: {error_output}")
-#         else:
-#             messages.success(request, f"Expired booking cancellation completed successfully.")
-
-#     except Exception as e:
-#         messages.error(request, f"An error occurred during expired booking cancellation: {e}")
-
-#     return redirect('staff_app:bookings_list')

@@ -7,25 +7,6 @@
 {% block staff_app_content %}
 <h2 class="staff-section-title">Bookings List</h2>
 
-<!-- Alert for Null Bookings -->
-<!-- {% if expired_bookings_count > 0 %} -->
-<div class="alert alert-danger alert-fix-display mb-4" role="alert">
-    <h4 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i> Immediate Action Required!</h4>
-    <p>There are **{{ null_bookings_count }}** booking(s) with **PENDING PAYMENT** status with **NO PAYMENT METHOD** that have passed their 24-hour payment window.</p>
-    <p class="mb-2">Please click the "Cancel Null Bookings" button to automatically cancel these expired bookings and free up seats.</p>
-    <div class="mb-0 d-flex justify-content-start">
-        <!-- Cancel Unpaid Bookings Button -->
-        <form action="{% url 'staff_app:cancel_unpaid_bookings' %}" method="post">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger btn-sm"
-                onclick="return confirm('Are you sure you want to cancel unpaid bookings older than 24 hours? This action cannot be undone.');">
-                <strong>Cancel Null Bookings</strong>
-            </button>
-        </form>
-    </div>
-</div>
-<!-- {% endif %} -->
-
 <!-- Alert for Abandoned Bookings on Booking List -->
 {% if unpaid_bookings_count > 0 or null_bookings_count > 0 or departed_bookings_count > 0 %}
 <div class="alert alert-warning alert-fix-display mb-4" role="alert">
@@ -50,16 +31,37 @@
     </ul>
     <p class="mb-2">Click the "Cancel Abandoned Bookings" button to automatically cancel these and free up seats.</p>
     <div class="mb-0 d-flex justify-content-start">
-        <form action="{% url 'staff_app:cancel_abandoned_bookings' %}" method="post">
+        <form action="{% url 'staff_app:cancel_abandoned_bookings' %}" method="POST" id="abandoned-cancellation-form">
             {% csrf_token %}
-            <button type="submit" class="btn btn-warning btn-sm"
-            onclick="return confirm('Are you sure you want to cancel all abandoned bookings? This action cannot be undone.');">
-            <strong>Cancel Abandoned Bookings</strong>
+            <button type="button" id="cancel-booking-button" class="btn btn-danger btn-lg mt-3" data-toggle="modal"
+                data-target="#cancellationConfirmModal">
+                <strong>Cancel Abandoned Booking</strong>
             </button>
         </form>
     </div>
 </div>
 {% endif %}
+
+<!-- Custom Confirmation Modal -->
+<div class="modal fade" id="cancellationConfirmModal" tabindex="-1" role="dialog" aria-labelledby="cancellationConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancellationConfirmModalLabel">Confirm Cancellation</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to cancel all abandoned bookings? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Go Back</button>
+                <button type="submit" form="abandoned-cancellation-form" name="action" id="confirm-cancel-button" class="btn btn-danger">Confirm Cancellation</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Booking Overview -->
 <div class="row align-items-center mb-4">

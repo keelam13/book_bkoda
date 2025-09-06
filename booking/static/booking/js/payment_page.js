@@ -401,10 +401,4 @@ $(document).ready(function () {
             paymentForm.off('submit').submit();
         }
     });
-
-    // --- Custom Modal and Cancellation Logic ---
-    cancelButton.on('click', (e) => {
-        e.preventDefault(); 
-        cancellationConfirmModal.modal('show');
-    });
 });
