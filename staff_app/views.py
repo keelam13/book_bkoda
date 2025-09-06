@@ -12,6 +12,7 @@ from manage_booking.utils import paginate_queryset
 from io import StringIO
 from .management.commands.generate_trips import Command as GenerateTripsCommand
 from .management.commands.cancel_abandoned_bookings import Command as CancelNullBookingsCommand
+from .utils import get_all_abandoned_bookings
 from datetime import datetime, timedelta
 import re
 
@@ -40,30 +41,7 @@ def staff_dashboard(request):
 
     total_revenue_confirmed = Booking.objects.filter(payment_status='PAID').aggregate(Sum('total_price'))['total_price__sum'] or 0
 
-    # --- Calculate Expired Bookings Count for Dashboard Alert ---
-    cutoff_time_for_unpaid = timezone.now() - timedelta(hours=24)
-    cutoff_time_for_null = timezone.now() - timedelta(hours=1)
-    now = timezone.now()
-
-    unpaid_bookings_count = Booking.objects.filter(
-        status='PENDING_PAYMENT',
-        payment_status='PENDING',
-        booking_date__lt=cutoff_time_for_unpaid
-    ).count()
-    print('Unpaid Bookings Count:', unpaid_bookings_count)
-
-    null_bookings_count = Booking.objects.filter(
-        Q(payment_method_type__isnull=True) | Q(payment_method_type=''),
-        status='PENDING_PAYMENT',
-        booking_date__lt=cutoff_time_for_null
-    ).count()
-    print('Null Bookings Count:', null_bookings_count)
-
-    departed_bookings_count = Booking.objects.filter(
-        Q(trip__date__lt=now.date()) | Q(trip__date=now.date(), trip__departure_time__lt=now.time()),
-        status='PENDING_PAYMENT'
-    ).count()
-    print('Departed Bookings Count:', departed_bookings_count)
+    abandoned_bookings = get_all_abandoned_bookings()
 
     context = {
         'total_trips': total_trips,
@@ -73,9 +51,9 @@ def staff_dashboard(request):
         'total_revenue_confirmed': total_revenue_confirmed,
         'recent_bookings': Booking.objects.order_by('-booking_date')[:5],
         'upcoming_trips': Trip.objects.order_by('date')[:5],
-        'unpaid_bookings_count': unpaid_bookings_count,
-        'departed_bookings_count': departed_bookings_count,
-        'null_bookings_count': null_bookings_count
+        'unpaid_bookings_count': abandoned_bookings['unpaid_count'],
+        'departed_bookings_count': abandoned_bookings['departed_count'],
+        'null_bookings_count': abandoned_bookings['null_count']
     }
     return render(request, 'staff_app/dashboard.html', context)
 
@@ -254,30 +232,7 @@ def bookings_list(request):
         min_booking_date = date_aggregation['min_date']
         max_booking_date = date_aggregation['max_date']
 
-    # --- Calculate Expired Bookings Count ---
-    cutoff_time_for_unpaid = timezone.now() - timedelta(hours=24)
-    cutoff_time_for_null = timezone.now() - timedelta(hours=1)
-    now = timezone.now()
-
-    unpaid_bookings_count = Booking.objects.filter(
-        status='PENDING_PAYMENT',
-        payment_status='PENDING',
-        booking_date__lt=cutoff_time_for_unpaid
-    ).count()
-    print('Unpaid Bookings Count:', unpaid_bookings_count)
-
-    null_bookings_count = Booking.objects.filter(
-        Q(payment_method_type__isnull=True) | Q(payment_method_type=''),
-        status='PENDING_PAYMENT',
-        booking_date__lt=cutoff_time_for_null
-    ).count()
-    print('Null Bookings Count:', null_bookings_count)
-
-    departed_bookings_count = Booking.objects.filter(
-        Q(trip__date__lt=now.date()) | Q(trip__date=now.date(), trip__departure_time__lt=now.time()),
-        status='PENDING_PAYMENT'
-    ).count()
-    print('Departed Bookings Count:', departed_bookings_count)
+    abandoned_bookings = get_all_abandoned_bookings()
 
     bookings_list = paginate_queryset(request, bookings_list, items_per_page=5)
 
@@ -296,9 +251,9 @@ def bookings_list(request):
         'booking_count': booking_count,
         'min_booking_date': min_booking_date,
         'max_booking_date': max_booking_date,
-        'unpaid_bookings_count': unpaid_bookings_count,
-        'departed_bookings_count': departed_bookings_count,
-        'null_bookings_count': null_bookings_count
+        'unpaid_bookings_count': abandoned_bookings['unpaid_count'],
+        'departed_bookings_count': abandoned_bookings['departed_count'],
+        'null_bookings_count': abandoned_bookings['null_count']
     }
     return render(request, 'staff_app/bookings_list.html', context)
 

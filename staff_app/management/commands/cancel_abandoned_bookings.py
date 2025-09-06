@@ -5,6 +5,7 @@ from datetime import timedelta
 from booking.models import Booking
 from booking.utils import send_booking_email
 from django.db import transaction
+from staff_app.utils import get_all_abandoned_bookings
 
 
 class Command(BaseCommand):
@@ -19,15 +20,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        # --- Task 1: Cancel old, null-payment bookings ---
-        cutoff_time = timezone.now() - timedelta(hours=1)
-        null_bookings = Booking.objects.filter(
-            Q(payment_method_type__isnull=True) | Q(payment_method_type=''),
-            status='PENDING_PAYMENT',
-            booking_date__lt=cutoff_time
-        )
+        abandoned_bookings = get_all_abandoned_bookings()
 
-        null_count = null_bookings.count()
+        # --- Task 1: Cancel old, null-payment bookings ---
+        null_bookings = abandoned_bookings['null_bookings']
+        null_count = abandoned_bookings['null_count']
 
         if null_count > 0:
             try:
@@ -43,12 +40,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("No old, null-payment bookings found to cancel."))
 
         # --- Task 2: Cancel pending bookings for past trips ---
-        now = timezone.now()
-        departed_bookings = Booking.objects.filter(
-            Q(trip__date__lt=now.date()) | Q(trip__date=now.date(), trip__departure_time__lt=now.time()),
-            status='PENDING_PAYMENT'
-        )
-        departed_count = departed_bookings.count()
+        departed_bookings = abandoned_bookings['departed_bookings']
+        departed_count = abandoned_bookings['departed_count']
         
         if departed_count > 0:
             try:
@@ -64,13 +57,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("No departed pending bookings found to cancel."))
 
         # --- Task 3: Cancel unpaid bookings older than 24 hours ---
-        cutoff_time_unpaid = timezone.now() - timedelta(hours=24)
-        unpaid_bookings = Booking.objects.filter(
-            status='PENDING_PAYMENT',
-            payment_status='PENDING',
-            booking_date__lt=cutoff_time_unpaid
-        )
-        unpaid_count = unpaid_bookings.count()
+        unpaid_bookings = abandoned_bookings['unpaid_bookings']
+        unpaid_count = abandoned_bookings['unpaid_count']
         
         if unpaid_count > 0:
             try:
