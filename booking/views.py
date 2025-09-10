@@ -132,8 +132,6 @@ def book_trip(request, trip_id, number_of_passengers):
     if existing_pending_booking:
         messages.info(request, f"You have an existing pending booking ({existing_pending_booking.booking_reference}). Please complete the payment or cancel it before starting a new one.")
         return redirect('process_payment', booking_id=existing_pending_booking.id)
-    
-    # --- END PENDING BOOKING CHECK ---
 
     trip = get_object_or_404(Trip, pk=trip_id)
     num_passengers = int(number_of_passengers)

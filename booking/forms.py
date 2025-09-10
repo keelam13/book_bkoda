@@ -36,67 +36,52 @@ class BookingConfirmationForm(forms.ModelForm):
                 del self.fields['save_info']
 
         for i in range(self.num_passengers):
+            passenger_number = i+1
 
             # Define each passenger field with unique names
-            self.fields[f'passenger_name{i+1}'] = forms.CharField(
-                    max_length=100,
-                    required=True,
-                    widget=forms.TextInput()
+            self.fields[f'passenger_name{passenger_number}'] = forms.CharField(
+                max_length=100,
+                required=True,
+                widget=forms.TextInput(attrs={
+                    'class': 'passenger-details-form',
+                    'placeholder': f'Full Name (Passenger {passenger_number}) *'
+                })
             )
-            self.fields[f'passenger_age{i+1}'] = forms.IntegerField(
-                    min_value=0,
-                    required=False,
-                    widget=forms.NumberInput()
+            self.fields[f'passenger_age{passenger_number}'] = forms.IntegerField(
+                min_value=0,
+                required=False,
+                widget=forms.NumberInput(attrs={
+                    'class': 'passenger-details-form',
+                    'placeholder': f'Age (Passenger {passenger_number})'
+                })
             )
-            self.fields[f'passenger_email{i+1}'] = forms.EmailField(
-                    max_length=255,
-                    required=True,
-                    widget=forms.EmailInput()
+            self.fields[f'passenger_email{passenger_number}'] = forms.EmailField(
+                max_length=255,
+                required=True,
+                widget=forms.EmailInput(attrs={
+                    'class': 'passenger-details-form',
+                    'placeholder': f'Email Address (Passenger {passenger_number}) *'
+                })
             )
-            self.fields[f'passenger_contact_number{i+1}'] = forms.CharField(
-                    max_length=20,
-                    required=True,
-                    widget=forms.TextInput()
+            self.fields[f'passenger_contact_number{passenger_number}'] = forms.CharField(
+                max_length=20,
+                required=True,
+                widget=forms.TextInput(attrs={
+                    'class': 'passenger-details-form',
+                    'placeholder': f'Contact Number (Passenger {passenger_number}) *'
+                })
             )
-
-        passenger_placeholders = {
-            'name': 'Full Name',
-            'age': 'Age',
-            'email': 'Email Address',
-            'contact_number': 'Contact Number',
-        }
 
         for field_name, field_obj in self.fields.items():
-            if field_name == 'save_info':
-                field_obj.widget.attrs['class'] = 'form-check-input'
-                continue
-
-            field_obj.widget.attrs['class'] = 'passenger-details-form'
-            field_obj.label = ''
-
-            if field_name.startswith('passenger'):
-                match = re.match(r'passenger_(.*)(\d+)', field_name)
-                if match:
-                    passenger_number = int(match.group(2))
-                    field_type_suffix = match.group(1)
-
-                    base_placeholder = passenger_placeholders.get(
-                        field_type_suffix, ''
-                        )
-
-                    current_placeholder_text = (
-                        f'{base_placeholder} (Passenger {passenger_number})'
-                        )
-                    if field_obj.required:
-                        current_placeholder_text += ' *'
-                    field_obj.widget.attrs[
-                        'placeholder'] = current_placeholder_text
+            if field_name.startswith('passenger') or field_name.startswith('save_info'):
+                if field_name == 'save_info':
+                    field_obj.widget.attrs['class'] = 'form-check-input'
                 else:
-                    field_obj.widget.attrs[
-                        'placeholder'] = "Error: Invalid Name"
+                    field_obj.widget.attrs['class'] = 'passenger-details-form'
+                    field_obj.label = ''
 
-            if field_name == 'passenger_name1':
-                field_obj.widget.attrs['autofocus'] = True
+        if 'passenger_name1' in self.fields:
+            self.fields['passenger_name1'].widget.attrs['autofocus'] = True
 
     def clean(self):
         cleaned_data = super().clean()
