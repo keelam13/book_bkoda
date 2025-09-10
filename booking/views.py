@@ -440,6 +440,7 @@ def process_payment(request, booking_id):
         'booking': booking,
         'trip': booking.trip,
         'total_price': booking.total_price,
+        'num_passengers': booking.number_of_passengers,
         'stripe_public_key': stripe_public_key,
         'client_secret': intent.client_secret if intent else None,
         'num_passsengers': booking.number_of_passengers,
