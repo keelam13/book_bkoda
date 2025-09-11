@@ -75,6 +75,44 @@ The book BKODA platform understands that each company, regardless of size, needs
 
 ---
 
+## Marketing Strategy
+
+The marketing strategy for book BKODA is designed to build brand awareness and drive user adoption within the specific local community of Kabayan and Baguio City. The focus will be on leveraging digital and local channels to highlight the app's key benefits: convenience, simplicity, and its understanding of local payment preferences.
+
+### Core Messaging
+Our message is simple: **"Your local and reliable seat reservation app. Book your trip from Kabayan to Baguio and pay your way."**
+
+This message highlights:
+1.  **Local Relevance:** A service specifically designed for the community.
+2.  **Reliability:** A dependable platform for travel.
+3.  **Convenience:** Easy online booking.
+4.  **Flexibility:** Acknowledging and accommodating local payment methods like cash and GCash.
+
+### Marketing Channels
+
+1.  **Digital Marketing:**
+    * **Social Media:** The existing **Facebook Page** will be the primary hub for digital communication. Content should be tailored to the local audience, including:
+        * Daily trip updates and availability.
+        * Announcements of new routes or services.
+        * Customer testimonials and user-generated photos of trips.
+        * Regular Q&A sessions to build trust and answer questions about the booking process.
+        * Collaborate with local community pages or influencers to reach a wider audience.
+    * **Email Marketing:** The call for subscription in the footer via **MailChimp** will be used to build a direct line of communication with users. Newsletters will include:
+        * Booking confirmations and reminders.
+        * Information on special promotions and discount codes.
+        * Travel tips and news relevant to the Kabayan-Baguio route.
+        * Updates on the app's features or changes to the booking policy.
+    * **Local SEO:** Optimize the website for local search terms such as "bus from Kabayan to Baguio City," "BKODA online booking," and "seat reservation Kabayan." Register the service on Google Maps and other local business directories to improve visibility for users searching for travel options in the area.
+
+2.  **Local & Offline Marketing:** Given the target audience, a strong offline presence is vital.
+    * **Partnerships:** Form partnerships with local businesses, such as cafes, hotels, and tourist spots, to display promotional materials (flyers, posters) and offer exclusive booking codes.
+    * **Terminal Presence:** Place branded materials at the BKODA bus terminals to inform walk-up passengers about the app and the benefits of online booking.
+    * **Community Engagement:** Sponsor or participate in local events, like festivals or community gatherings, to increase brand recognition and encourage direct sign-ups.
+
+This multi-channel approach ensures that book BKODA reaches its target audience where they are most active, both online and within their local community, building a strong and trusted brand.
+
+---
+
 ## Web Marketing
 
 1. A call for subscription is added in the footer for monthly newsletters with [MailChimp](https://mailchimp.com/) where subscribers will receive email notification of promos and discount codes.
