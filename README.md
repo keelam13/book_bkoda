@@ -11,7 +11,7 @@ The app is developed by [Keevin Aroco](https://github.com/keelam13).
 
 ## About
 
-[book BKODA](https://github.com/keelam13/book_bkoda) book BKODA is a web application built with Django that allows users to easily reserve seats for travels from Kabayan, Benguet to Baguio City and vice versa. It provides a user-friendly interface for trip search, seat reservation and booking management.
+book BKODA is a web application built with Django that allows users to easily reserve seats for travels from Kabayan, Benguet to Baguio City and vice versa. It provides a user-friendly interface for trip search, seat reservation and booking management.
 
 ## User Experience Design
 
@@ -77,12 +77,12 @@ The book BKODA platform understands that each company, regardless of size, needs
 
 ## Web Marketing
 
-1. A call for subscription is added in the footer for monthly newsletters with ![MailChimp](https://mailchimp.com/) where subscribers will receive email notification of promos and discount codes.
+1. A call for subscription is added in the footer for monthly newsletters with [MailChimp](https://mailchimp.com/) where subscribers will receive email notification of promos and discount codes.
 
 
-2. A Facebook Page is also added on the social media corner in the footer. ![book BKODA](https://www.facebook.com/profile.php?id=61577802846822)
+2. A Facebook Page is also added on the social media corner in the footer. [book BKODA](https://www.facebook.com/profile.php?id=61577802846822)
 
-[book BKODA Facebook Page](documentation/web_marketing/bkoda_fb_page.pdf)
+![book BKODA Facebook Page](documentation/web_marketing/bkoda_fb_page.png)
 
 ## Technologies used
 
@@ -241,7 +241,7 @@ The flowchart was created to help to understand the application and its function
 
 The flowchart was created using [Figma](https://www.figma.com/).
 
-- [Flowchart for Reservation](documentation/flowchart/flowchart_reservation.png)
+- ![Flowchart for Reservation](documentation/flowchart/flowchart_reservation.png)
 
 ---
 
