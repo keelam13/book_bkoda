@@ -119,6 +119,7 @@ The book BKODA platform understands that each company, regardless of size, needs
     + [Font Awesome](https://fontawesome.com/): was used to create the icons used in the website.
     + [Coolors](https://coolors.co/202a3c-1c2431-181f2a-0b1523-65e2d9-925cef-6b28e0-ffffff-eeeeee) was used to make a color palette for the website.
     * [Figma](https://figma.com/): was used to create the wireframes and the flowchart.
+    * [Lucidchart](https://www.lucidchart.com/): was used to create the ERD.
     + [W3C Validator](https://validator.w3.org/): was used to validate HTML5 code for the website.
     + [W3C CSS validator](https://jigsaw.w3.org/css-validator/): was used to validate CSS code for the website.
     + [JShint](https://jshint.com/): was used to validate JS code for the website.
@@ -253,6 +254,10 @@ The flowchart was created using [Figma](https://www.figma.com/).
 * The database was then migrated to PostgreSQL.
 
 ### Entity-Relationship Diagram
+
+* The ERD was created using [Lucidchart](https://www.lucidchart.com/).
+
+![ERD](documentation/erd/erd.png)
 
 ## Data Modeling
 
