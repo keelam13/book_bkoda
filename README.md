@@ -1,6 +1,6 @@
-# BKODA Seat Reservation
+# book BKODA
 
-Live Version: [BKODA Seat Reservation](https://book-bkoda-6d62942dbe76.herokuapp.com/)
+Live Version: [book BKODA](https://book-bkoda-6d62942dbe76.herokuapp.com/)
 
 
 Repository: [GitHub Repo](https://github.com/keelam13/book_bkoda)
@@ -326,6 +326,20 @@ The flowchart was created using [Figma](https://www.figma.com/).
 
 - User to Reservation: One User can have many Reservations (one-to-many). This is represented by the user_id foreign key in the Reservation table.
 - Trip to Reservation: One Trip can have many Reservations (one-to-many). This is represented by the trip_id foreign key in the Reservation table.
+
+## Future Implementations
+
+We are continually working to improve the BKODA app. Here are some features we plan to implement in future releases:
+
+* **Offline Access:** Allow users to view booking details and tickets even without an internet connection.
+* **Real-time Trip Updates:** Provide real-time location and status updates for active trips.
+* **Push Notifications:** Send alerts for booking confirmations, trip cancellations, or delays.
+* **User Feedback & Ratings:** Allow passengers to rate their trips and provide feedback.
+* **Multi-language Support:** Add support for other local languages to improve accessibility.
+* **Automated Discounts & Account Verification:** Implement an in-app process for eligible passengers (Senior Citizens, Students) to upload a valid ID for verification. Once verified by staff, their account will be permanently flagged to receive an automatic 20% discount on all future bookings. Until verification is complete, the standard fare will apply.
+* **Social Media Sign-up:** Allow users to register and log in quickly using their existing social media accounts (e.g., Google, Facebook).
+
+
 
 ## Acknowledgments
 
