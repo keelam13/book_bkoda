@@ -108,10 +108,19 @@ The application includes the following pages:
 - **Edit Route:** Allows admins to edit existing trip details (Route, date, time, seats).
 - **Delete Route:** Allows admins to remove trips.
 
-This document outlines the core features and functionalities of the Transportation Seat Booking App.
+## Security and Data Protection
+
+The application is built with security as a core principle to ensure the protection of user data and transactions. Key measures include:
+
+* **Secure Authentication:** User passwords are not stored in plain text. They are securely hashed and salted using industry-standard algorithms. User authentication and account management are handled by the robust `django-allauth` library, which enforces secure practices for registration, login, and password resets.
+* **Encrypted Data Transmission:** All data exchanged between the user's browser and the server is encrypted using HTTPS (SSL/TLS). This protects sensitive information like login credentials and booking details from being intercepted.
+* **Safe Payment Processing:** Sensitive financial information, such as credit card details, is never stored on our servers. All credit/debit card transactions are processed securely through a PCI-compliant third-party payment gateway. Payments via money wallets like GCash are also handled through official, secure APIs.
+* **Input Validation:** The application performs thorough validation and sanitization of all user inputs to prevent common security vulnerabilities like SQL injection and Cross-Site Scripting (XSS) attacks.
+
+This document outlines the core features and functionalities of the booking App.
 
 * Trips search.
-* Booking management (view, update seats, cancel).
+* Booking management (view, reschedule or cancel booking).
 * User authentication (registration, login).
 * Admin panel for route, schedule, and seat management.
 * Responsive design.
