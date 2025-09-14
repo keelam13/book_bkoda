@@ -9,28 +9,30 @@ The application includes the following pages:
 - Registration page
 - Logout page
 - Trip Selection Page
-- Reschdule Trip Page
-- Cancel Trip Page
 - Booking Form Page
 - Payment Form Page
+- My Bookings Page
+- Reschdule Trip Page
+- Cancel Trip Page
 - My Account Page (Passenger)
 - Staff Panel Page (Admin)
 
-## Access to Pages by User Role
+### Access to Pages by User Role
 
-| Page Name                   | Passenger | Admin |
-| --------------------------- | --------- | ----- |
-| Home page                   | Y         | Y     |
-| Login page                  | Y         | Y     |
-| Registration page           | Y         | Y     |
-| Logout page                 | Y         | Y     |
-| Trip Selection Page         | Y         | Y     |
-| Reschedule Trip Page        | Y         | Y     |
-| Cancel Trip Page            | Y         | Y     |
-| Booking Form Page           | Y         | Y     |
-| Payment Form Page           | Y         | Y     |
-| My Account Page             | Y         | Y     |
-| Staff Panel Page            | N         | Y     |
+| Page Name             | Unauthenticated User | Logged-in User (Passenger) | Admin |
+| --------------------- | -------------------- | -------------------------- | ----- |
+| Home page             | Y                    | Y                          | Y     |
+| Login page            | Y                    | N                          | N     |
+| Registration page     | Y                    | N                          | N     |
+| Trip Selection Page   | Y                    | Y                          | Y     |
+| Booking Form Page     | Y                    | Y                          | Y     |
+| Payment Form Page     | Y                    | Y                          | Y     |
+| My Bookings Page      | N                    | Y                          | Y     |
+| Reschedule Trip Page  | N                    | Y                          | Y     |
+| Cancel Trip Page      | N                    | Y                          | Y     |
+| My Account Page       | N                    | Y                          | N     |
+| Staff Panel Page      | N                    | N                          | Y     |
+| Logout page           | N                    | Y                          | Y     |
 
 - Each page has a consistent navbar and footer.
 
