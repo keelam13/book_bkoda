@@ -19,20 +19,23 @@ class Trip(models.Model):
         help_text="Expected arrival time (HH:MM)"
     )
     available_seats = models.IntegerField()
-    price = models.DecimalField(max_digits=10, null=False, blank=False, decimal_places=2, default=0.00)
-    company_name = models.CharField(max_length=100, default='BKODA Transport')
+    price = models.DecimalField(
+        max_digits=10,
+        null=False,
+        blank=False,
+        decimal_places=2,
+        default=0.00)
+    company_name = models.CharField(
+        max_length=100, default='BKODA Transport')
     bus_number = models.CharField(max_length=50, blank=True, null=True)
     origin_station = models.CharField(max_length=255, blank=True, null=True)
-    destination_station = models.CharField(max_length=255, blank=True, null=True)
+    destination_station = models.CharField(
+        max_length=255, blank=True, null=True)
 
-    def update_available_seats(self, number_of_passengers, operation='subtract'):
+    def update_available_seats(
+            self, number_of_passengers, operation='subtract'):
         """
         Updates the available seats for the trip.
-
-        Args:
-            number_of_passengers (int): The number of seats to add or subtract.
-            operation (str): 'subtract' to decrease seats, 'add' to increase
-            seats. Defaults to 'subtract'.
         """
         if operation == 'subtract':
             self.available_seats -= number_of_passengers
@@ -44,7 +47,8 @@ class Trip(models.Model):
     def duration(self):
         """
         Calculates the duration of the trip in 'Xh Ym' format.
-        Assumes arrival time can be on the next day if earlier than departure time.
+        Assumes arrival time can be on the next day if earlier than departure
+        time.
         """
         if self.departure_time and self.arrival_time:
             dummy_date = datetime.min.date()
@@ -66,6 +70,8 @@ class Trip(models.Model):
         Returns a string representation of the trip.
         """
         return (
-            f"Trip {self.trip_number}: From {self.origin} to {self.destination} "
-            f"on {self.date} from {self.departure_time} to {self.arrival_time} - Price: {self.price}"
+            f"Trip {self.trip_number}:"
+            f"From {self.origin} to {self.destination} "
+            f"on {self.date} from {self.departure_time} to "
+            f"{self.arrival_time} - Price: {self.price}"
         )

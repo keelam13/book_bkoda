@@ -1,17 +1,24 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import  messages
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
 from django.db.models import Sum, Min, Max, Q
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from trips.models import Trip
-from booking.models import Booking, BOOKING_STATUS_CHOICES, PAYMENT_STATUS_CHOICES, REFUND_STATUS_CHOICES, PAYMENT_METHOD_CHOICES
+from booking.models import (
+    Booking,
+    BOOKING_STATUS_CHOICES,
+    PAYMENT_STATUS_CHOICES,
+    REFUND_STATUS_CHOICES,
+    PAYMENT_METHOD_CHOICES
+    )
 from staff_app.forms import TripForm, BookingForm
 from manage_booking.utils import paginate_queryset
 from io import StringIO
 from .management.commands.generate_trips import Command as GenerateTripsCommand
-from .management.commands.cancel_abandoned_bookings import Command as CancelNullBookingsCommand
+from .management.commands.cancel_abandoned_bookings \
+    import Command as CancelNullBookingsCommand
 from .utils import get_all_abandoned_bookings
 from datetime import datetime, timedelta
 import re
@@ -40,7 +47,9 @@ def staff_dashboard(request):
     pending_bookings = Booking.objects.filter(status='PENDING_PAYMENT').count()
     confirmed_bookings = Booking.objects.filter(status='CONFIRMED').count()
 
-    total_revenue_confirmed = Booking.objects.filter(payment_status='PAID').aggregate(Sum('total_price'))['total_price__sum'] or 0
+    total_revenue_confirmed = Booking.objects.filter(
+        payment_status='PAID').aggregate(Sum(
+            'total_price'))['total_price__sum'] or 0
 
     abandoned_bookings = get_all_abandoned_bookings()
 
@@ -64,7 +73,8 @@ def staff_dashboard(request):
 def trips_list(request):
     """
     View function to display a list of trips with filtering capabilities,
-    and also handle updates and deletions for individual trips via POST requests.
+    and also handle updates and deletions for individual trips via POST
+    requests.
     """
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -77,24 +87,33 @@ def trips_list(request):
         trip = get_object_or_404(Trip, trip_id=trip_id)
 
         if action == 'update_trip' and trip.date < datetime.now().date():
-            messages.error(request, f'Cannot update past trip {trip.trip_number}. Editing is disallowed for past dates.')
+            messages.error(
+                request,
+                f'Cannot update past trip {trip.trip_number}.'
+                f'Editing is disallowed for past dates.')
             return redirect('staff_app:trips_list')
-
 
         if action == 'update_trip':
             form = TripForm(request.POST, instance=trip)
             if form.is_valid():
                 form.save()
-                messages.success(request, f'Trip {trip.trip_number} updated successfully!')
+                messages.success(
+                    request,
+                    f'Trip {trip.trip_number} updated successfully!')
             else:
-                messages.error(request, 'Error updating trip. Please correct the form errors below.')
+                messages.error(
+                    request,
+                    'Error updating trip. Please correct the form \
+                    errors below.')
         elif action == 'delete_trip':
             trip.delete()
-            messages.success(request, f'Trip {trip.trip_number} deleted successfully!')
+            messages.success(
+                request,
+                f'Trip {trip.trip_number} deleted successfully!')
         else:
             messages.error(request, 'Invalid action for trip operation.')
         return redirect('staff_app:trips_list')
-    
+
     trips_list = Trip.objects.all()
 
     filter_date = request.GET.get('date')
@@ -109,7 +128,8 @@ def trips_list(request):
             pass
 
     if filter_destination:
-        trips_list = trips_list.filter(destination__icontains=filter_destination)
+        trips_list = trips_list.filter(
+            destination__icontains=filter_destination)
 
     if filter_origin:
         trips_list = trips_list.filter(origin__icontains=filter_origin)
@@ -121,7 +141,8 @@ def trips_list(request):
     max_date = None
 
     if trip_count > 0:
-        date_aggregation = trips_list.aggregate(min_date=Min('date'), max_date=Max('date'))
+        date_aggregation = trips_list.aggregate(
+            min_date=Min('date'), max_date=Max('date'))
         min_date = date_aggregation['min_date']
         max_date = date_aggregation['max_date']
 
@@ -145,8 +166,9 @@ def trips_list(request):
 @login_required
 def bookings_list(request):
     """
-    View function to display a list of all bookings with filtering capabilities,
-    and also handle updates and deletions for individual bookings via POST requests.
+    View function to display a list of all bookings with filtering
+    capabilities, and also handle updates and deletions for individual
+    bookings via POST requests.
     """
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -157,7 +179,8 @@ def bookings_list(request):
             return redirect('staff_app:bookings_list')
 
         booking = get_object_or_404(Booking, pk=booking_pk)
-        trip_datetime = datetime.combine(booking.trip.date, booking.trip.departure_time)
+        trip_datetime = datetime.combine(
+            booking.trip.date, booking.trip.departure_time)
         if action == 'confirm_reschedule_payment':
             try:
                 if booking.is_pending_reschedule():
@@ -165,15 +188,29 @@ def bookings_list(request):
                     booking.payment_status = 'PAID'
                     booking.is_rescheduled = True
                     booking.save()
-                    messages.success(request, f'Reschedule for booking {booking.booking_reference} confirmed successfully!')
+                    messages.success(
+                        request,
+                        f'Reschedule for booking'
+                        f'{booking.booking_reference} confirmed'
+                        f'successfully!')
                 else:
-                    messages.error(request, 'Booking cannot be confirmed manually in its current state.')
+                    messages.error(
+                        request,
+                        'Booking cannot be confirmed manually \
+                        in its current state.')
             except Exception as e:
-                messages.error(request, f'An error occurred during reschedule confirmation: {e}')
+                messages.error(
+                    request,
+                    f'An error occurred during reschedule '
+                    f'confirmation: {e}')
 
         elif action == 'update_booking' and trip_datetime < datetime.now():
-             messages.error(request, f'Cannot update past booking {booking.booking_reference}. Editing is disallowed for past trip dates.')
-             return redirect('staff_app:bookings_list')
+            messages.error(
+                request,
+                f'Cannot update past'
+                f'booking {booking.booking_reference}.'
+                f'Editing is disallowed for past trip dates.')
+            return redirect('staff_app:bookings_list')
 
         elif action == 'update_booking':
             form = BookingForm(request.POST, instance=booking)
@@ -183,19 +220,30 @@ def bookings_list(request):
                 booking.status = form.cleaned_data['status']
                 booking.payment_status = form.cleaned_data['payment_status']
                 booking.save(update_fields=['status', 'payment_status'])
-                messages.success(request, f'Booking {booking.booking_reference} updated successfully!')
+                messages.success(
+                    request,
+                    f'Booking {booking.booking_reference} '
+                    f'updated successfully!')
             else:
-                messages.error(request, 'Error updating booking. Please correct the form errors below.')
+                messages.error(
+                    request,
+                    'Error updating booking. Please correct \
+                    the form errors below.')
         elif action == 'delete_booking':
             booking.delete()
-            messages.success(request, f'Booking {booking.booking_reference} deleted successfully!')
+            messages.success(
+                request,
+                f'Booking {booking.booking_reference}'
+                f'deleted successfully!')
         else:
-            messages.error(request, 'Invalid action for booking operation.')
+            messages.error(
+                request,
+                'Invalid action for booking operation.')
 
         return redirect('staff_app:bookings_list')
 
-    bookings_list = Booking.objects.all().select_related('trip', 'user').prefetch_related('passengers')
-
+    bookings_list = Booking.objects.all().select_related(
+        'trip', 'user').prefetch_related('passengers')
 
     # Get filter parameters
     filter_trip_number = request.GET.get('trip_number')
@@ -203,25 +251,32 @@ def bookings_list(request):
     filter_status = request.GET.get('status')
     filter_trip_date = request.GET.get('trip_date')
 
-
     # Apply filters
     if filter_trip_number:
-        bookings_list = bookings_list.filter(trip__trip_number__icontains=filter_trip_number)
-    
+        bookings_list = bookings_list.filter(
+            trip__trip_number__icontains=filter_trip_number)
+
     if filter_customer_name:
-        bookings_list = bookings_list.filter(passengers__name__icontains=filter_customer_name).distinct()
-    
+        bookings_list = bookings_list.filter(
+            passengers__name__icontains=filter_customer_name).distinct()
+
     if filter_status:
         bookings_list = bookings_list.filter(status__iexact=filter_status)
-    
+
     if filter_trip_date:
         try:
             date_obj = datetime.strptime(filter_trip_date, '%Y-%m-%d').date()
             bookings_list = bookings_list.filter(trip__date=date_obj)
         except ValueError:
-            messages.error(request, f"Invalid date format for 'Trip Date'. Please use YYYY-MM-DD. Filter was not applied.")
+            messages.error(
+                request,
+                f"Invalid date format for 'Trip Date'."
+                f"Please use YYYY-MM-DD. Filter was not applied.")
         except Exception as e:
-            messages.error(request, f"An unexpected error occurred with the 'Trip Date' filter: {e}")
+            messages.error(
+                request,
+                f"An unexpected error occurred with the"
+                f"'Trip Date' filter: {e}")
 
     # --- Calculate Booking Count and Date Range ---
     bookings_list = bookings_list.order_by('-booking_date')
@@ -231,7 +286,8 @@ def bookings_list(request):
     max_booking_date = None
 
     if booking_count > 0:
-        date_aggregation = bookings_list.aggregate(min_date=Min('booking_date'), max_date=Max('booking_date'))
+        date_aggregation = bookings_list.aggregate(
+            min_date=Min('booking_date'), max_date=Max('booking_date'))
         min_booking_date = date_aggregation['min_date']
         max_booking_date = date_aggregation['max_date']
 
@@ -278,14 +334,19 @@ def generate_trips_view(request):
 
         error_output = err.getvalue().strip()
         if error_output:
-            messages.error(request, f"Trip generation completed with warnings/errors: {error_output}")
+            messages.error(
+                request,
+                f"Trip generation completed with warnings/errors:"
+                f"{error_output}")
         else:
-            messages.success(request, remove_ansi_codes(out.getvalue().strip()))
-            
+            messages.success(
+                request, remove_ansi_codes(out.getvalue().strip()))
+
     except Exception as e:
-        messages.error(request, f"An error occurred during trip generation: {e}")
+        messages.error(
+            request, f"An error occurred during trip generation: {e}")
         import traceback
-    
+
     return redirect('staff_app:trips_list')
 
 
@@ -303,16 +364,24 @@ def cancel_abandoned_bookings_view(request):
         command.stdout = out
         command.stderr = err
         command.handle()
-        
+
         error_output = err.getvalue().strip()
         if error_output:
-            messages.error(request, f"Null bookings cancellation completed with warnings/errors: {error_output}")
+            messages.error(
+                request,
+                f"Null bookings cancellation completed with"
+                f"warnings/errors: {error_output}")
         else:
-            messages.success(request, remove_ansi_codes(out.getvalue().strip()))
+            messages.success(
+                request,
+                remove_ansi_codes(out.getvalue().strip()))
     except Exception as e:
-        messages.error(request, f"An error occurred during null bookings cancellation: {e}")
+        messages.error(
+            request,
+            f"An error occurred during null"
+            f"bookings cancellation: {e}")
         import traceback
-    
+
     return redirect('staff_app:bookings_list')
 
 
@@ -321,7 +390,8 @@ def cancel_abandoned_bookings_view(request):
 @user_passes_test(is_staff_user)
 def confirm_reschedule_payment(request, pk):
     """
-    Staff view to manually confirm a pending payment for a rescheduled booking.
+    Staff view to manually confirm a pending payment for a rescheduled
+    booking.
     This view handles the logic directly without a signal.
     """
     booking = get_object_or_404(Booking, pk=pk)
@@ -333,20 +403,26 @@ def confirm_reschedule_payment(request, pk):
             messages.error(request, "Booking not found.")
             return redirect('staff_app:bookings_list')
 
-        if booking.status == 'PENDING_PAYMENT' and booking.payment_status == 'PENDING':
+        if booking.status == 'PENDING_PAYMENT' and \
+                booking.payment_status == 'PENDING':
             with transaction.atomic():
                 booking.status = 'CONFIRMED'
                 booking.payment_status = 'PAID'
 
                 if original_booking.trip_id != booking.trip_id:
                     booking.is_rescheduled = True
-                
+
                 booking.save()
-                
-                messages.success(request, f"Payment for booking {booking.booking_reference} successfully confirmed.")
+
+                messages.success(
+                    request,
+                    f"Payment for booking {booking.booking_reference}"
+                    f"successfully confirmed.")
                 return redirect('staff_app:bookings_list')
         else:
-            messages.error(request, "This booking cannot be manually confirmed.")
+            messages.error(
+                request,
+                "This booking cannot be manually confirmed.")
             return redirect('staff_app:bookings_list')
 
     context = {'booking': booking}

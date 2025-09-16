@@ -44,10 +44,12 @@ class BookingConfirmationForm(forms.ModelForm):
                 required=True,
                 widget=forms.TextInput(attrs={
                     'class': 'passenger-details-form',
-                    'placeholder': f'Full Name (Passenger {passenger_number}) *'
+                    'placeholder':
+                        f'Full Name (Passenger {passenger_number}) *'
                 })
             )
-            self.fields[f'passenger_age{passenger_number}'] = forms.IntegerField(
+            self.fields[f'passenger_age{passenger_number}'] =\
+            forms.IntegerField(
                 min_value=0,
                 required=False,
                 widget=forms.NumberInput(attrs={
@@ -55,25 +57,30 @@ class BookingConfirmationForm(forms.ModelForm):
                     'placeholder': f'Age (Passenger {passenger_number})'
                 })
             )
-            self.fields[f'passenger_email{passenger_number}'] = forms.EmailField(
+            self.fields[f'passenger_email{passenger_number}'] =\
+            forms.EmailField(
                 max_length=255,
                 required=True,
                 widget=forms.EmailInput(attrs={
                     'class': 'passenger-details-form',
-                    'placeholder': f'Email Address (Passenger {passenger_number}) *'
+                    'placeholder':
+                        f'Email Address (Passenger {passenger_number}) *'
                 })
             )
-            self.fields[f'passenger_contact_number{passenger_number}'] = forms.CharField(
+            self.fields[f'passenger_contact_number{passenger_number}'] =\
+            forms.CharField(
                 max_length=20,
                 required=True,
                 widget=forms.TextInput(attrs={
                     'class': 'passenger-details-form',
-                    'placeholder': f'Contact Number (Passenger {passenger_number}) *'
+                    'placeholder':
+                        f'Contact Number (Passenger {passenger_number}) *'
                 })
             )
 
         for field_name, field_obj in self.fields.items():
-            if field_name.startswith('passenger') or field_name.startswith('save_info'):
+            if field_name.startswith('passenger') or\
+            field_name.startswith('save_info'):
                 if field_name == 'save_info':
                     field_obj.widget.attrs['class'] = 'form-check-input'
                 else:

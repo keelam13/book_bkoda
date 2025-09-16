@@ -8,6 +8,7 @@ class MyAccountConfig(AppConfig):
     def ready(self):
         """
         This method is called when the app is ready.
-        It imports the signals module to ensure that the signal handlers are registered.
+        It imports the signals module to ensure that the
+        signal handlers are registered.
         """
         import my_account.signals

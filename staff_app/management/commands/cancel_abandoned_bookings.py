@@ -16,7 +16,8 @@ class Command(BaseCommand):
     2. Cancels pending bookings for trips that have already departed.
     3. Cancels unpaid bookings older than 24 hours.
     """
-    help = 'Cancels all abandoned bookings based on their status and trip departure.'
+    help = 'Cancels all abandoned bookings based on their status and trip \
+        departure.'
 
     def handle(self, *args, **options):
 
@@ -30,48 +31,73 @@ class Command(BaseCommand):
             try:
                 with transaction.atomic():
                     updated_null_count = null_bookings.update(
-                        status='CANCELLED', 
+                        status='CANCELLED',
                         payment_status='FAILED',
                     )
-                self.stdout.write(self.style.SUCCESS(f"Successfully cancelled {updated_null_count} old, null-payment booking(s). "))
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"Successfully cancelled {updated_null_count} old,"
+                        f"null-payment booking(s). "))
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"An error occurred while cancelling old null bookings: {e}"))
+                self.stdout.write(
+                    self.style.ERROR(
+                        f"An error occurred while cancelling old null"
+                        f"bookings: {e}"))
         else:
-            self.stdout.write(self.style.SUCCESS("No old, null-payment bookings found to cancel."))
+            self.stdout.write(
+                self.style.SUCCESS(
+                    "No old, null-payment bookings found to cancel."))
 
         # --- Task 2: Cancel pending bookings for past trips ---
         departed_bookings = abandoned_bookings['departed_bookings']
         departed_count = abandoned_bookings['departed_count']
-        
+
         if departed_count > 0:
             try:
                 with transaction.atomic():
                     updated_departed_count = departed_bookings.update(
-                        status='CANCELLED', 
+                        status='CANCELLED',
                         payment_status='FAILED',
                     )
-                self.stdout.write(self.style.SUCCESS(f"Successfully cancelled {updated_departed_count} departed pending booking(s). "))
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"Successfully cancelled {updated_departed_count}"
+                        f"departed pending booking(s). "))
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"An error occurred while cancelling departed bookings: {e}"))
+                self.stdout.write(
+                    self.style.ERROR(
+                        f"An error occurred while cancelling departed"
+                        f"bookings: {e}"))
         else:
-            self.stdout.write(self.style.SUCCESS("No departed pending bookings found to cancel."))
+            self.stdout.write(
+                self.style.SUCCESS(
+                    "No departed pending bookings found to cancel."))
 
         # --- Task 3: Cancel unpaid bookings older than 24 hours ---
         unpaid_bookings = abandoned_bookings['unpaid_bookings']
         unpaid_count = abandoned_bookings['unpaid_count']
-        
+
         if unpaid_count > 0:
             try:
                 with transaction.atomic():
                     updated_unpaid_count = unpaid_bookings.update(
-                        status='CANCELLED', 
+                        status='CANCELLED',
                         payment_status='FAILED',
                     )
-                self.stdout.write(self.style.SUCCESS(f"Successfully cancelled {updated_unpaid_count} unpaid booking(s). "))
-                send_booking_email(unpaid_bookings, email_type='cancellation_unpaid')
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"Successfully cancelled {updated_unpaid_count}"
+                        f"unpaid booking(s). "))
+                send_booking_email(
+                    unpaid_bookings, email_type='cancellation_unpaid')
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"An error occurred while cancelling unpaid bookings: {e}"))
+                self.stdout.write(
+                    self.style.ERROR(
+                        f"An error occurred while cancelling unpaid"
+                        f"bookings: {e}"))
         else:
-            self.stdout.write(self.style.SUCCESS("No unpaid bookings found to cancel."))
+            self.stdout.write(
+                self.style.SUCCESS(
+                    "No unpaid bookings found to cancel."))
 
         self.stdout.write(self.style.SUCCESS("Finished cleanup process."))

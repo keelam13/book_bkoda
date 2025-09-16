@@ -3,6 +3,7 @@ from datetime import datetime
 
 register = template.Library()
 
+
 @register.filter
 def is_before_now(date, time):
     """Checks if a date and time are before the current datetime."""

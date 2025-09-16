@@ -25,30 +25,11 @@ class TripAdmin(admin.ModelAdmin):
         'bus_number',
         'origin_station',
         'destination_station',
-        # 'total_seats_reserved',
     )
-
 
     list_filter = ('origin', 'destination', 'date')
     search_fields = ('trip_number', 'origin', 'destination', 'bus_number')
-    # inlines = [ReservationInline]
     ordering = ('-date', '-departure_time')
 
-    # def total_seats_reserved(self, obj):
-    #     """
-    #     Calculates the total number of seats reserved for a given trip.
-
-    #     Args:
-    #         obj (Trip): The Trip object for which to calculate reserved seats.
-
-    #     Returns:
-    #         int: The total number of seats reserved, or 0 if no reservations
-    #         exist.
-    #     """
-    #     total_reserved = Reservation.objects.filter(trip=obj).aggregate(
-    #         total_reserved=Sum('number_of_seats'))['total_reserved'] or 0
-    #     return total_reserved
-
-    # total_seats_reserved.short_description = 'Total Seats Reserved'
 
 admin.site.register(Trip, TripAdmin)

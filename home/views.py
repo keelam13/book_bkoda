@@ -12,7 +12,7 @@ def index(request):
     }
 
     form = TripSearchForm()
-    
+
     if request.method == 'GET' and request.GET:
         form = TripSearchForm(request.GET)
     else:
@@ -28,7 +28,7 @@ def index(request):
     if form.is_valid():
         selected_origin = form.cleaned_data.get('origin')
         selected_destination = form.cleaned_data.get('destination')
-        current_date = form.cleaned_data.get('departure_date') or date.today() 
+        current_date = form.cleaned_data.get('departure_date') or date.today()
         selected_travelers = form.cleaned_data.get('num_travelers') or 1
 
         if selected_origin:
@@ -38,7 +38,9 @@ def index(request):
         if current_date:
             trips = trips.filter(departure_date=current_date)
 
-        trips = [trip for trip in trips if trip.available_seats >= selected_travelers]
+        trips = [
+            trip for trip in trips if trip.available_seats >=
+            selected_travelers]
 
     prev_date = current_date - timedelta(days=1)
     next_date = current_date + timedelta(days=1)

@@ -6,7 +6,8 @@ from booking.models import Booking
 
 def get_all_abandoned_bookings():
     """
-    Returns a dictionary of QuerySets for and calculate counts of null, departed, and unpaid bookings.
+    Returns a dictionary of QuerySets for and calculate counts of null,
+    departed, and unpaid bookings.
     """
     cutoff_time_null = timezone.now() - timedelta(hours=1)
     null_bookings_queryset = Booking.objects.filter(
@@ -18,7 +19,8 @@ def get_all_abandoned_bookings():
 
     now = timezone.now()
     departed_bookings_queryset = Booking.objects.filter(
-        Q(trip__date__lt=now.date()) | Q(trip__date=now.date(), trip__departure_time__lt=now.time()),
+        Q(trip__date__lt=now.date()) | Q(
+            trip__date=now.date(), trip__departure_time__lt=now.time()),
         status='PENDING_PAYMENT'
     )
     departed_count = departed_bookings_queryset.count()

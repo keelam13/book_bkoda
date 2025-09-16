@@ -242,7 +242,7 @@ These errors, however, are not causing any problem in the signing up ang signing
 
 ### CSS Validation:
 
-- No errors or warnings were found when passing through the official [W3C (Jigsaw)](https://jigsaw.w3.org/css-validator/)
+No errors or warnings were found when passing through the official [W3C (Jigsaw)](https://jigsaw.w3.org/css-validator/)
 
 * Base CSS
 
@@ -259,7 +259,7 @@ These errors, however, are not causing any problem in the signing up ang signing
 
 ### JS Validation:
 
-- No errors or warning messages were found when passing through the official [JSHint](https://jshint.com/)
+No errors or warning messages were found when passing through the official [JSHint](https://jshint.com/)
 
 * Base JS
 
@@ -277,38 +277,74 @@ These errors, however, are not causing any problem in the signing up ang signing
 
 ### Python Validation:
 
+No errors so far were found in the validated codes through CI Python Linter [online validation tool](https://pep8ci.herokuapp.com/#). This checking was done manually by copying python code and pasting it into the validator.
+
+
 * Admin.py
-- [Full Python Validation - Admin]
+- [Pep8 Validation - Booking Admin](documentation/validation/booking_admin_pep8_validation.png)
+- [Pep8 Validation - Trips Admin](documentation/validation/trips_admin_pep8_validation.png)
 
 * Apps.py
-- [Full Python Validation - Apps]
+- [Pep8 Validation - Booking Apps](documentation/validation/booking_apps_pep8_validation.png)
+- [Pep8 Validation - Home Apps](documentation/validation/home_apps_pep8_validation.png)
+- [Pep8 Validation - Manage Booking Apps](documentation/validation/manage_apps_pep8_validation.png)
+- [Pep8 Validation - My Account Apps](documentation/validation/my_account_apps_pep8_validation.png)
+- [Pep8 Validation - Staff App Apps](documentation/validation/staff_apps_pep8_validation.png)
+- [Pep8 Validation - Trips Apps](documentation/validation/trips_apps_pep8_validation.png)
 
 * ASGI.py
-- [Full Python Validation - ASGI]
+- [Pep8 Validation - BKODA ASGI](documentation/validation/bkoda_asgi_pep8_validation.png)
 
 * Forms.py
-- [Full Python Validation - Forms]
+- [Pep8 Validation - Booking Forms](documentation/validation/booking_forms_pep8_validation.png)
+- [Pep8 Validation - My Account Forms](documentation/validation/my_account_forms_pep8_validation.png)
+- [Pep8 Validation - Staff App Forms](documentation/validation/staff_forms_pep8_validation.png)
+- [Pep8 Validation - Trips Forms](documentation/validation/trips_forms_pep8_validation.png)
 
 * Manage.py
-- [Full Python Validation - Manage]
+- [Pep8 Validation - Staff App Cancel Abandoned Bookings](documentation/validation/staff_manage_cancel_abandoned_pep8_validation.png)
+- [Pep8 Validation - Staff App Generate Trips](documentation/validation/staff_manage_generate_pep8_validation.png)
 
 * Models.py
-- [Full Python Validation - Models]
+- [Pep8 Validation - Booking Models](documentation/validation/booking_models_pep8_validation.png)
+- [Pep8 Validation - My Account Models](documentation/validation/my_account_models_pep8_validation.png)
+- [Pep8 Validation - Trips Models](documentation/validation/trips_models_pep8_validation.png)
 
 * Setting.py
-- [Full Python Validation - Settings]
+- [Pep8 Validation - BKODA Settings](documentation/validation/bkoda_settings_pep8_validation.png)
+
+* Signals.py
+- [Pep8 Validation - My Account Signals](documentation/validation/my_account_signals_pep8_validation.png)
+
+* Templatetags
+- [Pep8 Validation - Booking Filters](documentation/validation/booking_filters_pep8_validation.png)
+- [Pep8 Validation - Trips Filters](documentation/validation/trips_filters_pep8_validation.png)
 
 * URL.py
-- [Full Python Validation - URL]
+- [Pep8 Validation - BKODA URLs](documentation/validation/bkoda_urls_pep8_validation.png)
+- [Pep8 Validation - Booking URLs](documentation/validation/booking_urls_pep8_validation.png)
+- [Pep8 Validation - Home URLs](documentation/validation/home_urls_pep8_validation.png)
+- [Pep8 Validation - Manage Booking URLs](documentation/validation/manage_urls_pep8_validation.png)
+- [Pep8 Validation - My Account URLs](documentation/validation/my_account_urls_pep8_validation.png)
+- [Pep8 Validation - Staff App URLs](documentation/validation/staff_urls_pep8_validation.png)
+- [Pep8 Validation - Trips URLs](documentation/validation/trips_urls_pep8_validation.png)
+
+* Utils.py
+- [Pep8 Validation - Booking Utils](documentation/validation/booking_utils_pep8_validation.png)
+- [Pep8 Validation - Manage Booking Utils](documentation/validation/manage_utils_pep8_validation.png)
+- [Pep8 Validation - Staff App Utils](documentation/validation/staff_utils_pep8_validation.png)
 
 * Views.py
-- [Full Python Validation - Views]
+- [Pep8 Validation - BKODA Views](documentation/validation/bkoda_views_pep8_validation.png)
+- [Pep8 Validation - Booking Views](documentation/validation/booking_views_pep8_validation.png)
+- [Pep8 Validation - Home Views](documentation/validation/home_views_pep8_validation.png)
+- [Pep8 Validation - Manage Booking Views](documentation/validation/manage_views_pep8_validation.png)
+- [Pep8 Validation - My Account Views](documentation/validation/my_account_views_pep8_validation.png)
+- [Pep8 Validation - Staff App Views](documentation/validation/staff_views_pep8_validation.png)
+- [Pep8 Validation - Trips Views](documentation/validation/trips_views_pep8_validation.png)
 
 * WSGI.py
-- [Full Python Validation - WSGI]
-
-- No errors so far were found in the validated coeds through CI Python Linter [online validation tool](https://pep8ci.herokuapp.com/#). This checking was done manually by copying python code and pasting it into the validator.
-
+- [Pep8 Validation - BKODA WSGI](documentation/validation/bkoda_wsgi_pep8_validation.png)
 
 ---
 ## Lighthouse Report

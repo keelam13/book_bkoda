@@ -9,6 +9,7 @@ from booking.models import Booking
 from .models import UserProfile
 from manage_booking.utils import paginate_queryset
 
+
 @login_required
 def account_details(request):
     """
@@ -16,20 +17,27 @@ def account_details(request):
     """
     return render(request, 'account/account_details.html')
 
+
 @login_required
 def personal_info(request):
     """
     Displays and handles updates for personal information (UserProfile).
     """
-    user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+    user_profile, created = UserProfile.objects.get_or_create(
+        user=request.user)
 
     if request.method == 'POST':
         form = ProfileForm(request.POST, instance=user_profile)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Personal information updated successfully!')
+            messages.success(
+                request, 'Personal information updated successfully!')
         else:
-            messages.error(request, 'Error updating personal information. Please check the form.')
+            messages.error(
+                request,
+                f'Error updating personal information.'
+                f'Please check the form.'
+                )
     else:
         form = ProfileForm(instance=user_profile)
 
@@ -39,13 +47,15 @@ def personal_info(request):
     }
     return render(request, template, context)
 
+
 @login_required
 def my_bookings(request):
     """
     Displays all bookings for the logged-in user,
     categorizing them into 'upcoming confirmed' and 'other bookings'.
     """
-    all_bookings = Booking.objects.filter(user=request.user).order_by('-booking_date')
+    all_bookings = Booking.objects.filter(
+        user=request.user).order_by('-booking_date')
 
     now = timezone.now()
 
@@ -61,18 +71,22 @@ def my_bookings(request):
     num_pending_payment = pending_payment_bookings.count()
 
     for booking in all_bookings:
-        trip_datetime_naive = datetime.combine(booking.trip.date, booking.trip.departure_time)
-        trip_datetime_aware = timezone.make_aware(trip_datetime_naive, timezone.get_current_timezone())
+        trip_datetime_naive = datetime.combine(
+            booking.trip.date, booking.trip.departure_time)
+        trip_datetime_aware = timezone.make_aware(
+            trip_datetime_naive, timezone.get_current_timezone())
 
         if booking.status == 'CONFIRMED' and trip_datetime_aware > now:
             upcoming_confirmed_bookings.append(booking)
         else:
             pass
 
-    upcoming_confirmed_bookings.sort(key=lambda b: datetime.combine(b.trip.date, b.trip.departure_time))
+    upcoming_confirmed_bookings.sort(key=lambda b: datetime.combine(
+        b.trip.date, b.trip.departure_time))
     num_upcoming_trips = len(upcoming_confirmed_bookings)
 
-    upcoming_confirmed_bookings_page = paginate_queryset(request, upcoming_confirmed_bookings, items_per_page=3)
+    upcoming_confirmed_bookings_page = paginate_queryset(
+        request, upcoming_confirmed_bookings, items_per_page=3)
 
     template = 'account/my_bookings.html'
     context = {
@@ -87,7 +101,8 @@ def my_bookings(request):
 @login_required
 def booking_detail(request, booking_id):
     """
-    Displays detailed information for a single booking belonging to the logged-in user.
+    Displays detailed information for a single booking belonging to the
+    logged-in user.
     """
     booking = get_object_or_404(Booking, id=booking_id, user=request.user)
     template = 'account/booking_detail.html'
