@@ -117,19 +117,34 @@ During the development of this app, there were a lot of bugs encountered and wer
 
 ## Validation:
 
-
 ### HTML Validation:
 
-All validated HTML but one is raising an error when passing through the official [W3C](https://validator.w3.org/) validator. However the error is coming from the allauth template and is not causing any problem in the signing up ang signing in processess. This checking was done manually by copying the view page source code (Ctrl+U) and pasting it into the validator. In Sign up Page the errors were
+Most HTMLs passed the official [W3C](https://validator.w3.org/) validator. However some errors were raised in
+ a few pages. Some errors are coming from the allauth template and and the others from the Stripe elements and the limitation of its implementation.
+
+The errors from the allauth templates are as follows:
+    - Error: End tag p implied, but there were open elements.
+    - Error: Unclosed element span.
+    - Error: Stray end tag span.
+    - Error: No p element in scope but a p end tag seen.
+
+And the error from Stripe element implementations:
+    - Error: The value of the for attribute of the label element must be the ID of a non-hidden form control.
+
+These errors, however, are not causing any problem in the signing up ang signing in processess, and the overall functionality of the app. That is why I left it as is, and since I have not found a solution yet to correct the errors. This checking was done manually by copying the view page source code (Ctrl+U) and pasting it into the validator.
 
 
 * Home Page
 
 ![Home Page](documentation/validation/home_page_w3c_validation.png)
 
- Signup Page
+* Signup Page
 
-![Signup Page](documentation/validation/sign_up_w3c_validation.png)
+![Signup Page](documentation/validation/sign_up_page_w3c_validation.png)
+
+* Confirm Email Page
+
+![Confirm Email Page](documentation/validation/confirm_email_page_w3c_validation.png)
 
 * Login Page
 
@@ -141,30 +156,106 @@ All validated HTML but one is raising an error when passing through the official
 
 * Reset Password Page
 
-![Reset Password Page](documentation/validation/reset)
+![Reset Password Page](documentation/validation/reset_password_page_w3c_validation.png)
 
- Trip List Page
+* Trip List Page
 
-![Trip List Page](documentation/validation/)
+![Trip List Page](documentation/validation/trip_search_result_w3c_validation.png)
 
- Reservation Form Page
+* Reschedule Trip List Page
 
-![Reservation Form Page](documentation/validation/)
+![Reschedule Trip List Page](documentation/validation/reschedule_trip_search_results_w3c_validation.png)
 
- Reservation List Page
+* Booking Form Page
 
-![Reservation List Page](documentation/validation/)
+![Booking Form Page](documentation/validation/booking_form_w3c_validation.png)
 
- Cancel Reservation Page
+* Payment Form Page
 
-![Cancel Reservation Page](documentation/validation/)
+![Payment Form Page](documentation/validation/payment_form_page_w3c_validation.png)
+
+* My Booking Confirmation Page
+
+![My Booking Confirmation Page](documentation/validation/booking_confirmation_page_w3c_validation.png)
+
+* My Account Page
+
+![My Account Page](documentation/validation/my_account_page_w3c_validation.png_)
+
+* My Account Details Page (My Account)
+
+![My Account Details Page](documentation/validation/account_details_page_w3c_validation.png)
+
+* Personal Information Page (My Account)
+
+![Personal Info Page](documentation/validation/personal_info_page_w3c_validation.png)
+
+* My Bookings Page (My Account)
+
+![My Bookings Page](documentation/validation/my_bookings_page_w3c_validation.png)
+
+* Bookings List Page (Manage Booking)
+
+![Bookings List Page](documentation/validation/manage_all_bookings_w3c_validation.png)
+
+* Booking Details (Manage Booking)
+
+![Booking Details Page](documentation/validation/manage_booking_details_page_w3c_validation.png)
+
+* Confirmed Bookings Page (Manage Booking)
+
+![Confirmed Bookings Page](documentation/validation/manage_confirmed_bookings_page_w3c_validation.png)
+
+* Pending Bookings Page (Manage Booking)
+
+![Pending Bookings Page](documentation/validation/manage_pending_page_w3c_validation.png)
+
+* Refund Bookings Page (Manage Booking)
+
+![Refund Bookings Page](documentation/validation/manage_refund_page_w3c_validation.png)
+
+* Cancelled Bookings Page (Manage Booking)
+
+![Cancelled Bookings Page](documentation/validation/manage_canceled_w3c_validation.png)
+
+* Confirm Booking Reschedule Page (Manage Booking)
+
+![Confirm Booking Reschedule Page](documentation/validation/confirm_resched_page_w3c_validation.png)
+
+* Confirm Booking Cancellation Page (Manage Booking)
+
+![Confirm Booking Cancellation Page](documentation/validation/confirm_cancellation_page_w3c_validation.png)
+
+* Staff App Dashboard Page
+
+![Bookings List Page](documentation/validation/staff_dashboard_page_w3c_validation.png)
+
+* Trips List Page (Staff App)
+
+![Tripss List Page](documentation/validation/staff_trips_page_w3c_validation.png)
+
+* Bookings List Page (Staff App)
+
+![Bookings List Page](documentation/validation/staff_bookings_page_w3c_validation.png)
+
 
 
 ### CSS Validation:
 
-- [Full CSS Validation Report]
+- No errors or warnings were found when passing through the official [W3C (Jigsaw)](https://jigsaw.w3.org/css-validator/)
 
-- No errors or warnings were found when passing through the official [W3C (Jigsaw)]
+* Base CSS
+
+![Base CSS](documentation/validation/base_css_w3c_validation.png)
+
+* Bookings Form CSS
+
+![Bookings Form](documentation/validation/booking_form_css_w3c_validation.png)
+
+* Staff App
+
+![Staff App](documentation/validation/staff_app_css_w3c_validation.png)
+
 
 ### JS Validation:
 
