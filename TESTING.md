@@ -259,9 +259,21 @@ These errors, however, are not causing any problem in the signing up ang signing
 
 ### JS Validation:
 
-- [Full JS Validation Report]
+- No errors or warning messages were found when passing through the official [JSHint](https://jshint.com/)
 
-- No errors or warning messages were found when passing through the official [JSHint]
+* Base JS
+
+![Base JS](documentation/validation/base_js_validation.png)
+
+* Payment Page JS
+
+![Payment Page JS](documentation/validation/payment_page_js_validation.png)
+
+* Custom Country Select Widget JS
+
+![Custom Country Select Widget JS](documentation/validation/country_widget_js_validation.png)
+
+
 
 ### Python Validation:
 

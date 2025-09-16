@@ -23,9 +23,6 @@ $(document).ready(function () {
     const billingPostcodeInput = $('#id_billing_postcode');
     const billingCountrySelect = $('#id_billing_country');
 
-        // Custom Modal elements
-    const cancelButton = $('#cancel-booking-button');
-    const cancellationConfirmModal = $('#cancellationConfirmModal');
 
     // Global Stripe variables
     let stripe = null;
