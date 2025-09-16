@@ -412,4 +412,24 @@
 {{ stripe_public_key|json_script:"id_stripe_public_key" }}
 {{ client_secret|json_script:"id_client_secret" }}
 <script src="{% static 'booking/js/payment_page.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const countrySelect = document.getElementById('id_billing_country');
+        const flagImage = document.getElementById('flag_id_billing_country');
+        
+        function updateFlagAlt() {
+            if (countrySelect && flagImage) {
+                const selectedOption = countrySelect.options[countrySelect.selectedIndex];
+                const countryName = selectedOption.text.trim();
+                flagImage.alt = countryName + ' flag';
+            }
+        }
+
+        updateFlagAlt();
+
+        if (countrySelect) {
+            countrySelect.addEventListener('change', updateFlagAlt);
+        }
+    });
+</script>
 {% endblock %}
