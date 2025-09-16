@@ -117,51 +117,48 @@ During the development of this app, there were a lot of bugs encountered and wer
 
 ## Validation:
 
-Validation of HTML, CSS, JS and some Python codes were started and unfortunately it's still going on. Hence no pictures are embeded in the file. Some are uploaded but not referenced in this file.
 
 ### HTML Validation:
+
+All validated HTML but one is raising an error when passing through the official [W3C](https://validator.w3.org/) validator. However the error is coming from the allauth template and is not causing any problem in the signing up ang signing in processess. This checking was done manually by copying the view page source code (Ctrl+U) and pasting it into the validator. In Sign up Page the errors were
 
 
 * Home Page
 
-![Home Page]
+![Home Page](documentation/validation/home_page_w3c_validation.png)
 
  Signup Page
 
-![Signup Page]
+![Signup Page](documentation/validation/sign_up_w3c_validation.png)
 
 * Login Page
 
-![Login Page]
+![Login Page](documentation/validation/signin_page_w3c_validation.png)
 
 * Logout Page
 
-![Logout Page]
+![Logout Page](documentation/validation/sign_out_page_w3c_validation.png)
 
 * Reset Password Page
 
-![Reset Password Page]
+![Reset Password Page](documentation/validation/reset)
 
  Trip List Page
 
-![Trip List Page]
+![Trip List Page](documentation/validation/)
 
  Reservation Form Page
 
-![Reservation Form Page]
+![Reservation Form Page](documentation/validation/)
 
  Reservation List Page
 
-![Reservation List Page]
+![Reservation List Page](documentation/validation/)
 
  Cancel Reservation Page
 
-![Cancel Reservation Page]
+![Cancel Reservation Page](documentation/validation/)
 
-
-- [Full HTML Validation Report]
-
-- All validated HTML but one is raising an error when passing through the official [W3C](https://validator.w3.org/) validator. How ever the error is coming from the allauth template and is not causing any problem in the signing up ang signing in processess. This checking was done manually by copying the view page source code (Ctrl+U) and pasting it into the validator. In SIn up Page the errors were
 
 ### CSS Validation:
 
