@@ -74,7 +74,7 @@ Usability was tested with the below user acceptance testing, sent to new users t
 
 ### **Registration and User Accounts**
 3 Site User Easily register for an account Have a personal account and be able to view my profile
-4. Site User Easily register with my social account Register with my Facebook or Gmail accounts
+4 Site User Easily register with my social account Register with my Facebook or Gmail accounts
 4 Site User Easily login or logout Access my personal account information
 5 Site User Easily recover my password in case I forget it Recover access to my account
 6 Site User Receive an email confirmation after registering Verify that my account registration was successful
@@ -96,13 +96,22 @@ Usability was tested with the below user acceptance testing, sent to new users t
 ---
 
 ## Bugs
-Unfortunately, there are still a lot of bugs that are causing the app to not fully function. I was not able to debug them in time.
-- The layout, most especially the form for newsletter subscription. 
-- When rescheduling a booking to a later date, and then cancelled before the 24 hour coutoff time, the full payment is refunded. Although it's not a coding bug,  it is something that needs to be looked into.
-- I also supposed to add first and last names, and mobile number fields on the sign ups page but somehow it didn't work.
-- As well as social acount, using facebook to sign up.
-- And some others.
-- I'd like to continue working on this app though for the next project.
+During the development of this app, there were a lot of bugs encountered and were fixed. Some were documented in the commits, but unfortunately some others not. Here are some of the bugs with their fixes:
+
+* Bug: Widget placeholder after the 9th passenger is displaying "(Passenger 0), (Passenger 1)" and so on.
+    Solution: Removed the second for loop that contained the regex logic and create the placeholder directly within the first for loop.
+
+* Bug: The alert for null and unpaid bookings in the staff dashboard and bookings list are displaying the correct expired bookings counts but the cancel_null and _unpaid_bookings buttons are not cancelling the bookings as expected.
+    Solution: Corrected the typo within the null_bookings filter, e.i payment_method_isnull=True changed to payment_method_type_isnull=True. 
+
+* Bug: The refund for rescheduled bookings is being given in full, even if the original booking was close to the departure time and would have been charged with a fee.
+    Solution: Added a code to check for original departure time if the booking being cancelled is not a new booking or have been rescheduled. The original departure time will be the basis for the refund calculation. This is also reflected in the booking policy.
+
+* Bug: There is a horizontal overflow for smaller screens.
+    Solutions: Separate the html from the body css style and gave its overflow-x property a hidden value. 
+
+* Bug: The card brand and card last 4 is not being displayed in the Booking details.
+    Solutions: Corrected another typo in the if block checking the payment method, e.i "CARD" changed to "card".
 
 ---
 

@@ -38,7 +38,7 @@ User Story ID AS A/AN I WANT TO BE ABLE TO... SO THAT I CAN...
 
 #### **Registration and User Accounts**
 3 Site User Easily register for an account Have a personal account and be able to view my profile
-4. Site User Easily register with my social account Register with my Facebook or Gmail accounts
+4 Site User Easily register with my social account Register with my Facebook or Gmail accounts
 4 Site User Easily login or logout Access my personal account information
 5 Site User Easily recover my password in case I forget it Recover access to my account
 6 Site User Receive an email confirmation after registering Verify that my account registration was successful
