@@ -281,70 +281,70 @@ No errors so far were found in the validated codes through CI Python Linter [onl
 
 
 * Admin.py
-- [Pep8 Validation - Booking Admin](documentation/validation/booking_admin_pep8_validation.png)
-- [Pep8 Validation - Trips Admin](documentation/validation/trips_admin_pep8_validation.png)
+- ![Pep8 Validation - Booking Admin](documentation/validation/booking_admin_pep8_validation.png)
+- ![Pep8 Validation - Trips Admin](documentation/validation/trips_admin_pep8_validation.png)
 
 * Apps.py
-- [Pep8 Validation - Booking Apps](documentation/validation/booking_apps_pep8_validation.png)
-- [Pep8 Validation - Home Apps](documentation/validation/home_apps_pep8_validation.png)
-- [Pep8 Validation - Manage Booking Apps](documentation/validation/manage_apps_pep8_validation.png)
-- [Pep8 Validation - My Account Apps](documentation/validation/my_account_apps_pep8_validation.png)
-- [Pep8 Validation - Staff App Apps](documentation/validation/staff_apps_pep8_validation.png)
-- [Pep8 Validation - Trips Apps](documentation/validation/trips_apps_pep8_validation.png)
+- ![Pep8 Validation - Booking Apps](documentation/validation/booking_apps_pep8_validation.png)
+- ![Pep8 Validation - Home Apps](documentation/validation/home_apps_pep8_validation.png)
+- ![Pep8 Validation - Manage Booking Apps](documentation/validation/manage_apps_pep8_validation.png)
+- ![Pep8 Validation - My Account Apps](documentation/validation/my_account_apps_pep8_validation.png)
+- ![Pep8 Validation - Staff App Apps](documentation/validation/staff_apps_pep8_validation.png)
+- ![Pep8 Validation - Trips Apps](documentation/validation/trips_apps_pep8_validation.png)
 
 * ASGI.py
-- [Pep8 Validation - BKODA ASGI](documentation/validation/bkoda_asgi_pep8_validation.png)
+- ![Pep8 Validation - BKODA ASGI](documentation/validation/bkoda_asgi_pep8_validation.png)
 
 * Forms.py
-- [Pep8 Validation - Booking Forms](documentation/validation/booking_forms_pep8_validation.png)
-- [Pep8 Validation - My Account Forms](documentation/validation/my_account_forms_pep8_validation.png)
-- [Pep8 Validation - Staff App Forms](documentation/validation/staff_forms_pep8_validation.png)
-- [Pep8 Validation - Trips Forms](documentation/validation/trips_forms_pep8_validation.png)
+- ![Pep8 Validation - Booking Forms](documentation/validation/booking_forms_pep8_validation.png)
+- ![Pep8 Validation - My Account Forms](documentation/validation/my_account_forms_pep8_validation.png)
+- ![Pep8 Validation - Staff App Forms](documentation/validation/staff_forms_pep8_validation.png)
+- ![Pep8 Validation - Trips Forms](documentation/validation/trips_forms_pep8_validation.png)
 
 * Manage.py
-- [Pep8 Validation - Staff App Cancel Abandoned Bookings](documentation/validation/staff_manage_cancel_abandoned_pep8_validation.png)
-- [Pep8 Validation - Staff App Generate Trips](documentation/validation/staff_manage_generate_pep8_validation.png)
+- ![Pep8 Validation - Staff App Cancel Abandoned Bookings](documentation/validation/staff_manage_cancel_abandoned_pep8_validation.png)
+- ![Pep8 Validation - Staff App Generate Trips](documentation/validation/staff_manage_generate_pep8_validation.png)
 
 * Models.py
-- [Pep8 Validation - Booking Models](documentation/validation/booking_models_pep8_validation.png)
-- [Pep8 Validation - My Account Models](documentation/validation/my_account_models_pep8_validation.png)
-- [Pep8 Validation - Trips Models](documentation/validation/trips_models_pep8_validation.png)
+- ![Pep8 Validation - Booking Models](documentation/validation/booking_models_pep8_validation.png)
+- ![Pep8 Validation - My Account Models](documentation/validation/my_account_models_pep8_validation.png)
+- ![Pep8 Validation - Trips Models](documentation/validation/trips_models_pep8_validation.png)
 
 * Setting.py
-- [Pep8 Validation - BKODA Settings](documentation/validation/bkoda_settings_pep8_validation.png)
+- ![Pep8 Validation - BKODA Settings](documentation/validation/bkoda_settings_pep8_validation.png)
 
 * Signals.py
-- [Pep8 Validation - My Account Signals](documentation/validation/my_account_signals_pep8_validation.png)
+- ![Pep8 Validation - My Account Signals](documentation/validation/my_account_signals_pep8_validation.png)
 
 * Templatetags
-- [Pep8 Validation - Booking Filters](documentation/validation/booking_filters_pep8_validation.png)
-- [Pep8 Validation - Trips Filters](documentation/validation/trips_filters_pep8_validation.png)
+- ![Pep8 Validation - Booking Filters](documentation/validation/booking_filters_pep8_validation.png)
+- ![Pep8 Validation - Trips Filters](documentation/validation/trips_filters_pep8_validation.png)
 
 * URL.py
-- [Pep8 Validation - BKODA URLs](documentation/validation/bkoda_urls_pep8_validation.png)
-- [Pep8 Validation - Booking URLs](documentation/validation/booking_urls_pep8_validation.png)
-- [Pep8 Validation - Home URLs](documentation/validation/home_urls_pep8_validation.png)
-- [Pep8 Validation - Manage Booking URLs](documentation/validation/manage_urls_pep8_validation.png)
-- [Pep8 Validation - My Account URLs](documentation/validation/my_account_urls_pep8_validation.png)
-- [Pep8 Validation - Staff App URLs](documentation/validation/staff_urls_pep8_validation.png)
-- [Pep8 Validation - Trips URLs](documentation/validation/trips_urls_pep8_validation.png)
+- ![Pep8 Validation - BKODA URLs](documentation/validation/bkoda_urls_pep8_validation.png)
+- ![Pep8 Validation - Booking URLs](documentation/validation/booking_urls_pep8_validation.png)
+- ![Pep8 Validation - Home URLs](documentation/validation/home_urls_pep8_validation.png)
+- ![Pep8 Validation - Manage Booking URLs](documentation/validation/manage_urls_pep8_validation.png)
+- ![Pep8 Validation - My Account URLs](documentation/validation/my_account_urls_pep8_validation.png)
+- ![Pep8 Validation - Staff App URLs](documentation/validation/staff_urls_pep8_validation.png)
+- ![Pep8 Validation - Trips URLs](documentation/validation/trips_urls_pep8_validation.png)
 
 * Utils.py
-- [Pep8 Validation - Booking Utils](documentation/validation/booking_utils_pep8_validation.png)
-- [Pep8 Validation - Manage Booking Utils](documentation/validation/manage_utils_pep8_validation.png)
-- [Pep8 Validation - Staff App Utils](documentation/validation/staff_utils_pep8_validation.png)
+- ![Pep8 Validation - Booking Utils](documentation/validation/booking_utils_pep8_validation.png)
+- ![Pep8 Validation - Manage Booking Utils](documentation/validation/manage_utils_pep8_validation.png)
+- ![Pep8 Validation - Staff App Utils](documentation/validation/staff_utils_pep8_validation.png)
 
 * Views.py
-- [Pep8 Validation - BKODA Views](documentation/validation/bkoda_views_pep8_validation.png)
-- [Pep8 Validation - Booking Views](documentation/validation/booking_views_pep8_validation.png)
-- [Pep8 Validation - Home Views](documentation/validation/home_views_pep8_validation.png)
-- [Pep8 Validation - Manage Booking Views](documentation/validation/manage_views_pep8_validation.png)
-- [Pep8 Validation - My Account Views](documentation/validation/my_account_views_pep8_validation.png)
-- [Pep8 Validation - Staff App Views](documentation/validation/staff_views_pep8_validation.png)
-- [Pep8 Validation - Trips Views](documentation/validation/trips_views_pep8_validation.png)
+- ![Pep8 Validation - BKODA Views](documentation/validation/bkoda_views_pep8_validation.png)
+- ![Pep8 Validation - Booking Views](documentation/validation/booking_views_pep8_validation.png)
+- ![Pep8 Validation - Home Views](documentation/validation/home_views_pep8_validation.png)
+- ![Pep8 Validation - Manage Booking Views](documentation/validation/manage_views_pep8_validation.png)
+- ![Pep8 Validation - My Account Views](documentation/validation/my_account_views_pep8_validation.png)
+- ![Pep8 Validation - Staff App Views](documentation/validation/staff_views_pep8_validation.png)
+- ![Pep8 Validation - Trips Views](documentation/validation/trips_views_pep8_validation.png)
 
 * WSGI.py
-- [Pep8 Validation - BKODA WSGI](documentation/validation/bkoda_wsgi_pep8_validation.png)
+- ![Pep8 Validation - BKODA WSGI](documentation/validation/bkoda_wsgi_pep8_validation.png)
 
 ---
 ## Lighthouse Report
@@ -420,7 +420,6 @@ The lighthouse reports suggests that the book BKODA App needs more improvements 
     - Staff App Page Mobile
     ![Staff App Page Mobile](documentation/lighthouse/lh_staff_app_mobile.png)
 
-
 ---
 
 ## Compatibility
@@ -433,7 +432,186 @@ Testing was conducted on the following browsers;
 
 # Responsiveness
 
-The responsiveness was checked manually by using devtools (Chrome) throughout the whole development.
+The responsiveness was checked manually by using devtools (Chrome) throughout the whole development. A Mobilephone (Oppo F1) was used to take the mobile screenshots. 
 
+* Home Page
+    - Desktop
+        + Authenticated User
+      ![Authenticated](documentation/responsiveness/desktop_home_auth.png)
+        + Unauthenticated User
+      ![Unauthenticated](documentation/responsiveness/desktop_home_unauth.png)
+    
+    - Mobile
+        + Authenticated User
+      ![Authenticated](documentation/responsiveness/mobile_home_auth.png)
+        + Unauthenticated User
+      ![Unauthenticated](documentation/responsiveness/mobile_home_unauth.png)
+
+* Sign In Page
+    - Desktop
+    ![Signin Desktop](documentation/responsiveness/desktop_signin.png)
+
+    - Mobile
+    ![Signin  Mobile](documentation/responsiveness/mobile_signin.png)
+
+* Sign Up Page
+    - Desktop
+    ![Desktop Sign Up](documentation/responsiveness/desktop_signup.png)
+
+    - Mobile
+    ![Mobile Sign Up](documentation/responsiveness/mobile_signup.png)
+
+* Trip List
+    - Desktop
+    ![Desktop Trip List](documentation/responsiveness/desktop_triplist.png)
+
+    - Desktop (Reschedule)
+    ![Desktop Trip List for Resched](documentation/responsiveness/desktop_resched_triplist.png)
+
+    - Mobile
+    ![Mobile Trip List](documentation/responsiveness/mobile_triplist.png)
+    
+    - Mobile (Reschedule)
+    ![Mobile Trip List for Resched](documentation/responsiveness/mobile_resched_triplist.png)
+
+* Booking Confirmation
+    - Desktop
+    ![Desktop Booking Confirmation](documentation/responsiveness/desktop_confirm_booking.png)
+
+    - Mobile
+    ![Mobile Booking Confirmation](documentation/responsiveness/mobile_confirm_booking.png)
+
+    - Confirm Cancel
+    ![Mobile Cancel Booking](documentation/responsiveness/mobile_confirm_booking_cancel.png)
+
+* Payment Form
+    - Desktop
+    ![Desktop Payment Form](documentation/responsiveness/desktop_payment_form.png)
+
+    - Desktop
+    ![Desktop Payment Form](documentation/responsiveness/desktop_payment_form.png)
+
+    - Mobile
+    ![Mobile Payment Form](documentation/responsiveness/mobile_payment_form.png)
+
+    - Card Payment
+    ![Mobile Card Payment](documentation/responsiveness/mobile_card_payment.png)
+
+    - Cash Payment
+    ![Mobile Cash Payment](documentation/responsiveness/mobile_cash_payment.png)
+
+    - Card Payment
+    ![Mobile GCash Payment](documentation/responsiveness/mobile_gcash_payment.png)
+
+    - Spinning Overlay
+    ![Desktop Spinning Overlay](documentation/responsiveness/desktop_spinning_overlay.png)
+
+* Booking Confirmation
+    - Desktop
+        - Authenticated User
+    ![Desktop Booking Confirmation 1](documentation/responsiveness/desktop_booking_confirmed_auth.png)
+        - Unauthenticated User
+    ![Desktop Booking Confirmation 2](documentation/responsiveness/desktop_booking_confirmed_unauth.png)
+
+    - Mobile
+        - Authenticated User
+    ![Mobile Booking Confirmation 1](documentation/responsiveness/mobile_booking_confirmed.png)
+
+* Pending Payment
+    - Desktop
+    ![Desktop Pending Payment](documentation/responsiveness/desktop_pending_payment_auth.png)
+
+    - Mobile
+    ![Mobile Pending Payment](documentation/responsiveness/mobile_pending_payment.png)
+
+* My Account
+    - Desktop
+        - My Account (Non-Staff)
+    ![Desktop My Account](documentation/responsiveness/desktop_my_account.png)
+
+        - My Account (Staff)
+    ![Desktop My Account - Staff](documentation/responsiveness/desktop_my_account_staff.png)
+
+    - Mobile
+        - My Account (Non-Staff)
+    ![Mobile My Account](documentation/responsiveness/mobile_my_account.png)
+
+        - My Account (Staff)
+    ![Mobile My Account - Staff](documentation/responsiveness/mobile_my_account_staff.png)
+
+* Personal Information
+    - Desktop
+    ![Desktop Personal Info](documentation/responsiveness/desktop_personal_info.png)
+
+    - Mobile
+    ![Mobile Personal Info](documentation/responsiveness/mobile_personal_info.png)
+
+* My Bookings
+    - Desktop
+    ![Desktop My Bookings](documentation/responsiveness/desktop_my_boookings.png)
+
+    - Mobile
+    ![Mobile My Bookings](documentation/responsiveness/mobile_my_bookings.png)
+
+* Booking Details
+    - Desktop
+    ![Desktop Booking Details](documentation/responsiveness/desktop_booking_details.png)
+
+    - Mobile
+    ![Mobile Booking Details](documentation/responsiveness/mobile_booking_details.png)
+
+* Manage Bookings
+    - Desktop
+    ![Desktop Manage Booking](documentation/responsiveness/desktop_manage_booking.png)
+
+    - Mobile
+    ![Mobile Manage Booking](documentation/responsiveness/mobile_manage_booking.png)
+
+* Reschedule Booking
+    - Desktop
+    ![Desktop Reschedule Booking](documentation/responsiveness/desktop_confirm_resched.png)
+
+    - Mobile
+    ![Mobile Reschedule Booking](documentation/responsiveness/mobile_confirm_resched.png)
+
+* Cancel Booking
+    - Desktop
+    ![Desktop Cancel Booking](documentation/responsiveness/desktop_confirm_booking_cancel.png)
+
+    - Mobile
+    ![Mobile Cancel Booking](documentation/responsiveness/mobile_confirm_booking_cancel.png)
+
+* Staff App Dashboard
+    - Desktop
+    ![Desktop Staff App - Dashboard](documentation/responsiveness/desktop_staff_dashboard.png)
+
+    - Mobile
+    ![Mobile Staff App](documentation/responsiveness/mobile_staff_dashboard.png)
+
+* Staff App Trip List
+    - Desktop
+    ![Desktop Staff App - Trips](documentation/responsiveness/desktop_staff_trips.png)
+
+        - Trip Details
+    ![Desktop Trip Details](documentation/responsiveness/desktop_trips_details.png)
+    
+    - Mobile
+    ![Mobile Staff App](documentation/responsiveness/mobile_staff_trips.png)
+
+        - Generate Trip Confirmation
+    ![Mobile Genetrate Trip](documentation/responsiveness/mobile_staff_generate_trips.png)
+
+* Staff App Booking List
+    - Desktop
+    ![Desktop Staff App - Bookings](documentation/responsiveness/desktop_staff_bookings.png)
+
+        - Booking Details
+    ![Desktop Booking Details](documentation/responsiveness/desktop_staff_booking_details.png)
+
+    - Mobile
+    ![Mobile Staff App](documentation/responsiveness/mobile_staff_bookings.png)
+
+        - Cancel Abandoned Bookings
+    ![Mobile Cancel Abandoned Booking](documentation/responsiveness/mobile_confirm_cancel_abandoned.png)
 
 ---
