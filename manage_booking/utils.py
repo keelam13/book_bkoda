@@ -176,7 +176,11 @@ def _process_refund(request, booking, refund_amount, metadata):
                 request,
                 f"REFUND of Php{refund_amount} is being processed."
                 f"An email is sent for more details.")
-            send_booking_email(booking, email_type='refund_processing')
+            send_booking_email(
+                booking,
+                email_type='refund_processing',
+                refund_amount=refund_amount
+                )
             booking.refund_status = 'COMPLETED'
             booking.refund_amount = refund_amount
         # Added stripe refund simulation logic for future development
@@ -210,7 +214,11 @@ def _process_refund(request, booking, refund_amount, metadata):
     else:
         booking.refund_status = 'PENDING'
         booking.refund_amount = refund_amount
-        send_booking_email(booking, email_type='refund_processing')
+        send_booking_email(
+            booking,
+            email_type='refund_processing',
+            refund_amount=refund_amount
+            )
         messages.info(
             request,
             f"A refund of Php{refund_amount:.2f} is pending manual "
