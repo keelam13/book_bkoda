@@ -733,5 +733,21 @@ The responsiveness was checked manually by using devtools (Chrome) throughout th
 
         - Cancel Abandoned Bookings
     ![Mobile Cancel Abandoned Booking](documentation/responsiveness/mobile_confirm_cancel_abandoned.png)
-
 ---
+
+# Sending Emails
+
+* Payment Receipt
+    ![Payment Receipt](documentation/emails/email_payment_receipt.png)
+
+* Booking Confirmation
+    ![Booking Confirmation](documentation/emails/email_booking_confirmed.png)
+
+* Pending Booking
+    ![Pending Booking](documentation/emails/email_pending_payment.png)
+
+* Booking Cancelled
+    ![Booking Cancelled](documentation/emails/email_booking_cancelled.png)
+
+* Refund Processing
+    ![Refund Processing](documentation/emails/email_refund_processing.png)
