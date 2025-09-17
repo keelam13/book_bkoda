@@ -349,21 +349,76 @@ No errors so far were found in the validated codes through CI Python Linter [onl
 ---
 ## Lighthouse Report
 
+The lighthouse reports suggests that the book BKODA App needs more improvements in the Performance and in the Best Practices categories. Overall, the web app needs fine tuning to improve its quality across several categories.
+    - In the Performance category for pages needing more improvements:
+        1. Red Metrics: Significant Issues
+            - First Contentful Paint (FCP): 4.0 s
+            - Largest Contentful Paint (LCP): 4.2 s
+
+        2. Yellow/Orange Metrics: Needs Improvement
+            - Total Blocking Time (TBT): 490 ms
+            - Speed Index: 5.1 s
+
+        3. Green Metrics: Good
+            - Cumulative Layout Shift (CLS): 0.088
+
+    - In the Best Practices category for pages needing more improvements:
+        Key Issues:
+        1. Uses third-party cookies — 12 cookies found:
+            - mailchimp
+            - _stripe_orig_uat
+
+        2. Issues were logged in the Issues panel in Chrome Devtools:
+            - A form field (from the MailChimp embedcode) has an id or name attribute that the browser's autofill recognizes. However, it doesn't have an autocomplete attribute assigned. This might prevent the browser from correctly autofilling the form.
+
 * Home Page
 
-![Home Page]
+    - Home Page Desktop
+    ![Home Page Desktop](documentation/lighthouse/lh_home_desktop.png)
+    - Home Page Mobile
+    ![Home Page Mobile](documentation/lighthouse/lh_home_mobile.png)
 
- Signup Page
+* Trip List (Search Result) Page
 
-![Signup Page]
+    - Trip List Page Desktop
+    ![Trip List Page Desktop](documentation/lighthouse/lh_trip_list_desktop.png)
+    - Trip List Page Mobile
+    ![Trip List Page Mobile](documentation/lighthouse/lh_trip_list_mobile.png)
 
-* Login Page
+* Confirm Booking Page
 
-![Login Page]
+    - Booking Form Page Desktop
+    ![Booking Form Page Desktop](documentation/lighthouse/lh_booking_form_desktop.png)
+    - Booking Form Page Mobile
+    ![Booking Form Page Mobile](documentation/lighthouse/lh_booking_form_mobile.png)
 
-* Logout Page
+* Booking Payment Page
 
-![Logout Page]
+    - Payment Form Page Desktop
+    ![Payment Form Page Desktop](documentation/lighthouse/lh_payment_form_desktop.png)
+    - Payment Form Page Mobile
+    ![Payment Form Page Mobile](documentation/lighthouse/lh_payment_form_mobile.png)
+
+* My Bookings Page
+
+    - My Bookings Form Page Desktop
+    ![My Bookings Page Desktop](documentation/lighthouse/lh_my_bookings_desktop.png)
+    - My Bookings Page Mobile
+    ![My Bookings Page Mobile](documentation/lighthouse/lh_my_bookings_mobile.png)
+
+* My Account Page
+
+    - My Account Form Page Desktop
+    ![My Account Page Desktop](documentation/lighthouse/lh_my_account_desktop.png)
+    - My Account Page Mobile
+    ![My Account Page Mobile](documentation/lighthouse/lh_my_account_mobile.png)
+
+* Staff App Page
+
+    - Staff App Form Page Desktop
+    ![Staff App Page Desktop](documentation/lighthouse/lh_staff_app_desktop.png)
+    - Staff App Page Mobile
+    ![Staff App Page Mobile](documentation/lighthouse/lh_staff_app_mobile.png)
 
 
 ---
