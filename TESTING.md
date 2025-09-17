@@ -424,9 +424,39 @@ The lighthouse reports suggests that the book BKODA App needs more improvements 
 
 ## Compatibility
 
-Testing was conducted on the following browsers;
+The app was developed using Chrome browser. To check for compatibility, testing was conducted on the following browsers:
 
-- Chrome;
+- Edge
+    - Home
+    ![Home Edge](documentation/compatibility/edge_home.png)
+
+    - Booking Confirmation
+    ![Booking Confirmation Edge](documentation/compatibility/edge_booking_confirmation.png)
+
+    - My Account
+    ![My Account Edge](documentation/compatibility/edge_my_account.png)
+
+    - My Bookings
+    ![My Bookings Edge](documentation/compatibility/edge_my_bookings.png)
+
+    - Staff App
+    ![Staff App Edge](documentation/compatibility/edge_staff_app.png)
+
+- Mozilla
+    - Home
+    ![Home Mozilla](documentation/compatibility/mozilla_home.png)
+
+    - Booking Confirmation
+    ![Booking Confirmation Mozilla](documentation/compatibility/mozilla_booking_confirmation.png)
+
+    - My Account
+    ![My Account Mozilla](documentation/compatibility/mozilla_my_account.png)
+
+    - Manage Bookings
+    ![Manage Bookings Mozilla](documentation/compatibility/mozilla_manage_bookings.png)
+
+    - Staff App
+    ![Staff App Mozilla](documentation/compatibility/mozilla_staff_app.png)
 
 ---
 
