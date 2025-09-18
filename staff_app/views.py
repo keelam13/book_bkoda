@@ -254,6 +254,7 @@ def bookings_list(request):
     filter_customer_name = request.GET.get('customer_name')
     filter_status = request.GET.get('status')
     filter_trip_date = request.GET.get('trip_date')
+    filter_refund_status = request.GET.get('refund_status')
 
     # Apply filters
     if filter_trip_number:
@@ -266,6 +267,9 @@ def bookings_list(request):
 
     if filter_status:
         bookings_list = bookings_list.filter(status__iexact=filter_status)
+
+    if filter_refund_status:
+        bookings_list = bookings_list.filter(refund_status=filter_refund_status)
 
     if filter_trip_date:
         try:

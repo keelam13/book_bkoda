@@ -19,6 +19,19 @@
     <p>Pending Refunds: <span>{{ pending_refunds }}</span></p>
     <p>Confirmed Bookings: <span>{{ confirmed_bookings }}</span></p>
     <p>Total Confirmed Revenue: Php {{ total_revenue_confirmed|floatformat:2 }}</p>
+
+    <!-- Alert for Pending Refunds -->
+    {% if pending_refunds > 0 %}
+    <div class="alert alert-warning alert-fix-display mb-4" role="alert">
+        <h4 class="alert-heading"><i class="fas fa-hand-holding-usd mr-2"></i> Action Required on Refunds!</h4>
+        <p>There are **{{ pending_refunds }}** bookings with pending refunds that require your attention.</p>
+        <p class="mb-0">
+            See all
+            <a href="{% url 'staff_app:bookings_list' %}?status=CANCELED&refund_status=PENDING" class="alert-link">Pending Refund Bookings</a>.
+        </p>
+    </div>
+    {% endif %}
+
     <!-- Alert for Expired Bookings on Dashboard -->
     {% if null_bookings_count > 0 or departed_bookings_count > 0 or unpaid_bookings_count > 0 %}
     <div class="alert alert-warning alert-fix-display mb-4" role="alert">
