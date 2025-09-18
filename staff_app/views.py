@@ -45,6 +45,9 @@ def staff_dashboard(request):
     total_trips = Trip.objects.count()
     total_bookings = Booking.objects.count()
     pending_bookings = Booking.objects.filter(status='PENDING_PAYMENT').count()
+    pending_refunds = Booking.objects.filter(
+        status='CANCELED',
+        refund_status='PENDING').count()
     confirmed_bookings = Booking.objects.filter(status='CONFIRMED').count()
 
     total_revenue_confirmed = Booking.objects.filter(
@@ -57,6 +60,7 @@ def staff_dashboard(request):
         'total_trips': total_trips,
         'total_bookings': total_bookings,
         'pending_bookings': pending_bookings,
+        'pending_refunds': pending_refunds,
         'confirmed_bookings': confirmed_bookings,
         'total_revenue_confirmed': total_revenue_confirmed,
         'recent_bookings': Booking.objects.order_by('-booking_date')[:5],
