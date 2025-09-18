@@ -259,6 +259,14 @@
                                                 {% endfor %}
                                             </select>
                                         </div>
+                                        <div class="form-group">
+                                        <label for="id_booking_refund_status_{{ booking.pk }}">Refund Status</label>
+                                        <select class="form-control" id="id_booking_refund_status_{{ booking.pk }}" name="refund_status">
+                                            {% for value, label in REFUND_STATUS_CHOICES %}
+                                            <option value="{{ value }}" {% if booking.refund_status == value %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
                                     </div>
                                     <div class="modal-footer">
                                         <button type="submit" class="btn btn-success">Save Changes</button>

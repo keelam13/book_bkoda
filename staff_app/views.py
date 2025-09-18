@@ -223,7 +223,12 @@ def bookings_list(request):
                 form.save(commit=False)
                 booking.status = form.cleaned_data['status']
                 booking.payment_status = form.cleaned_data['payment_status']
-                booking.save(update_fields=['status', 'payment_status'])
+                booking.refund_status = form.cleaned_data['refund_status']
+                booking.save(update_fields=[
+                    'status',
+                    'payment_status',
+                    'refund_status',]
+                    )
                 messages.success(
                     request,
                     f'Booking {booking.booking_reference} '

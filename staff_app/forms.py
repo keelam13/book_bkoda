@@ -56,10 +56,12 @@ class BookingForm(forms.ModelForm):
         fields = [
             'status',
             'payment_status',
+            'refund_status',
         ]
         widgets = {
             'status': forms.Select(choices=BOOKING_STATUS_CHOICES),
             'payment_status': forms.Select(choices=PAYMENT_STATUS_CHOICES),
+            'refund_status': forms.Select(choices=REFUND_STATUS_CHOICES),
         }
 
     def __init__(self, *args, **kwargs):
