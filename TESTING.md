@@ -75,23 +75,23 @@ Usability was tested with the below user acceptance testing, sent to new users t
 ### **Registration and User Accounts**
 3 Site User Easily register for an account Have a personal account and be able to view my profile
 4 Site User Easily register with my social account Register with my Facebook or Gmail accounts
-4 Site User Easily login or logout Access my personal account information
-5 Site User Easily recover my password in case I forget it Recover access to my account
-6 Site User Receive an email confirmation after registering Verify that my account registration was successful
-7 Site User Have a personalized user profile View my personal trip history and booking confirmations, and save my payment information
+5 Site User Easily login or logout Access my personal account information
+6 Site User Easily recover my password in case I forget it Recover access to my account
+7 Site User Receive an email confirmation after registering Verify that my account registration was successful
+8 Site User Have a personalized user profile View my personal trip history and booking confirmations, and save my payment information
 
 ### **Booking**
-8 Passenger Easily select the trip that I want to book Ensure I don't accidentally select the wrong trip
-9 Passenger Add the passengers Easily make changes before booking
-10 Passenger Easily enter my payment information Check out quickly and with no hassles
-11 Passenger Feel my personal and payment information is safe and secure Confidently provide the needed information to make a purchase
-12 Passenger View an booking confirmation Verify that I haven't made any mistakes
-13 Passenger Receive an email confirmation after payment Keep the confirmation of what I've paid for.
-14 Passenger Easily manage my booking Change the date and/or time of my travel when I have to
+9 Passenger Easily select the trip that I want to book Ensure I don't accidentally select the wrong trip
+10 Passenger Add the passengers Easily make changes before booking
+11 Passenger Easily enter my payment information Check out quickly and with no hassles
+12 Passenger Feel my personal and payment information is safe and secure Confidently provide the needed information to make a purchase
+13 Passenger View an booking confirmation Verify that I haven't made any mistakes
+14 Passenger Receive an email confirmation after payment Keep the confirmation of what I've paid for.
+15 Passenger Easily manage my booking Change the date and/or time of my travel when I have to
 
 ### **Admin and Transport Management**
-15 Manager Add a trip Add new trips to the list
-16 Manager Easily see bookings Easily plan for the next trips
+16 Manager Add a trip Add new trips to the list
+17 Manager Easily see bookings Easily plan for the next trips
 
 ---
 

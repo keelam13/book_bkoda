@@ -227,7 +227,7 @@ def bookings_list(request):
                 booking.save(update_fields=[
                     'status',
                     'payment_status',
-                    'refund_status',]
+                    'refund_status', ]
                     )
                 messages.success(
                     request,
@@ -274,7 +274,8 @@ def bookings_list(request):
         bookings_list = bookings_list.filter(status__iexact=filter_status)
 
     if filter_refund_status:
-        bookings_list = bookings_list.filter(refund_status=filter_refund_status)
+        bookings_list = bookings_list.filter(
+            refund_status=filter_refund_status)
 
     if filter_trip_date:
         try:

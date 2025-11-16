@@ -36,7 +36,8 @@ class TripForm(forms.ModelForm):
 
         if price is not None and price <= 0:
             raise forms.ValidationError(
-                "The trip price must be a positive value greater than zero (e.g., $1.00)."
+                "The trip price must be a positive value greater than zero \
+                (e.g., $1.00)."
             )
         return price
 

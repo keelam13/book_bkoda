@@ -54,10 +54,10 @@ class Trip(models.Model):
     def save(self, *args, **kwargs):
         """
         Overrides save to explicitly call full_clean() to ensure
-        the model's clean() method (which validates the price) runs 
+        the model's clean() method (which validates the price) runs
         before the data is saved to the database.
         """
-        self.full_clean() 
+        self.full_clean()
         super().save(*args, **kwargs)
 
     def update_available_seats(

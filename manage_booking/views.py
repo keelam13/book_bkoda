@@ -195,7 +195,7 @@ def booking_detail(request, booking_id):
         if eligible_status_for_action:
             # Cancellation Logic
             if time_until_departure_hours > \
-            policy.free_cancellation_cutoff_hours:
+                    policy.free_cancellation_cutoff_hours:
                 can_cancel = True
                 messages.info(
                     request,
@@ -204,7 +204,7 @@ def booking_detail(request, booking_id):
                     f"hours before departure."
                     )
             elif time_until_departure_hours >= \
-            policy.late_cancellation_cutoff_hours:
+                    policy.late_cancellation_cutoff_hours:
                 can_cancel = True
                 cancellation_fee_applied = True
                 messages.info(
@@ -228,7 +228,7 @@ def booking_detail(request, booking_id):
 
             # Rescheduling Logic
             if time_until_departure_hours > \
-            policy.free_rescheduling_cutoff_hours:
+                    policy.free_rescheduling_cutoff_hours:
                 can_reschedule = True
                 messages.info(
                     request,
@@ -237,7 +237,7 @@ def booking_detail(request, booking_id):
                     f"hours before departure."
                     )
             elif time_until_departure_hours >= \
-            policy.late_rescheduling_cutoff_hours:
+                    policy.late_rescheduling_cutoff_hours:
                 can_reschedule = True
                 rescheduling_charge_applied = True
                 messages.info(
@@ -357,7 +357,7 @@ def booking_cancel(request, booking_id):
 
                 if booking.trip.available_seats is not None:
                     booking.trip.available_seats += \
-                    booking.number_of_passengers
+                        booking.number_of_passengers
                     booking.trip.save(update_fields=['available_seats'])
                 else:
                     messages.warning(
@@ -432,15 +432,15 @@ def booking_reschedule_select_trip(request, booking_id):
         current_time = timezone.now()
         time_until_departure = departure_datetime - current_time
         time_until_departure_hours = \
-        time_until_departure.total_seconds() / 3600
+            time_until_departure.total_seconds() / 3600
 
         # Check policy for rescheduling eligibility
         if eligible_status_for_action:
             if time_until_departure_hours > \
-            policy.free_rescheduling_cutoff_hours:
+                    policy.free_rescheduling_cutoff_hours:
                 can_reschedule = True
             elif time_until_departure_hours >= \
-            policy.late_rescheduling_cutoff_hours:
+                    policy.late_rescheduling_cutoff_hours:
                 can_reschedule = True
             else:
                 messages.error(
@@ -467,7 +467,7 @@ def booking_reschedule_select_trip(request, booking_id):
             'manage_booking:booking_detail', booking_id=original_booking.id)
 
     redirect_url = \
-    reverse('trips') + f'?reschedule_booking_id={original_booking.id}' \
+        reverse('trips') + f'?reschedule_booking_id={original_booking.id}' \
         f'&origin={original_booking.trip.origin}' \
         f'&destination={original_booking.trip.destination}' \
         f'&departure_date={original_booking.trip.date.strftime("%Y-%m-%d")}' \
@@ -524,7 +524,8 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
             f"{original_booking.number_of_passengers} passengers."
             )
         redirect_url = \
-        reverse('trips') + f'?reschedule_booking_id={original_booking.id}' \
+            reverse('trips') + \
+            f'?reschedule_booking_id={original_booking.id}' \
             f'&origin={original_booking.trip.origin}' \
             f'&destination={original_booking.trip.destination}' \
             f'&departure_date=' \
@@ -539,7 +540,8 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
             f"Please select a different one."
             )
         redirect_url = \
-        reverse('trips') + f'?reschedule_booking_id={original_booking.id}' \
+            reverse('trips') + \
+            f'?reschedule_booking_id={original_booking.id}' \
             f'&origin={original_booking.trip.origin}' \
             f'&destination={original_booking.trip.destination}' \
             f'&departure_date=' \
@@ -560,7 +562,7 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
     if original_booking.passengers.exists():
         first_passenger = original_booking.passengers.first()
         first_passenger_email = \
-        first_passenger.email if first_passenger.email else ''
+            first_passenger.email if first_passenger.email else ''
         first_passenger_contact_number = first_passenger.contact_number if \
             first_passenger.contact_number else ''
 
@@ -710,9 +712,9 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
 
                                 if payment_intent.status == 'succeeded':
                                     expected_amount_cents = \
-                                    int(amount_to_pay * 100)
+                                        int(amount_to_pay * 100)
                                     if payment_intent.amount != \
-                                    expected_amount_cents:
+                                            expected_amount_cents:
                                         messages.error(
                                             request,
                                             f"Payment amount mismatch. Please"
@@ -735,12 +737,12 @@ def booking_reschedule_confirm(request, booking_id, new_trip_id):
                                     })
 
                                     new_booking = \
-                                    _create_new_rescheduled_booking(
-                                        request,
-                                        original_booking,
-                                        new_trip,
-                                        new_booking_params
-                                        )
+                                        _create_new_rescheduled_booking(
+                                            request,
+                                            original_booking,
+                                            new_trip,
+                                            new_booking_params
+                                            )
 
                                     messages.success(
                                         request,

@@ -8,10 +8,10 @@ from my_account.models import UserProfile
 from .models import Booking, Passenger
 from .forms import BookingConfirmationForm, BillingDetailsForm
 from .utils import (send_booking_email,
-    _get_initial_billing_details,
-    _get_pending_booking,
-    _get_payment_method_context
-)
+                    _get_initial_billing_details,
+                    _get_pending_booking,
+                    _get_payment_method_context
+                    )
 
 from datetime import timedelta
 from decimal import Decimal
@@ -312,7 +312,7 @@ def process_payment(request, booking_id):
                 original_status = booking.status
                 booking.status = 'CANCELED'
                 booking.payment_status = \
-                'REFUNDED' if booking.payment_status == 'PAID' else 'NONE'
+                    'REFUNDED' if booking.payment_status == 'PAID' else 'NONE'
                 booking.save()
 
                 if not request.user.is_authenticated and \
