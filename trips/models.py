@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
 
 
@@ -31,6 +32,33 @@ class Trip(models.Model):
     origin_station = models.CharField(max_length=255, blank=True, null=True)
     destination_station = models.CharField(
         max_length=255, blank=True, null=True)
+
+    def clean(self):
+        """
+        Validation for model fields.
+        """
+        # Ensures the price is not a negative value
+        if self.price is not None and self.price < 0:
+            raise ValidationError(
+                {'price': 'The trip price cannot be a negative value.'}
+            )
+
+        # Ensures available seats are not negative
+        if self.available_seats is not None and self.available_seats < 0:
+            raise ValidationError(
+                {'available_seats': 'Available seats cannot be negative.'}
+            )
+
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        """
+        Overrides save to explicitly call full_clean() to ensure
+        the model's clean() method (which validates the price) runs 
+        before the data is saved to the database.
+        """
+        self.full_clean() 
+        super().save(*args, **kwargs)
 
     def update_available_seats(
             self, number_of_passengers, operation='subtract'):

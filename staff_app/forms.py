@@ -25,7 +25,20 @@ class TripForm(forms.ModelForm):
             'date': forms.DateInput(attrs={'type': 'date'}),
             'departure_time': forms.TimeInput(attrs={'type': 'time'}),
             'arrival_time': forms.TimeInput(attrs={'type': 'time'}),
+            'price': forms.NumberInput(attrs={'min': '1', 'step': '0.01'}),
         }
+
+    def clean_price(self):
+        """
+        Ensures the 'price' field is a positive value greater than zero.
+        """
+        price = self.cleaned_data.get('price')
+
+        if price is not None and price <= 0:
+            raise forms.ValidationError(
+                "The trip price must be a positive value greater than zero (e.g., $1.00)."
+            )
+        return price
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
