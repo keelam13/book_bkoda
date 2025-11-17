@@ -111,7 +111,7 @@
                     <div class="d-grid mt-4">
                         {% if user_is_authenticated %}
                             <a href="{% url 'account:my_bookings' %}" class="btn btn-primary btn-lg">Go to My Bookings</a>
-                            <button class="btn btn-outline-secondary btn-lg" onclick="window.print()">Print Confirmation</button>
+                            <button class="btn btn-outline-secondary btn-lg" onclick="window.print()">Print Payment Instructions</button>
                         {% else %}
                         <button class="btn btn-primary btn-lg" onclick="window.print()">Print Confirmation</button>
                         {% endif %}
