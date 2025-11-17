@@ -48,7 +48,6 @@ class UserProfile(models.Model):
     default_street_address2 = models.CharField(
         max_length=225, blank=True, null=True)
     default_city = models.CharField(max_length=100, blank=True, null=True)
-    
     default_postcode = models.CharField(
         max_length=20,
         blank=True,
