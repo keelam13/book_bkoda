@@ -39,23 +39,23 @@ User Story ID - AS A/AN I WANT TO BE ABLE TO... - SO THAT I CAN...
 #### **Registration and User Accounts**
 3.   Site User -  Easily register for an account  -   Have a personal account and be able to view my profile.
 4.   Site User -  Easily register with my social account   -   Register with my Facebook or Gmail accounts.
-4.   Site User -  Easily login or logout  -   Access my personal account information.
-5.   Site User -  Easily recover my password in case I forget it   -   Recover access to my account.
-6.   Site User -  Receive an email confirmation after registering  -   Verify that my account registration was successful.
-7.   Site User -  Have a personalized user profile  -  View my personal trip history and booking confirmations, and save my payment information.
+5.   Site User -  Easily login or logout  -   Access my personal account information.
+6.   Site User -  Easily recover my password in case I forget it   -   Recover access to my account.
+7.   Site User -  Receive an email confirmation after registering  -   Verify that my account registration was successful.
+8.   Site User -  Have a personalized user profile  -  View my personal trip history and booking confirmations, and save my payment information.
 
 #### **Booking**
-8.   Passenger -  Easily select the trip that I want to book   -   Ensure I don't accidentally select the wrong trip.
-9.   Passenger -  Add the passengers  -    Easily make changes before booking.
-10.  Passenger -  Easily enter my payment information  -   Check out quickly and with no hassles.
-11.  Passenger -  Feel my personal and payment information is safe and secure  -   Confidently provide the needed information to make a purchase.
-12.  Passenger  -  View a booking confirmation  -  Verify that I haven't made any mistakes.
-13.  Passenger  -  Receive an email confirmation after payment - Keep the confirmation of what I've paid for.
-14.  Passenger -  Easily manage my booking  -  Change the date and/or time of my travel when I have to.
+9.   Passenger -  Easily select the trip that I want to book   -   Ensure I don't accidentally select the wrong trip.
+10.   Passenger -  Add the passengers  -    Easily make changes before booking.
+11.  Passenger -  Easily enter my payment information  -   Check out quickly and with no hassles.
+12.  Passenger -  Feel my personal and payment information is safe and secure  -   Confidently provide the needed information to make a purchase.
+13.  Passenger  -  View a booking confirmation  -  Verify that I haven't made any mistakes.
+14.  Passenger  -  Receive an email confirmation after payment - Keep the confirmation of what I've paid for.
+15.  Passenger -  Easily manage my booking  -  Change the date and/or time of my travel when I have to.
 
 #### **Admin and Transport Management**
-15.  Manager  -   Add a trip   -   Add new trips to the list.
-16.  Manager  -   Easily see bookings  -   Easily plan for the next trips.
+16.  Manager  -   Add a trip   -   Add new trips to the list.
+17.  Manager  -   Easily see bookings  -   Easily plan for the next trips.
 
 ---
 
@@ -327,6 +327,13 @@ The flowchart was created using [Figma](https://www.figma.com/).
 - User to Reservation: One User can have many Reservations (one-to-many). This is represented by the user_id foreign key in the Reservation table.
 - Trip to Reservation: One Trip can have many Reservations (one-to-many). This is represented by the trip_id foreign key in the Reservation table.
 
+## Current Data Constraints
+
+The UserProfile model includes static, server-side validation rules currently tailored for the initial local market:
+
+* **Postal Code:** Hardcoded to enforce the **Philippine 4-digit numeric format** (`NNNN`).
+* **Phone Number:** Hardcoded to a strict format for the Philippines, typically requiring the country code or local prefix (e.g., `+639xxxxxxxxx` or `09xxxxxxxxx`). This is to ensure numbers are callable within the local service area.
+
 ## Future Implementations
 
 We are continually working to improve the BKODA app. Here are some features we plan to implement in future releases:
@@ -338,7 +345,7 @@ We are continually working to improve the BKODA app. Here are some features we p
 * **Multi-language Support:** Add support for other local languages to improve accessibility.
 * **Automated Discounts & Account Verification:** Implement an in-app process for eligible passengers (Senior Citizens, Students) to upload a valid ID for verification. Once verified by staff, their account will be permanently flagged to receive an automatic 20% discount on all future bookings. Until verification is complete, the standard fare will apply.
 * **Social Media Sign-up:** Allow users to register and log in quickly using their existing social media accounts (e.g., Google, Facebook).
-
+* **Global Data Validation:**	Expand Model/Form validation to dynamically support international postal/zip code and phone number formats, ensuring robust data quality for a global user base.
 
 
 ## Acknowledgments
